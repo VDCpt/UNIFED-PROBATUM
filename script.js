@@ -5063,7 +5063,7 @@ async function exportPDF() {
         const verdict = IFDESystem.analysis.verdict || { level: { pt: 'N/A', en: 'N/A' }, key: 'low', color: '#8c7ae6', description: { pt: 'Perícia não executada.', en: 'Forensic exam not executed.' }, percent: '0.00%' };
 
         let pageNumber = 1;
-        const TOTAL_PAGES = 8; // +1 página: ADENDA FORENSE (v13.1.6-GOLD)
+        let TOTAL_PAGES = 8; // Valor provisório — actualizado por doc.getNumberOfPages() na 2.ª passagem
         const left = 14;
 
         // ══════════════════════════════════════════════════════════════════════
@@ -6150,11 +6150,44 @@ async function exportPDF() {
         // Conformidade: DORA (UE) 2022/2554 · RFC 3161 · Art. 125.º CPP
         addFooter(doc, pageNumber, true);
 
-        // Guardar PDF — sincronamente após inserção garantida do QR Code
+        // ══════════════════════════════════════════════════════════════════════
+        // SEGUNDA PASSAGEM — CORRECÇÃO DE NUMERAÇÃO (PROTOCOLO UNIFED-GOLD)
+        // Problema: TOTAL_PAGES=8 fixo; pageNumber pode ultrapassar 8 por
+        // overflow dinâmico (cadeia de custódia, perguntas, TSA).
+        // Solução: após construção completa, obter total real via
+        // doc.getNumberOfPages(), iterar todas as páginas, apagar o texto
+        // antigo com rectângulo branco e re-escrever "Página X de Y" correcto.
+        // ══════════════════════════════════════════════════════════════════════
+        const realTotalPages = doc.getNumberOfPages();
+        TOTAL_PAGES = realTotalPages; // actualizar para log e texto de encerramento
+
+        const _pw  = doc.internal.pageSize.getWidth();
+        const _ph  = doc.internal.pageSize.getHeight();
+        const _mg  = 14;
+
+        for (let _p = 1; _p <= realTotalPages; _p++) {
+            doc.setPage(_p);
+
+            // 1. Apagar texto antigo — rectângulo branco sobre a zona do rodapé
+            //    Zona: x=margin, y=pageHeight-14 (cobre "Página X de Y" a 7pt)
+            doc.setFillColor(255, 255, 255);
+            doc.rect(_mg, _ph - 14, 60, 8, 'F');
+
+            // 2. Re-escrever "Página X de Y" com total correcto
+            doc.setFontSize(7);
+            doc.setFont('courier', 'bold');
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Página ${_p} de ${realTotalPages}`, _mg, _ph - 10);
+
+            doc.setTextColor(0, 0, 0);
+        }
+        // ══ FIM SEGUNDA PASSAGEM ══
+
+        // Guardar PDF — sincronamente após inserção garantida do QR Code e correcção de numeração
         doc.save(`UNIFED_PERITIA_${IFDESystem.sessionId}.pdf`);
-        logAudit('✅ PDF UNIFED_PERITIA exportado com sucesso (QR Code selado)', 'success');
-        showToast('PDF gerado com Selo QR PROBATUM', 'success');
-        ForensicLogger.addEntry('PDF_EXPORT_COMPLETED', { sessionId: IFDESystem.sessionId, pages: TOTAL_PAGES, qrSealed: !!_qrDataUrl });
+        logAudit(`✅ PDF UNIFED_PERITIA exportado com sucesso — ${realTotalPages} páginas · QR Code selado`, 'success');
+        showToast(`PDF gerado · ${realTotalPages} páginas · Selo QR PROBATUM`, 'success');
+        ForensicLogger.addEntry('PDF_EXPORT_COMPLETED', { sessionId: IFDESystem.sessionId, pages: realTotalPages, qrSealed: !!_qrDataUrl });
 
     } catch (error) {
         console.error('Erro PDF:', error);
