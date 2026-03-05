@@ -2996,7 +2996,7 @@ function generateQRCode() {
     const hashFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
     const sessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 16) : 'N/A';
 
-    // Formato compacto: IFDE|SESSION|HASH (sem JSON, sem timestamp variável)
+    // Formato compacto: UNIFED|SESSION|HASH (sem JSON, sem timestamp variável)
     const qrData = `UNIFED|${sessionShort}|${hashFull}`;
 
     if (typeof QRCode !== 'undefined') {
@@ -5029,7 +5029,7 @@ async function exportDataJSON() {
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `IFDE_PERITIA_${IFDESystem.sessionId}.json`;
+    a.download = `UNIFED_PERITIA_${IFDESystem.sessionId}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
 
@@ -5042,7 +5042,7 @@ async function exportDataJSON() {
 // ============================================================================
 // 24. EXPORTAÇÃO PDF (v12.8.9 - Atualizada para novos campos)
 // ============================================================================
-function exportPDF() {
+async function exportPDF() {
     if (!IFDESystem.client) return showToast('Sem sujeito passivo para gerar parecer.', 'error');
     if (typeof window.jspdf === 'undefined') {
         logAudit('❌ Erro: jsPDF não carregado.', 'error');
@@ -5126,7 +5126,54 @@ function exportPDF() {
             doc.setTextColor(0, 0, 0);
         };
 
-        const addFooter = (doc, pageNum) => {
+        // ══════════════════════════════════════════════════════════════════════
+        // PRÉ-GERAÇÃO DO QR CODE — PROTOCOLO UNIFED-GOLD v13.1.8
+        // O QR Code é gerado ANTES da construção do PDF para eliminar
+        // a race condition entre setTimeout(QR=100ms) e setTimeout(save=500ms).
+        // O dataURL resultante é usado sincronamente em addFooter(isLastPage=true).
+        // Conformidade: DORA (UE) 2022/2554 · ISO/IEC 27037:2012
+        // ══════════════════════════════════════════════════════════════════════
+        const _qrHashFull    = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
+        const _qrSessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 20) : 'N/A';
+        const _qrPayload     = `UNIFED|${_qrSessionShort}|${_qrHashFull}`;
+
+        const _qrDataUrl = await new Promise((resolve) => {
+            if (typeof QRCode === 'undefined') { resolve(null); return; }
+            const _tmpDiv = document.createElement('div');
+            // Manter div fora do viewport (não bloqueia layout)
+            _tmpDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+            document.body.appendChild(_tmpDiv);
+            new QRCode(_tmpDiv, {
+                text: _qrPayload,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            // 200ms: margem de segurança para o canvas ser pintado pelo qrcodejs
+            setTimeout(() => {
+                const _canvas = _tmpDiv.querySelector('canvas');
+                const _dataUrl = _canvas ? _canvas.toDataURL('image/png') : null;
+                document.body.removeChild(_tmpDiv);
+                resolve(_dataUrl);
+            }, 200);
+        });
+
+        if (_qrDataUrl) {
+            console.log('[UNIFED-PDF] ✅ QR Code pré-gerado com sucesso — dataURL pronto para inserção no PDF.');
+        } else {
+            console.warn('[UNIFED-PDF] ⚠ QR Code não disponível (biblioteca QRCode ausente).');
+        }
+        // ══ FIM PRÉ-GERAÇÃO QR ══
+
+        // ══════════════════════════════════════════════════════════════════════
+        // addFooter(doc, pageNum, isLastPage)
+        // isLastPage=true → ativa o Selo de Certificação PROBATUM com QR Code
+        // Substituição de if(pageNum===TOTAL_PAGES) por flag explícita para
+        // eliminar falhas quando pageNumber excede TOTAL_PAGES por overflow.
+        // ══════════════════════════════════════════════════════════════════════
+        const addFooter = (doc, pageNum, isLastPage = false) => {
             // ── MARCA DE ÁGUA: aplicada a cada página via addFooter ───────────
             addWatermark(doc);
             // ─────────────────────────────────────────────────────────────────
@@ -5159,12 +5206,13 @@ function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.text(`Master Hash: ${hashFull}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            if (pageNum === TOTAL_PAGES) {
-                // ══════════════════════════════════════════════════════════════
-                // SELO DE CERTIFICAÇÃO — COORDENADAS FIXAS (PDF Layout Integrity)
-                // Posição: Canto Inferior Direito — independente do volume de dados
-                // Conformidade: RGIT Art. 103.º/104.º · CRP Art. 32.º · Art. 125.º CPP
-                // ══════════════════════════════════════════════════════════════
+            // ══════════════════════════════════════════════════════════════════
+            // SELO DE CERTIFICAÇÃO PROBATUM — ativado por isLastPage=true
+            // (flag explícita em vez de comparação numérica — elimina bug de overflow)
+            // Posição: Canto Inferior Direito — independente do volume de dados
+            // Conformidade: RGIT Art. 103.º/104.º · CRP Art. 32.º · Art. 125.º CPP
+            // ══════════════════════════════════════════════════════════════════
+            if (isLastPage) {
                 const boxSize  = 50;                              // caixa total 50mm
                 const qrSize   = 26;                              // QR Code 26mm
                 const qrMargin = (boxSize - qrSize) / 2 - 4;     // centramento horizontal
@@ -5172,11 +5220,6 @@ function exportPDF() {
                 // Coordenadas fixas — canto inferior direito, 8mm acima da linha de rodapé
                 const sealX = pageWidth - margin - boxSize;
                 const sealY = pageHeight - margin - boxSize - 8;
-
-                const hashFull2    = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
-                const sessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 20) : 'N/A';
-                // QR Code contém o Hash SHA-256 completo do relatório
-                const qrData = `UNIFED|${sessionShort}|${hashFull2}`;
 
                 // 1. Quadrado exterior de Selagem (Cyan PROBATUM)
                 doc.setDrawColor(0, 229, 255);
@@ -5193,7 +5236,24 @@ function exportPDF() {
                 doc.setTextColor(0, 229, 255);
                 doc.text('PROBATUM SEAL v13.1.8-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
-                // 4. Texto de certificação (abaixo do QR) — sobreposição obrigatória
+                // 4. QR Code — inserido sincronamente com o dataURL pré-gerado
+                // (eliminação da race condition setTimeout QR vs setTimeout save)
+                if (_qrDataUrl) {
+                    doc.addImage(_qrDataUrl, 'PNG',
+                        sealX + qrMargin + 2,
+                        sealY + 5,
+                        qrSize, qrSize);
+                    console.log('[UNIFED-PDF] ✅ QR Code inserido no PDF (sincronamente).');
+                } else {
+                    // Fallback: placeholder textual quando QRCode lib não disponível
+                    doc.setFontSize(4);
+                    doc.setFont('courier', 'normal');
+                    doc.setTextColor(180, 180, 180);
+                    doc.text('[QR CODE INDISPONÍVEL]', sealX + boxSize / 2, sealY + qrSize / 2 + 5, { align: 'center' });
+                }
+
+                // 5. Texto de certificação (abaixo do QR) — sobreposição obrigatória
+                // Protocolo UNIFED-GOLD: texto gravado por cima do QR Code conforme mandato
                 doc.setFontSize(4.2);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(30, 60, 120);
@@ -5212,30 +5272,6 @@ function exportPDF() {
                 doc.setTextColor(120, 120, 120);
                 doc.text('Uso restrito a mandato jurídico autorizado',
                     sealX + boxSize / 2, sealY + qrSize + 19, { align: 'center' });
-
-                // 5. QR Code — gerado com o Hash SHA-256 completo
-                if (typeof QRCode !== 'undefined') {
-                    const qrContainer = document.createElement('div');
-                    new QRCode(qrContainer, {
-                        text: qrData,
-                        width: 128,
-                        height: 128,
-                        colorDark: '#000000',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.L
-                    });
-
-                    setTimeout(() => {
-                        const qrCanvas = qrContainer.querySelector('canvas');
-                        if (qrCanvas) {
-                            const qrCodeBase64 = qrCanvas.toDataURL('image/png');
-                            doc.addImage(qrCodeBase64, 'PNG',
-                                sealX + qrMargin + 2,
-                                sealY + 5,
-                                qrSize, qrSize);
-                        }
-                    }, 100); // dispara antes do doc.save() (500ms delay no save)
-                }
 
                 // Reset para cinza técnico
                 doc.setTextColor(100, 116, 139);
@@ -6108,14 +6144,17 @@ function exportPDF() {
         doc.setTextColor(0, 0, 0);
         y += 6;
 
-        addFooter(doc, pageNumber);
+        // ══ CHAMADA FINAL — isLastPage=true: ativa o Selo QR na última página ══
+        // O QR Code já está pré-gerado como dataURL (_qrDataUrl) e é inserido
+        // sincronamente — sem race condition, sem setTimeout.
+        // Conformidade: DORA (UE) 2022/2554 · RFC 3161 · Art. 125.º CPP
+        addFooter(doc, pageNumber, true);
 
-        setTimeout(() => {
-            doc.save(`UNIFED_Parecer_${IFDESystem.sessionId}.pdf`);
-            logAudit('✅ PDF (Estilo Institucional) exportado com sucesso', 'success');
-            showToast('PDF gerado', 'success');
-            ForensicLogger.addEntry('PDF_EXPORT_COMPLETED', { sessionId: IFDESystem.sessionId, pages: TOTAL_PAGES });
-        }, 500);
+        // Guardar PDF — sincronamente após inserção garantida do QR Code
+        doc.save(`UNIFED_PERITIA_${IFDESystem.sessionId}.pdf`);
+        logAudit('✅ PDF UNIFED_PERITIA exportado com sucesso (QR Code selado)', 'success');
+        showToast('PDF gerado com Selo QR PROBATUM', 'success');
+        ForensicLogger.addEntry('PDF_EXPORT_COMPLETED', { sessionId: IFDESystem.sessionId, pages: TOTAL_PAGES, qrSealed: !!_qrDataUrl });
 
     } catch (error) {
         console.error('Erro PDF:', error);
