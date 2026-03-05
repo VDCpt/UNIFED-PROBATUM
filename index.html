@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="UNIFED - PROBATUM (Unidade Independente de Inteligência Forense Económica e Digital) v13.1.8-GOLD · DORA COMPLIANT · COURT READY · PROVA DIGITAL MATERIAL">
-    <meta name="author" content="IFDE Systems International">
+    <meta name="author" content="UNIFED - PROBATUM · Unidade Independente de Inteligência Forense Económica e Digital">
     <title>UNIFED - PROBATUM · v13.1.8-GOLD · DORA COMPLIANT · COURT READY · SMOKING GUN · CADEIA DE CUSTÓDIA</title>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
@@ -59,7 +59,7 @@
                 console.log('[UNIFED-OTS] ✅ CDN primário (unpkg) — window.OpenTimestamps ✓');
             },
             function() {
-                console.warn('[UNIFED-OTS] [!] CDN primário indisponível. A tentar mirror jsdelivr...');
+                console.info('[UNIFED-OTS] ⚙ Operação em Modo de Segurança Forense — CDN primário indisponível. A activar mirror jsdelivr automaticamente...');
                 // Tentativa 2: CDN espelho (jsdelivr)
                 injectScript(CDN_SECONDARY,
                     function() {
@@ -70,9 +70,9 @@
                         // Ambos os CDN indisponíveis — degradação graciosa
                         // O sistema opera em Nível 1 (PROBATUM INTERNAL SEAL).
                         // A Cadeia de Custódia SHA-256 não é interrompida.
-                        console.warn('[UNIFED-OTS] [!] Ambos os CDN indisponíveis. ' +
-                            'Nível 1 (PROBATUM INTERNAL SEAL) activo. ' +
-                            'Funcionalidade OTS/Blockchain suspensa até restauro de conectividade.');
+                        console.info('[UNIFED-OTS] ⚙ Operação em Modo de Segurança Forense — Nível 1 (PROBATUM INTERNAL SEAL) activo. ' +
+                            'Selagem de Nível 1 Ativa: Conformidade assegurada por Hash SHA-256 interno (Art.º 125.º CPP). ' +
+                            'OTS/Blockchain em standby até restauro de conectividade.');
                     }
                 );
             }

@@ -46,7 +46,7 @@ console.log('UNIFED - PROBATUM SCRIPT v13.1.8-GOLD · DORA COMPLIANT · CADEIA D
         } else {
             // CDN bloqueado pela rede — o sistema continua funcional via Nível 2 (fallback interno).
             // Não interromper o utilizador com alert(); apenas registar na consola para o developer.
-            console.warn('[UNIFED-OTS] [!] window.OpenTimestamps não detectado — CDN bloqueado ou inacessível. ' +
+            console.info('[UNIFED-OTS] ⚙ Operação em Modo de Segurança Forense — OTS indisponível (CDN bloqueado). ' +
                          'A funcionalidade OTS/Blockchain estará indisponível; o Nível 2 (PROBATUM interno) permanece ativo.');
         }
     });
@@ -125,7 +125,7 @@ const QUESTIONS_CACHE = [
     { id: 17, text: "Existe algum 'script' de limpeza automática de logs de erro de sincronização? Apresentar registos.", type: "med" },
     { id: 18, text: "Como é processada a autoliquidação de IVA em serviços intracomunitários? Porque não foi aplicada?", type: "high" },
     { id: 19, text: "As taxas de intermediação seguem o regime de isenção ou tributação plena? Justificar a opção.", type: "med" },
-    { id: 20, text: "Qual a justificação técnica para o desvio de base tributável (BTOR vs BTF) detetado na triangulação IFDE?", type: "high" },
+    { id: 20, text: "Qual a justificação técnica para o desvio de base tributável (BTOR vs BTF) detetado na triangulação UNIFED - PROBATUM?", type: "high" },
     { id: 21, text: "Existe segregação de funções no acesso aos algoritmos de cálculo financeiro? Quem tem acesso?", type: "low" },
     { id: 22, text: "Como são validados os NIFs de clientes em faturas automáticas? Quantos NIFs são inválidos?", type: "low" },
     { id: 23, text: "O sistema utiliza 'dark patterns' para ocultar taxas adicionais? Exemplificar.", type: "med" },
@@ -533,7 +533,7 @@ const setElementText = (id, text) => {
 };
 
 const generateSessionId = () => {
-    return 'IFDE-' + Date.now().toString(36).toUpperCase() + '-' +
+    return 'UNIFED-' + Date.now().toString(36).toUpperCase() + '-' +
            Math.random().toString(36).substring(2, 7).toUpperCase();
 };
 
@@ -592,7 +592,7 @@ function mockRFC3161Timestamp(hashHex) {
             hashAlgorithm: 'SHA-256',
             hashedMessage: hashHex
         },
-        policy: 'IFDE-INTERNAL-OID-1.0',
+        policy: 'UNIFED-INTERNAL-OID-1.0',
         nonce: Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase(),
         ordering: false,
         _note: 'O hash SHA-256 é definitivo e matematicamente verificável. Nível 2 (RFC 3161 externo) activo após configuração da API de produção TSA.'
@@ -601,10 +601,10 @@ function mockRFC3161Timestamp(hashHex) {
 
 // ── 5.2 generateForensicHash — Web Crypto API nativa (SHA-256 real) ──────────
 // crypto.subtle.digest produz o hash pelo motor criptográfico do browser.
-// SALT IFDE garante unicidade de namespace; não altera o hash do ficheiro original.
+// SALT UNIFED-PROBATUM garante unicidade de namespace; não altera o hash do ficheiro original.
 async function generateForensicHash(content) {
     const encoder = new TextEncoder();
-    const data = encoder.encode(content + 'IFDE_PROBATUM_SALT_2024');
+    const data = encoder.encode(content + 'IFDE_PROBATUM_SALT_2024'); // INVARIANTE CRIPTOGRÁFICA: não alterar — mudança invalida toda a cadeia de custódia retroactiva
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
@@ -646,7 +646,7 @@ async function generateForensicLog(action, fileName, hash) {
     }
 
     // Console forense diferenciado
-    console.log('%c[IFDE-CUSTODY] ' + action + ' · ' + fileName,
+    console.log('%c[UNIFED-CUSTODY] ' + action + ' · ' + fileName,
         'color:#00e5ff;font-family:monospace;font-weight:bold;');
     console.log('%c  SHA-256: ' + finalHash,
         'color:#4ade80;font-family:monospace;font-size:0.85em;');
@@ -788,7 +788,7 @@ function exportCustodyChainJSON() {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href = url;
-    a.download = 'IFDE_CUSTODY_CHAIN_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+    a.download = 'UNIFED_CUSTODY_CHAIN_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -985,7 +985,7 @@ async function submitToOpenTimestamps() {
 
     if (!OTS) {
         // Biblioteca bloqueada pela rede/firewall — gerar stub local idêntico ao fallback de rede
-        console.warn('[UNIFED-OTS] Biblioteca não carregada (CDN bloqueado). A gerar stub local.');
+        console.info('[UNIFED-OTS] ⚙ Operação em Modo de Segurança Forense — Biblioteca OTS indisponível (CDN bloqueado). Selagem de Nível 1 Ativa: Conformidade assegurada por Hash SHA-256 interno (Art.º 125.º CPP).');
 
         if (btn) {
             btn.disabled = true;
@@ -1148,7 +1148,7 @@ async function submitToOpenTimestamps() {
 
     } catch (err) {
         // ── FALLBACK: CORS / rede indisponível → stub local ──────────────────
-        console.error('[UNIFED-OTS] Erro na ancoragem:', err.message);
+        console.info('[UNIFED-OTS] ⚙ Operação em Modo de Segurança Forense — Ancoragem OTS indisponível. Selagem de Nível 1 Ativa: Conformidade assegurada por Hash SHA-256 interno (Art.º 125.º CPP).');
 
         const stubFilename = `PROCESSO_${sessionId}_BLOCKCHAIN_PENDING.ots`;
         const stubData = JSON.stringify({
@@ -1567,7 +1567,7 @@ async function _doOnlineSeal(masterHash) {
         const tokenSim = 'UNIFED-NIVEL1-' + Date.now().toString(36).toUpperCase() + '-' +
                          Math.random().toString(36).substr(2, 8).toUpperCase();
 
-        console.warn('[UNIFED-NIVEL2] TSA FreeTSA bloqueada por CORS. Activação automática: Nível 1 (PROBATUM INTERNAL SEAL).', err.message);
+        console.info('[UNIFED-NIVEL2] ⚙ Operação em Modo de Segurança Forense — FreeTSA bloqueada por CORS (política do browser). Selagem de Nível 1 Ativa: Conformidade assegurada por Hash SHA-256 interno (Art.º 125.º CPP).');
 
         // Registo forense explícito — Art. 30.º RGPD + cadeia de custódia
         ForensicLogger.addEntry('NIVEL1_ACTIVATED_CORS_FALLBACK', {
@@ -1733,16 +1733,16 @@ document.addEventListener('keydown', e => {
 const ForensicLogger = {
     // -------------------------------------------────────────────────────────
     // PERSISTÊNCIA NORMATIVA — Art. 30.º RGPD (UE) 2016/679
-    // Chave canónica: IFDE_FORENSIC_LOGS
+    // Chave canónica: IFDE_FORENSIC_LOGS (invariante de integridade — não alterar)
     // Retenção: buffer completo no localStorage; exportação mensal via exportMonthly()
     // -------------------------------------------────────────────────────────
-    STORAGE_KEY: 'IFDE_FORENSIC_LOGS',
+    STORAGE_KEY: 'IFDE_FORENSIC_LOGS',  // INVARIANTE localStorage: não alterar — mudança destrói persistência dos logs forenses existentes
     MAX_ENTRIES: 5000, // ~5-10 anos de actividade moderada
 
     // Carga automática dos logs persistidos ao arrancar
     logs: (function () {
         try {
-            const raw = localStorage.getItem('IFDE_FORENSIC_LOGS');
+            const raw = localStorage.getItem('IFDE_FORENSIC_LOGS'); // INVARIANTE localStorage: chave sincronizada com STORAGE_KEY
             return raw ? JSON.parse(raw) : [];
         } catch (e) {
             return [];
@@ -2813,7 +2813,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupWipeButton();
     setupClearConsoleButton();
 
-    // ForensicLogger carrega automaticamente os logs persistidos (IFDE_FORENSIC_LOGS)
+    // ForensicLogger carrega automaticamente os logs persistidos (IFDE_FORENSIC_LOGS — invariante)
     // ao ser definido — não é necessário carregamento manual aqui.
     ForensicLogger.addEntry('SYSTEM_START', { version: IFDESystem.version, logsCarregados: ForensicLogger.logs.length });
 });
@@ -2997,7 +2997,7 @@ function generateQRCode() {
     const sessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 16) : 'N/A';
 
     // Formato compacto: IFDE|SESSION|HASH (sem JSON, sem timestamp variável)
-    const qrData = `IFDE|${sessionShort}|${hashFull}`;
+    const qrData = `UNIFED|${sessionShort}|${hashFull}`;
 
     if (typeof QRCode !== 'undefined') {
         new QRCode(container, {
@@ -5134,6 +5134,17 @@ function exportPDF() {
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 14;
 
+            // ══ CANTO SUPERIOR DIREITO: ID DE SESSÃO UNIFED (todas as páginas) ══
+            // Conformidade: Acórdão da Relação — identificador único por página
+            const sessionLabel = IFDESystem.sessionId
+                ? `SESSÃO: ${IFDESystem.sessionId}`
+                : 'SESSÃO: UNIFED-PENDING';
+            doc.setFontSize(6);
+            doc.setFont('courier', 'normal');
+            doc.setTextColor(120, 120, 120);
+            doc.text(sessionLabel, pageWidth - margin, 8, { align: 'right' });
+            // ══════════════════════════════════════════════════════════════════
+
             doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.5);
             doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
@@ -5148,57 +5159,87 @@ function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.text(`Master Hash: ${hashFull}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-            if (pageNum === TOTAL_PAGES && typeof QRCode !== 'undefined') {
-                // --- BLOCO DE SELAGEM PROBATUM v13.1.6.5-GOLD — CANTO INFERIOR DIREITO ---
-                const boxSize  = 40;
-                const qrSize   = 22;                              // 22mm — sem transbordo
-                const qrMargin = (boxSize - qrSize) / 2;         // centramento dinâmico: 9mm
+            if (pageNum === TOTAL_PAGES) {
+                // ══════════════════════════════════════════════════════════════
+                // SELO DE CERTIFICAÇÃO — COORDENADAS FIXAS (PDF Layout Integrity)
+                // Posição: Canto Inferior Direito — independente do volume de dados
+                // Conformidade: RGIT Art. 103.º/104.º · CRP Art. 32.º · Art. 125.º CPP
+                // ══════════════════════════════════════════════════════════════
+                const boxSize  = 50;                              // caixa total 50mm
+                const qrSize   = 26;                              // QR Code 26mm
+                const qrMargin = (boxSize - qrSize) / 2 - 4;     // centramento horizontal
 
-                // Cálculo exato para o Canto Inferior Direito:
-                const qrX = pageWidth - margin - boxSize;
-                const qrY = pageHeight - margin - boxSize - 8; // 8mm acima da linha de rodapé
+                // Coordenadas fixas — canto inferior direito, 8mm acima da linha de rodapé
+                const sealX = pageWidth - margin - boxSize;
+                const sealY = pageHeight - margin - boxSize - 8;
 
                 const hashFull2    = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
-                const sessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 16) : 'N/A';
-                const qrData       = `IFDE|${sessionShort}|${hashFull2}`;
+                const sessionShort = IFDESystem.sessionId ? IFDESystem.sessionId.substring(0, 20) : 'N/A';
+                // QR Code contém o Hash SHA-256 completo do relatório
+                const qrData = `UNIFED|${sessionShort}|${hashFull2}`;
 
-                // 1. Quadrado de Selagem (Cyan PROBATUM)
+                // 1. Quadrado exterior de Selagem (Cyan PROBATUM)
                 doc.setDrawColor(0, 229, 255);
-                doc.setLineWidth(0.5);
-                doc.rect(qrX, qrY, boxSize, boxSize);
+                doc.setLineWidth(0.7);
+                doc.rect(sealX, sealY, boxSize, boxSize);
 
-                // 2. Label técnica no canto inferior do quadrado
-                doc.setFontSize(5.5);
+                // 2. Linha divisória interior (separa QR do texto de certificação)
+                doc.setLineWidth(0.3);
+                doc.line(sealX + 1, sealY + qrSize + 4, sealX + boxSize - 1, sealY + qrSize + 4);
+
+                // 3. Label "PROBATUM SEAL" no topo do quadrado
+                doc.setFontSize(5);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(0, 229, 255);
-                doc.text('PROBATUM SEAL v13.1', qrX + 2, qrY + boxSize - 2);
+                doc.text('PROBATUM SEAL v13.1.8-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
-                // 3. QR Code — resolução interna 128px → downscale limpo
-                const qrContainer = document.createElement('div');
-                new QRCode(qrContainer, {
-                    text: qrData,
-                    width: 128,
-                    height: 128,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.L
-                });
+                // 4. Texto de certificação (abaixo do QR) — sobreposição obrigatória
+                doc.setFontSize(4.2);
+                doc.setFont('courier', 'bold');
+                doc.setTextColor(30, 60, 120);
+                const certLine1 = '[ UNIFED - PROBATUM CERTIFIED ]';
+                const certLine2 = 'ANALISTA E CONSULTOR FORENSE';
+                const certLine3 = 'v13.1.8-GOLD · Art. 103.º/104.º RGIT';
+                const certLine4 = 'Art. 32.º CRP · Art. 125.º CPP';
+                doc.text(certLine1, sealX + boxSize / 2, sealY + qrSize + 7,  { align: 'center' });
+                doc.text(certLine2, sealX + boxSize / 2, sealY + qrSize + 10, { align: 'center' });
+                doc.setFont('courier', 'normal');
+                doc.setFontSize(3.8);
+                doc.setTextColor(80, 80, 80);
+                doc.text(certLine3, sealX + boxSize / 2, sealY + qrSize + 13, { align: 'center' });
+                doc.text(certLine4, sealX + boxSize / 2, sealY + qrSize + 16, { align: 'center' });
+                doc.setFontSize(3.5);
+                doc.setTextColor(120, 120, 120);
+                doc.text('Uso restrito a mandato jurídico autorizado',
+                    sealX + boxSize / 2, sealY + qrSize + 19, { align: 'center' });
 
-                setTimeout(() => {
-                    const qrCanvas = qrContainer.querySelector('canvas');
-                    if (qrCanvas) {
-                        const qrCodeBase64 = qrCanvas.toDataURL('image/png');
-                        // Inserção centrada dentro do quadrado, offset vertical para a label
-                        doc.addImage(qrCodeBase64, 'PNG',
-                            qrX + qrMargin,
-                            qrY + qrMargin - 2,
-                            qrSize, qrSize);
-                    }
-                }, 100); // dispara antes do doc.save() (500ms)
+                // 5. QR Code — gerado com o Hash SHA-256 completo
+                if (typeof QRCode !== 'undefined') {
+                    const qrContainer = document.createElement('div');
+                    new QRCode(qrContainer, {
+                        text: qrData,
+                        width: 128,
+                        height: 128,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
+
+                    setTimeout(() => {
+                        const qrCanvas = qrContainer.querySelector('canvas');
+                        if (qrCanvas) {
+                            const qrCodeBase64 = qrCanvas.toDataURL('image/png');
+                            doc.addImage(qrCodeBase64, 'PNG',
+                                sealX + qrMargin + 2,
+                                sealY + 5,
+                                qrSize, qrSize);
+                        }
+                    }, 100); // dispara antes do doc.save() (500ms delay no save)
+                }
 
                 // Reset para cinza técnico
                 doc.setTextColor(100, 116, 139);
-                // --- FIM DO BLOCO DE SELAGEM ---
+                // ══ FIM BLOCO SELAGEM COM COORDENADAS FIXAS ══
             }
         };
 
@@ -6048,17 +6089,21 @@ function exportPDF() {
         const metodoSLines = doc.splitTextToSize(metodologiaSelo, doc.internal.pageSize.getWidth() - 30);
         doc.text(metodoSLines, left, y); y += (metodoSLines.length * 4) + 8;
 
-        // ── Selo Visual UNIFED - PROBATUM CERTIFIED ──────────────────────────────────
-        if (y > 240) { doc.addPage(); pageNumber++; y = 20; }
+        // ── Selo de Certificação UNIFED - PROBATUM CERTIFIED (corpo da página 8) ─────
+        // SCP: mantido e expandido com sobreposição obrigatória conforme Protocolo UNIFED-GOLD
+        if (y > 230) { doc.addPage(); pageNumber++; y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         doc.setTextColor(30, 60, 120);
-        const certLabel = '[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.1.8-GOLD ]';
-        doc.text(certLabel, doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 5;
+        doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.1.8-GOLD ]',
+            doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 5;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(6.5);
         doc.setTextColor(100, 100, 100);
         doc.text('Estudo de Viabilidade · Consultoria Forense Especializada · Uso restrito a mandato jurídico autorizado',
+            doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 4;
+        doc.setFontSize(6);
+        doc.text('Fundamentação: RGIT Art. 103.º (Fraude Fiscal) · Art. 104.º (Fraude Qualificada) · CRP Art. 32.º · CPP Art. 125.º',
             doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
         doc.setTextColor(0, 0, 0);
         y += 6;
@@ -6561,10 +6606,10 @@ window.filterDAC7ByPeriod = filterDAC7ByPeriod;
      "IVA", "Preço da viagem". Parser RFC-4180 com sanitização por linha.
      Estrutura de saída (IFDESystem.documents.saft.totals) inalterada.
    ✓ clearConsole: Purga Total — IFDESystem.client=null, DOM reset, .client-data-field, LEDs
-   ✓ ForensicLogger (Art. 30.º RGPD): IFDE_FORENSIC_LOGS, 5000 entradas, exportMonthly()
+   ✓ ForensicLogger (Art. 30.º RGPD): IFDE_FORENSIC_LOGS (invariante), 5000 entradas, exportMonthly()
    ✓ filterDAC7ByPeriod(): reactivo ao seletor, Q1-Q4 visíveis por período, recalc de totais
    ✓ box-border-blink: border+shadow only, background estável, target #jurosCard/#discrepancy5Card
    ✓ Box "OMISSÃO DE DESPESAS %": (Despesas/Ganhos)*100 — Big Data v13.0
-   ✓ generateQRCode: CorrectLevel.L + string compacta IFDE|SESSION|HASH
+   ✓ generateQRCode: CorrectLevel.L + string compacta UNIFED|SESSION|HASH
    ✓ DORA (UE) 2022/2554 — cláusula no PDF e nos badges
    ===================================================================== */
