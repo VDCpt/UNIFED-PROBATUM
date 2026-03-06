@@ -5093,41 +5093,36 @@ async function exportPDF() {
         const left = 14;
 
         // ══════════════════════════════════════════════════════════════════════
-        // UNIFED - PROBATUM v13.1.8-GOLD — SELAGEM DE VALORES AUDITADOS (VERDADE MATERIAL)
-        // Protocolo: UNIFED - PROBATUM PLATINUM — Retificação Forense Certificada
-        // Estes valores resultam da auditoría cruzada Set-Dez e são imutáveis.
+        // UNIFED - PROBATUM v13.1.8-GOLD — VALORES DINÂMICOS DO DASHBOARD
+        // Protocolo: UNIFED-GOLD — Ligação às variáveis globais do motor forense.
+        // Substituição de valores hardcoded por referências às variáveis de estado
+        // calculadas em performForensicCrossings() — Verdade Material Dinâmica.
+        // O masterHash é o valor real calculado pelo motor SHA-256 (não substituído).
         // ══════════════════════════════════════════════════════════════════════
-        const AUDITADOS = {
-            ganhosBrutos:              10157.73,  // Soma real Set-Dez (Extrato)
-            ganhosDac7:                 7755.16,  // Reporte DAC7 declarado pela Bolt
-            comissoesRetidas:           2447.89,  // Soma deduções reais (Extrato)
-            comissoesFaturadas:          262.94,  // Soma faturas PT1124 + PT1125
-            omissaoReceita:             2402.57,  // Ganhos Brutos - DAC7
-            omissaoCustos:              2184.95,  // Comissões Retidas - Faturadas
-            percentagemOmissaoCustos:     89.26,  // 2184.95 / 2447.89 × 100
-            ivaFalta23:                  502.54,  // IVA 23% sobre omissão custos
-            ivaFalta6:                   131.10,  // IVA 6% sobre transporte
-            impactoMercado7Anos: 1162393400.00,  // Projeção 7 anos (mercado português (PT))
-            masterHashFixo: '77fad284e8358e8eafcac2d1c3c700ffb6d718789693f4bc9dfc195b118795d0'
-        };
 
-        // Fixar Master Hash de Cadeia de Custódia com valor auditado
-        IFDESystem.masterHash = AUDITADOS.masterHashFixo;
-        if (typeof setElementText === 'function') {
-            setElementText('masterHashValue', IFDESystem.masterHash);
-        }
+        // ── Cálculo dinâmico da percentagem de omissão (evita divisão por zero) ──
+        const _pctOmissao    = cross.percentagemOmissao || 0;
+        const _pctOmissaoStr = _pctOmissao.toFixed(2) + '%';
 
-        // Forçar veredicto RISCO CRÍTICO independentemente dos dados carregados
-        const verdictForced = {
-            level:       { pt: 'RISCO CRÍTICO · INFRAÇÃO DETETADA', en: 'CRITICAL RISK · INFRACTION DETECTED' },
-            key:         'critical',
-            color:       '#ef4444',
-            description: {
-                pt: 'Evidência de subcomunicação de proveitos (DAC7 − 2.402,57 €) e omissão grave de faturação de custos (89,26%). A plataforma retém comissões sem a devida titulação fiscal, prejudicando o direito à dedução de IVA e inflacionando a base de IRC do contribuinte.',
-                en: 'Evidence of income under-reporting (DAC7 − €2,402.57) and serious cost invoicing omission (89.26%). The platform retains commissions without proper tax documentation, prejudicing VAT deduction rights and inflating the taxpayer\'s IRC base.'
-            },
-            percent: '89.26%'
-        };
+        // ── Cálculo dinâmico da percentagem de omissão de receita (Ganhos vs DAC7) ──
+        const _pctReceita    = totals.ganhos > 0
+            ? ((cross.discrepanciaSaftVsDac7 / totals.ganhos) * 100)
+            : 0;
+        const _pctReceitaStr = _pctReceita.toFixed(2) + '%';
+
+        // ── Impacto macroeconómico: usa cross.impactoSeteAnosMercado se calculado,
+        //    caso contrário recalcula com os dados actuais da sessão ──
+        const _impactoMercado7Anos = (cross.impactoSeteAnosMercado && cross.impactoSeteAnosMercado > 0)
+            ? cross.impactoSeteAnosMercado
+            : forensicRound(cross.discrepanciaCritica * 12 * 38000 * 7);
+
+        // ── Dados auxiliares (Lei TVDE — fluxos não sujeitos a comissão) ──
+        const _aux        = IFDESystem.auxiliaryData;
+        const _auxTotalNS = _aux ? _aux.totalNaoSujeitos : 0;
+
+        // ── Veredicto dinâmico: usa o veredicto calculado pelo motor forense ──
+        // (já definido acima como `verdict` a partir de IFDESystem.analysis.verdict)
+        // Não é forçado um nível específico — o motor decide com base nos dados reais.
 
         // ══════════════════════════════════════════════════════════════════════
         // UNIFED - PROBATUM v13.1.8-GOLD — MARCA DE ÁGUA DIAGONAL
@@ -5417,15 +5412,15 @@ async function exportPDF() {
 
         // ── VALORES AUDITADOS SELADOS — VERDADE MATERIAL v13.1.6-GOLD ──
         const rows = [
-            { desc: 'Gross Earnings / Ganhos Brutos (Auditado · Set-Dez)',    value: AUDITADOS.ganhosBrutos,        source: 'Plataforma Digital',  isBruto: true },
-            { desc: 'Reported Earnings / Ganhos Reportados (DAC7 · Plataforma Digital)',      value: AUDITADOS.ganhosDac7,          source: 'Plataforma (DAC7)' },
-            { desc: 'Retained Commissions / Comissões Retidas (Extrato)',    value: AUDITADOS.comissoesRetidas,    source: 'Plataforma Digital',  isGap: true },
-            { desc: 'Invoiced Commissions / Comissões Faturadas (PT1124+PT1125)',     value: AUDITADOS.comissoesFaturadas,  source: 'Faturas BTF' },
+            { desc: 'Gross Earnings / Ganhos Brutos (Auditado · Set-Dez)',    value: totals.ganhos,        source: 'Plataforma Digital',  isBruto: true },
+            { desc: 'Reported Earnings / Ganhos Reportados (DAC7 · Plataforma Digital)',      value: totals.dac7TotalPeriodo,          source: 'Plataforma (DAC7)' },
+            { desc: 'Retained Commissions / Comissões Retidas (Extrato)',    value: totals.despesas,    source: 'Plataforma Digital',  isGap: true },
+            { desc: 'Invoiced Commissions / Comissões Faturadas (PT1124+PT1125)',     value: totals.faturaPlataforma,  source: 'Faturas BTF' },
             { desc: '-------------------------------------------',  value: null,                          source: '' },
-            { desc: '[!] Revenue Omission / Omissão Receita — Brutos vs DAC7',     value: AUDITADOS.omissaoReceita,      source: 'Smoking Gun 1', isGap: true },
-            { desc: '[X] Expense Omission / Omissão Custos — Retenção vs Fatura [89.26%]', value: AUDITADOS.omissaoCustos,       source: 'Smoking Gun 2', isCritical: true },
-            { desc: 'IVA Omitido (23% · Autoliquidação CIVA)',         value: AUDITADOS.ivaFalta23,          source: 'Cálculo CIVA',  isGap: true },
-            { desc: 'IVA Omitido (6% · Serviços Transporte)',          value: AUDITADOS.ivaFalta6,           source: 'Cálculo CIVA',  isGap: true }
+            { desc: '[!] Revenue Omission / Omissão Receita — Brutos vs DAC7',     value: cross.discrepanciaSaftVsDac7,      source: 'Smoking Gun 1', isGap: true },
+            { desc: '[X] Expense Omission / Omissão Custos — Retenção vs Fatura [89.26%]', value: cross.discrepanciaCritica,       source: 'Smoking Gun 2', isCritical: true },
+            { desc: 'IVA Omitido (23% · Autoliquidação CIVA)',         value: cross.ivaFalta,          source: 'Cálculo CIVA',  isGap: true },
+            { desc: 'IVA Omitido (6% · Serviços Transporte)',          value: cross.ivaFalta6,           source: 'Cálculo CIVA',  isGap: true }
         ];
 
         rows.forEach(row => {
@@ -5470,7 +5465,7 @@ async function exportPDF() {
         y += 5;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(239, 68, 68);
-        doc.text(`[!] Percentagem Omissão Custos (Retenção vs Fatura): ${AUDITADOS.percentagemOmissaoCustos.toFixed(2)}%`, left, y);
+        doc.text(`[!] Percentagem Omissão Custos (Retenção vs Fatura): ${_pctOmissao.toFixed(2)}%`, left, y);
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7.5);
         doc.text('Nota Pericial: 89,26% de omissão é estatisticamente impossível de ser erro administrativo.', left + 5, y + 4);
@@ -5478,9 +5473,9 @@ async function exportPDF() {
         doc.setFontSize(8);
         doc.setTextColor(0, 0, 0);
         y += 12;
-        doc.text(`Omissão de Receita (Bruto vs DAC7): ${AUDITADOS.omissaoReceita.toFixed(2)} €`, left, y);
+        doc.text(`Omissão de Receita (Bruto vs DAC7): ${cross.discrepanciaSaftVsDac7.toFixed(2)} €`, left, y);
         y += 4;
-        doc.text(`Omissão de Custos (Retenção vs Fatura): ${AUDITADOS.omissaoCustos.toFixed(2)} €`, left, y);
+        doc.text(`Omissão de Custos (Retenção vs Fatura): ${cross.discrepanciaCritica.toFixed(2)} €`, left, y);
         y += 10;
 
         // 3. VEREDICTO DE RISCO (RGIT) — FORÇADO PELO PROTOCOLO v13.1.6-GOLD
@@ -5495,7 +5490,7 @@ async function exportPDF() {
 
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        const vTitleLines = doc.splitTextToSize(`[!!] ${verdictForced.level[currentLang]}`, usableW - 6);
+        const vTitleLines = doc.splitTextToSize(`[!!] ${verdict.level[currentLang]}`, usableW - 6);
         const vBoxH = (vTitleLines.length * 6) + 6;
         doc.setFillColor(239, 68, 68);
         doc.rect(left, y - 5, usableW, vBoxH, 'F');
@@ -5508,17 +5503,17 @@ async function exportPDF() {
         doc.setFont('helvetica', 'bold');
         // Sub-label: split into two lines to prevent overflow
         const vLine1 = doc.splitTextToSize(
-            `Expense Omission / Omissao Custos: ${verdictForced.percent}  |  Gross Earnings: ${formatCurrency(AUDITADOS.ganhosBrutos)}`,
+            `Expense Omission / Omissao Custos: ${_pctOmissaoStr}  |  Gross Earnings: ${formatCurrency(totals.ganhos)}`,
             usableW);
         const vLine2 = doc.splitTextToSize(
-            `Revenue Gap (DAC7): ${formatCurrency(AUDITADOS.omissaoReceita)} (23.65%)`,
+            `Revenue Gap (DAC7): ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`,
             usableW);
         doc.text(vLine1, left, y); y += (vLine1.length * 4.5);
         doc.text(vLine2, left, y); y += (vLine2.length * 4.5) + 4;
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        const verdictDescLines = doc.splitTextToSize(verdictForced.description[currentLang], usableW);
+        const verdictDescLines = doc.splitTextToSize(verdict.description[currentLang], usableW);
         doc.text(verdictDescLines, left, y); y += (verdictDescLines.length * 4.5) + 8;
 
         // 4. PROVA RAINHA (SMOKING GUN) — VALORES AUDITADOS v13.1.6-GOLD
@@ -5540,26 +5535,26 @@ async function exportPDF() {
         doc.setFont('helvetica', 'bold');
         doc.text('SMOKING GUN 1 — Revenue Omission / Omissão de Receita (DAC7):', left, y); y += 5;
         doc.setFont('helvetica', 'normal');
-        doc.text(`  Ganhos Brutos (Auditado):          ${formatCurrency(AUDITADOS.ganhosBrutos)}`, left, y); y += 4;
-        doc.text(`  Ganhos Reportados (DAC7):          ${formatCurrency(AUDITADOS.ganhosDac7)}`, left, y); y += 4;
+        doc.text(`  Ganhos Brutos (Auditado):          ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
+        doc.text(`  Ganhos Reportados (DAC7):          ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(245, 158, 11);
-        doc.text(`  [!]  DIFERENÇA OMITIDA (AT):         ${formatCurrency(AUDITADOS.omissaoReceita)}`, left, y); y += 7;
+        doc.text(`  [!]  DIFERENÇA OMITIDA (AT):         ${formatCurrency(cross.discrepanciaSaftVsDac7)}`, left, y); y += 7;
 
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'bold');
         doc.text('SMOKING GUN 2 — Expense Omission / Omissão de Custos (Faturação BTF):', left, y); y += 5;
         doc.setFont('helvetica', 'normal');
-        doc.text(`  Comissões Retidas (Extrato):       ${formatCurrency(AUDITADOS.comissoesRetidas)}`, left, y); y += 4;
-        doc.text(`  Comissões Faturadas (BTF):         ${formatCurrency(AUDITADOS.comissoesFaturadas)}`, left, y); y += 4;
+        doc.text(`  Comissões Retidas (Extrato):       ${formatCurrency(totals.despesas)}`, left, y); y += 4;
+        doc.text(`  Comissões Faturadas (BTF):         ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(239, 68, 68);
-        doc.text(`  [X] OMISSÃO DE FATURAÇÃO:            ${formatCurrency(AUDITADOS.omissaoCustos)} (89,26%)`, left, y); y += 7;
+        doc.text(`  [X] OMISSÃO DE FATURAÇÃO:            ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 7;
 
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
-        doc.text(`IVA Omitido (23%):  ${formatCurrency(AUDITADOS.ivaFalta23)}`, left, y); y += 4;
-        doc.text(`IVA Omitido (6%):   ${formatCurrency(AUDITADOS.ivaFalta6)}`, left, y);
+        doc.text(`IVA Omitido (23%):  ${formatCurrency(cross.ivaFalta)}`, left, y); y += 4;
+        doc.text(`IVA Omitido (6%):   ${formatCurrency(cross.ivaFalta6)}`, left, y);
 
         addFooter(doc, pageNumber);
 
@@ -5666,9 +5661,9 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.text(`I. ANÁLISE PERICIAL (${periodoTexto}):`, left, y); y += 5;
         doc.text(currentLang === 'pt' ? 'Duas discrepâncias fundamentais detetadas (Verdade Material Auditada):' : 'Two fundamental critical divergences detected (Audited Material Truth):', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 5;
-        const anal1 = doc.splitTextToSize(`1. ${currentLang === 'pt' ? 'Omissão de Custos (Expense Omission)' : 'Expense Omission'}: ${formatCurrency(AUDITADOS.omissaoCustos)} (${AUDITADOS.percentagemOmissaoCustos.toFixed(2)}%) [Smoking Gun 2]`, doc.internal.pageSize.getWidth() - 30);
+        const anal1 = doc.splitTextToSize(`1. ${currentLang === 'pt' ? 'Omissão de Custos (Expense Omission)' : 'Expense Omission'}: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissao.toFixed(2)}%) [Smoking Gun 2]`, doc.internal.pageSize.getWidth() - 30);
         doc.text(anal1, left, y); y += (anal1.length * 4) + 2;
-        const anal2 = doc.splitTextToSize(`2. ${currentLang === 'pt' ? 'Omissão de Receita / Revenue Omission (DAC7)' : 'Revenue Omission (DAC7)'}: ${formatCurrency(AUDITADOS.omissaoReceita)} (23.65%) [Smoking Gun 1]`, doc.internal.pageSize.getWidth() - 30);
+        const anal2 = doc.splitTextToSize(`2. ${currentLang === 'pt' ? 'Omissão de Receita / Revenue Omission (DAC7)' : 'Revenue Omission (DAC7)'}: ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr}) [Smoking Gun 1]`, doc.internal.pageSize.getWidth() - 30);
         doc.text(anal2, left, y); y += (anal2.length * 4) + 4;
 
         // 9. FACTOS CONSTATADOS
@@ -5680,18 +5675,18 @@ async function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text(`II. MATERIAL FACTS / FACTOS CONSTATADOS (Verdade Material / Material Truth):`, left, y); y += 5;
-        doc.text(`Gross Earnings / Ganhos Brutos (Auditado · Set-Dez):   ${formatCurrency(AUDITADOS.ganhosBrutos)}`, left, y); y += 4;
-        doc.text(`Retained Commissions / Comissões Retidas (Extrato):    ${formatCurrency(AUDITADOS.comissoesRetidas)}`, left, y); y += 4;
-        doc.text(`Invoiced Commissions / Comissões Faturadas (BTF):      ${formatCurrency(AUDITADOS.comissoesFaturadas)}`, left, y); y += 4;
+        doc.text(`Gross Earnings / Ganhos Brutos (Auditado · Set-Dez):   ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
+        doc.text(`Retained Commissions / Comissões Retidas (Extrato):    ${formatCurrency(totals.despesas)}`, left, y); y += 4;
+        doc.text(`Invoiced Commissions / Comissões Faturadas (BTF):      ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(239, 68, 68);
-        doc.text(`Expense Omission / Omissão de Custos [SG-2]:           ${formatCurrency(AUDITADOS.omissaoCustos)} (89.26%)`, left, y); y += 6;
+        doc.text(`Expense Omission / Omissão de Custos [SG-2]:           ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
         doc.text(`III. REVENUE vs DAC7 / RECEITA vs REPORTE DAC7 (Smoking Gun 1):`, left, y); y += 5;
-        doc.text(`Gross Earnings / Ganhos Brutos (Set-Dez Auditado):     ${formatCurrency(AUDITADOS.ganhosBrutos)}`, left, y); y += 4;
-        doc.text(`Reporte DAC7 (Plataforma Digital · AT):       ${formatCurrency(AUDITADOS.ganhosDac7)}`, left, y); y += 4;
+        doc.text(`Gross Earnings / Ganhos Brutos (Set-Dez Auditado):     ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
+        doc.text(`Reporte DAC7 (Plataforma Digital · AT):       ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 158, 11);
-        doc.text(`Revenue Omission (DAC7·AT) / Omissão Receita:          ${formatCurrency(AUDITADOS.omissaoReceita)} (23.65%)`, left, y); y += 6;
+        doc.text(`Revenue Omission (DAC7·AT) / Omissão Receita:          ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
         // 10. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO
@@ -5702,15 +5697,15 @@ async function exportPDF() {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`VAT 23% / IVA Omitido (23% Autoliquidacao CIVA):  ${formatCurrency(AUDITADOS.ivaFalta23)}`, left, y); y += 4;
-        doc.text(`VAT 6% / IVA Omitido (6% Transporte):             ${formatCurrency(AUDITADOS.ivaFalta6)}`, left, y); y += 4;
-        doc.text(`Revenue Omission (DAC7) / Omissao Receita:        ${formatCurrency(AUDITADOS.omissaoReceita)} (23.65%)`, left, y); y += 4;
-        doc.text(`Expense Omission / Omissao Custos:                ${formatCurrency(AUDITADOS.omissaoCustos)} (89.26%)`, left, y); y += 4;
-        doc.text(`Annual Omitted Base / Projecao Anual:             ${formatCurrency(AUDITADOS.omissaoCustos * 12)}`, left, y); y += 4;
-        doc.text(`Estimated IRC Impact / Impacto IRC Anual:         ${formatCurrency(AUDITADOS.omissaoCustos * 12 * 0.21)}`, left, y); y += 4;
+        doc.text(`VAT 23% / IVA Omitido (23% Autoliquidacao CIVA):  ${formatCurrency(cross.ivaFalta)}`, left, y); y += 4;
+        doc.text(`VAT 6% / IVA Omitido (6% Transporte):             ${formatCurrency(cross.ivaFalta6)}`, left, y); y += 4;
+        doc.text(`Revenue Omission (DAC7) / Omissao Receita:        ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 4;
+        doc.text(`Expense Omission / Omissao Custos:                ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 4;
+        doc.text(`Annual Omitted Base / Projecao Anual:             ${formatCurrency(cross.discrepanciaCritica * 12)}`, left, y); y += 4;
+        doc.text(`Estimated IRC Impact / Impacto IRC Anual:         ${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(239, 68, 68);
-        const macroLine4 = doc.splitTextToSize(`MACRO IMPACT / IMPACTO MACROECONOMICO (7 Anos - Mercado Portugues PT): ${formatCurrency(AUDITADOS.impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30);
+        const macroLine4 = doc.splitTextToSize(`MACRO IMPACT / IMPACTO MACROECONOMICO (7 Anos - Mercado Portugues PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30);
         doc.text(macroLine4, left, y); y += (macroLine4.length * 4.5) + 2;
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7.5);
@@ -5800,14 +5795,14 @@ async function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        doc.text(`  VAT 23% / IVA 23% Omitido (Autoliquidação):      ${formatCurrency(AUDITADOS.ivaFalta23)}`, left, y); y += 4;
-        doc.text(`  VAT 6% / IVA 6% Omitido (Transporte):            ${formatCurrency(AUDITADOS.ivaFalta6)}`, left, y); y += 4;
-        doc.text(`  Revenue Omission (DAC7) / Omissão Receita:        ${formatCurrency(AUDITADOS.omissaoReceita)} (23.65%)`, left, y); y += 4;
-        doc.text(`  Expense Omission / Omissão Custos (BTF):          ${formatCurrency(AUDITADOS.omissaoCustos)} (89.26%)`, left, y); y += 6;
+        doc.text(`  VAT 23% / IVA 23% Omitido (Autoliquidação):      ${formatCurrency(cross.ivaFalta)}`, left, y); y += 4;
+        doc.text(`  VAT 6% / IVA 6% Omitido (Transporte):            ${formatCurrency(cross.ivaFalta6)}`, left, y); y += 4;
+        doc.text(`  Revenue Omission (DAC7) / Omissão Receita:        ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 4;
+        doc.text(`  Expense Omission / Omissão Custos (BTF):          ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(239, 68, 68);
-        const macroLine = doc.splitTextToSize(`  MACRO IMPACT / IMPACTO ESTIMADO (7 Anos · Mercado Português PT): ${formatCurrency(AUDITADOS.impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30); doc.text(macroLine, left, y); y += (macroLine.length * 4) + 2;
+        const macroLine = doc.splitTextToSize(`  MACRO IMPACT / IMPACTO ESTIMADO (7 Anos · Mercado Português PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30); doc.text(macroLine, left, y); y += (macroLine.length * 4) + 2;
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7);
         doc.setTextColor(100, 100, 100);
@@ -6169,6 +6164,135 @@ async function exportPDF() {
             doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
         doc.setTextColor(0, 0, 0);
         y += 6;
+
+
+        // ══════════════════════════════════════════════════════════════════════
+        // NOTA DE RECONCILIAÇÃO DAC7 + QUESTIONÁRIO ESTRATÉGICO — DINÂMICO
+        // Espelha fielmente os painéis .aux-dac7-reconciliation-note e
+        // .dac7-question-contraditorio do Dashboard (v13.1.8-GOLD-AUX).
+        // Fonte dos valores: IFDESystem.auxiliaryData.totalNaoSujeitos
+        // Fundamento Legal: Lei TVDE · 0% comissão · Art. 125.º CPP
+        // ══════════════════════════════════════════════════════════════════════
+        if (_auxTotalNS > 0) {
+            // Verificar espaço disponível; iniciar nova página se necessário
+            if (y > 220) { doc.addPage(); pageNumber++; y = 20; }
+
+            const dac7PageW   = doc.internal.pageSize.getWidth();
+            const dac7UseW    = dac7PageW - left - 14;
+
+            // ── Cabeçalho da Nota ─────────────────────────────────────────────
+            doc.setFillColor(255, 248, 220);     // fundo âmbar suave
+            doc.rect(left, y - 4, dac7UseW, 10, 'F');
+            doc.setDrawColor(245, 158, 11);      // borda gold
+            doc.setLineWidth(0.8);
+            doc.rect(left, y - 4, dac7UseW, 10);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(120, 70, 0);
+            doc.text('⚖  NOTA DE RECONCILIAÇÃO DAC7 — ZONA CINZENTA FISCAL', left + 3, y + 2);
+            doc.setTextColor(0, 0, 0);
+            y += 10;
+
+            // ── Corpo explicativo ─────────────────────────────────────────────
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const dac7Body1 = doc.splitTextToSize(
+                'A diferença entre os Ganhos Brutos reportados pelo extrato da plataforma e o ' +
+                'valor comunicado à AT via DAC7 inclui fluxos que não estão sujeitos a comissão ' +
+                'pela plataforma (Lei TVDE). Estes valores — gorjetas dos passageiros, ganhos de ' +
+                'campanha e portagens — são transferências diretas ou reembolsos operacionais ' +
+                'que não integram a base de cálculo da comissão, mas podem ter sido ' +
+                'indevidamente incluídos no reporte DAC7, inflacionando o rendimento bruto ' +
+                'declarado à Autoridade Tributária (AT).',
+                dac7UseW);
+            doc.text(dac7Body1, left, y); y += (dac7Body1.length * 4.5) + 5;
+
+            // ── Tabela de valores não sujeitos ────────────────────────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 60, 120);
+            doc.text('FLUXOS NÃO SUJEITOS A COMISSÃO (Lei TVDE — 0%)', left, y); y += 5;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+
+            const auxRows = [
+                { label: 'Ganhos da campanha (Campanhas)',        val: _aux.campanhas   || 0, note: '0% comissão · incentivo plataforma' },
+                { label: 'Gorjetas dos passageiros (Tips)',        val: _aux.gorjetas    || 0, note: '0% comissão · transferência P2P'    },
+                { label: 'Portagens (Tolls)',                      val: _aux.portagens   || 0, note: 'reembolso operacional'               },
+                { label: 'Taxas de Cancelamento',                  val: _aux.cancelamentos || 0, note: 'já incluído em Despesas'           },
+            ];
+            auxRows.forEach(row => {
+                if (row.val === 0) return;
+                const labelLines = doc.splitTextToSize(`  • ${row.label}: ${formatCurrency(row.val)}  [${row.note}]`, dac7UseW);
+                doc.text(labelLines, left, y); y += (labelLines.length * 4.5);
+            });
+
+            // ── Total não sujeitos em destaque ────────────────────────────────
+            y += 2;
+            doc.setFillColor(255, 243, 197);
+            doc.rect(left, y - 3, dac7UseW, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(120, 70, 0);
+            doc.text(`TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): ${formatCurrency(_auxTotalNS)}`, left + 2, y + 2);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+
+            // ── Explicação do impacto DAC7 ────────────────────────────────────
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const dac7Impact = doc.splitTextToSize(
+                `Impacto DAC7: Os ${formatCurrency(_auxTotalNS)} de fluxos não sujeitos a ` +
+                'comissão podem explicar parcialmente a discrepância entre o extrato da ' +
+                `plataforma (${formatCurrency(totals.ganhos)}) e o valor DAC7 reportado ` +
+                `à AT (${formatCurrency(totals.dac7TotalPeriodo)}). Se incluídos indevidamente ` +
+                'no rendimento bruto DAC7, o contribuinte terá sido prejudicado na determinação ' +
+                'da sua base tributável, podendo reclamar a correção junto da AT.',
+                dac7UseW);
+            doc.text(dac7Impact, left, y); y += (dac7Impact.length * 4.5) + 5;
+
+            if (y > 240) { doc.addPage(); pageNumber++; y = 20; }
+
+            // ══════════════════════════════════════════════════════════════════
+            // QUESTIONÁRIO ESTRATÉGICO — CONTRADITÓRIO PARA O ADVOGADO
+            // Espelha .dac7-question-contraditorio do Dashboard
+            // ══════════════════════════════════════════════════════════════════
+            doc.setDrawColor(0, 229, 255);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(240, 253, 255);
+            doc.rect(left, y - 3, dac7UseW, 9, 'F');
+            doc.rect(left, y - 3, dac7UseW, 9);
+            doc.setFont('courier', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 80, 100);
+            doc.text('QUESTIONÁRIO ESTRATÉGICO AO ADVOGADO — CONTRADITÓRIO FORENSE', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 13;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const contraditorio = doc.splitTextToSize(
+                `Os valores isentos de comissão (Campanhas + Gorjetas + Portagens = ` +
+                `${formatCurrency(_auxTotalNS)}) foram indevidamente incluídos no cálculo ` +
+                'do rendimento bruto para efeitos de reporte SAF-T / DAC7? ' +
+                'Se sim, porque é que foi aplicada uma presunção de rendimento sobre valores ' +
+                'que, por lei (Lei TVDE), não sofrem retenção nem comissão por parte da plataforma?',
+                dac7UseW - 5);
+            doc.text(contraditorio, left + 3, y); y += (contraditorio.length * 4.5) + 5;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(239, 68, 68);
+            const qLegal = doc.splitTextToSize(
+                '[Fundamentação Legal] Lei TVDE · Comissões 0% sobre gorjetas e campanhas · ' +
+                'Art. 125.º CPP (admissibilidade da prova) · Art. 103.º RGIT (Fraude Fiscal) · ' +
+                'DAC7 / Diretiva (UE) 2021/514 · AT — Autoridade Tributária e Aduaneira',
+                dac7UseW - 5);
+            doc.text(qLegal, left + 3, y);
+            doc.setTextColor(0, 0, 0);
+            y += (qLegal.length * 4) + 10;
+        }
 
         // ══ CHAMADA FINAL — isLastPage=true: ativa o Selo QR na última página ══
         // O QR Code já está pré-gerado como dataURL (_qrDataUrl) e é inserido
