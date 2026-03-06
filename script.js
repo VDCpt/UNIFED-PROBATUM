@@ -5203,7 +5203,7 @@ async function exportPDF() {
             const margin = 14;
 
             // ══ CANTO SUPERIOR DIREITO: ID DE SESSÃO UNIFED (todas as páginas) ══
-            // Conformidade: Acórdão da Relação — identificador único por página
+            // Conformidade: Instâncias Judiciais Competentes — identificador único por página
             const sessionLabel = IFDESystem.sessionId
                 ? `SESSÃO: ${IFDESystem.sessionId}`
                 : 'SESSÃO: UNIFED-PENDING';
@@ -5599,7 +5599,7 @@ async function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.text(`• Art. 125.º CPP — São admissíveis como meios de prova todos os meios não proibidos por lei.`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 5;
         doc.text(`  Esta prova digital material foi produzida com metodologia forense certificada e cadeia de custódia`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 4;
-        doc.text(`  documentada, sendo plenamente admissível em sede de Acórdão da Relação.`, left, y); y += 6;
+        doc.text(`  documentada, sendo plenamente admissível perante as Instâncias Judiciais Competentes.`, left, y); y += 6;
         doc.text(`• Art. 32.º CRP — Garantias de Defesa: o processo penal assegura todas as garantias`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 4;
         doc.text(`  de defesa, incluindo o recurso à prova técnica pericial para contraditório fundamentado.`, left, y); y += 6;
         doc.text(`• Art. 103.º RGIT — Fraude Fiscal: omissão de proveitos e retenção indevida de IVA.`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 5;
@@ -5704,6 +5704,13 @@ async function exportPDF() {
         doc.text(`Annual Omitted Base / Projecao Anual:             ${formatCurrency(cross.discrepanciaCritica * 12)}`, left, y); y += 4;
         doc.text(`Estimated IRC Impact / Impacto IRC Anual:         ${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}`, left, y); y += 4;
         doc.text(`  Contribuição IMT/AMT Omitida (5%):              ${formatCurrency(cross.discrepancia5IMT)}`, left, y); y += 4;
+        // ── Cruzamentos adicionais (sincronização Dashboard → PDF · v13.2.1-FINAL) ──
+        doc.text(`Agravamento Bruto IRC (Anual × 12):               ${formatCurrency(cross.agravamentoBrutoIRC)}`, left, y); y += 4;
+        doc.text(`IRC Estimado (21% sobre agravamento anual):       ${formatCurrency(cross.ircEstimado)}`, left, y); y += 4;
+        doc.text(`Impacto Mensal Mercado (38.000 condutores PT):    ${formatCurrency(cross.impactoMensalMercado)}`, left, y); y += 4;
+        doc.text(`Impacto Anual Mercado (38.000 condutores PT):     ${formatCurrency(cross.impactoAnualMercado)}`, left, y); y += 4;
+        doc.text(`% Omissão Receita SAF-T vs DAC7:                  ${(cross.percentagemSaftVsDac7 || 0).toFixed(2)}%`, left, y); y += 4;
+        doc.text(`% Diferencial de Base em Análise (Desp. vs Fat.): ${(cross.percentagemOmissao || 0).toFixed(2)}%`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(239, 68, 68);
         const macroLine4 = doc.splitTextToSize(`MACRO IMPACT / IMPACTO MACROECONOMICO (7 Anos - Mercado Portugues PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30);
@@ -6238,6 +6245,112 @@ async function exportPDF() {
         }
 
         // ══════════════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════════════════
+        // SECÇÃO: QUESTÕES PARA O CONTRADITÓRIO — PROTOCOLO UNIFED-GOLD v13.2.1-FINAL
+        // Fundamento: Art. 327.º CPP (contraditório) · Art. 125.º CPP (admissibilidade)
+        // Art. 103.º e 104.º RGIT (Fraude Fiscal) · Decreto-Lei n.º 28/2019 (SAF-T/DAC7)
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 240) { doc.addPage(); pageNumber++; y = 20; }
+
+        {
+            const _cqPageW = doc.internal.pageSize.getWidth();
+            const _cqUseW  = _cqPageW - left - 14;
+
+            // ── Cabeçalho da secção ────────────────────────────────────────────
+            doc.setDrawColor(239, 68, 68);
+            doc.setLineWidth(0.6);
+            doc.setFillColor(255, 245, 245);
+            doc.rect(left, y - 4, _cqUseW, 11, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(150, 20, 20);
+            doc.text('QUESTÕES PARA O CONTRADITÓRIO — PROTOCOLO UNIFED-GOLD', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            const _cqIntro = doc.splitTextToSize(
+                'As seguintes questões, elaboradas com fundamento pericial, destinam-se a ser formuladas ao representante legal da plataforma ' +
+                'em sede de audiência de discussão e julgamento, nos termos do Art. 327.º do CPP (Contraditório). ' +
+                'Cada questão sustenta-se em evidência digital auditada e documentada no presente relatório forense.',
+                _cqUseW);
+            doc.text(_cqIntro, left, y); y += (_cqIntro.length * 3.5) + 6;
+
+            // ── QUESTÃO 1: Desalinhamento Temporal ───────────────────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 60, 120);
+            doc.text('Q1 — DESALINHAMENTO TEMPORAL (Pagamento Semanal vs Faturação Mensal):', left, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            const _cqQ1 = doc.splitTextToSize(
+                '"Pode a plataforma explicar a impossibilidade de reconciliação bancária direta (cruzamento 1:1) ' +
+                'resultante do desalinhamento temporal entre o processamento de pagamentos — efectuado semanalmente ' +
+                'por transferência bancária — e a emissão dos documentos de reporte fiscal, efectuada em formato ' +
+                'mensal agregado? Esta assimetria temporal, detetada pelo sistema UNIFED-PROBATUM, impede o parceiro ' +
+                'de auditar as transferências recebidas contra o documento de reporte correspondente, constituindo ' +
+                'indício de ofuscação deliberada, nos termos do Art. 103.º do RGIT."',
+                _cqUseW - 5);
+            doc.text(_cqQ1, left + 3, y); y += (_cqQ1.length * 3.5) + 7;
+
+            // ── QUESTÃO 2: Fluxos Não Sujeitos a Comissão no DAC7 ────────────
+            if (y > 245) { doc.addPage(); pageNumber++; y = 20; }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 60, 120);
+            doc.text('Q2 — INCLUSÃO DE FLUXOS ISENTOS NO REPORTE DAC7 (Lei TVDE · Diretiva UE 2021/514):', left, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            const _cqQ2 = doc.splitTextToSize(
+                '"Qual o fundamento legal que suporta a inclusão de fluxos financeiros não sujeitos a comissão — ' +
+                'nomeadamente gorjetas dos passageiros, ganhos de campanha e reembolsos de portagens — ' +
+                'no valor bruto reportado à Autoridade Tributária (AT) via DAC7 (Diretiva UE 2021/514)? ' +
+                'Estes fluxos, identificados pelo UNIFED-PROBATUM como isentos de comissão ao abrigo da Lei TVDE, ' +
+                'podem ter inflacionado artificialmente a base tributável do parceiro, prejudicando-o na ' +
+                'determinação do seu rendimento líquido real. Em que normativo legal se baseia esta prática? ' +
+                'Cfr. Decreto-Lei n.º 28/2019 (obrigações de faturação) e Art. 36.º, n.º 11 do CIVA."',
+                _cqUseW - 5);
+            doc.text(_cqQ2, left + 3, y); y += (_cqQ2.length * 3.5) + 7;
+
+            // ── QUESTÃO 3: Contribuição IMT/AMT 5% ───────────────────────────
+            if (y > 245) { doc.addPage(); pageNumber++; y = 20; }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 60, 120);
+            doc.text('Q3 — CONTRIBUIÇÃO IMT/AMT (5%) SOBRE OS DIFERENCIAIS DETETADOS:', left, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            const _cqQ3 = doc.splitTextToSize(
+                `"Onde se encontra o comprovativo de liquidação da contribuição de 5% ao Instituto da Mobilidade e dos Transportes (IMT) / ` +
+                `Autoridade da Mobilidade e dos Transportes (AMT) sobre os diferenciais de rendimento detetados? ` +
+                `O sistema UNIFED-PROBATUM calculou uma Contribuição IMT/AMT Omitida de ${formatCurrency(cross.discrepancia5IMT)} ` +
+                `(5% sobre a discrepância SAF-T vs DAC7 de ${formatCurrency(cross.discrepanciaSaftVsDac7)}). ` +
+                `A ausência deste comprovativo constitui indício de incumprimento das obrigações contributivas no âmbito da ` +
+                `regulação do transporte em veículo descaracterizado (TVDE), podendo fundamentar a qualificação do facto ` +
+                `nos termos do Art. 103.º e Art. 104.º do RGIT."`,
+                _cqUseW - 5);
+            doc.text(_cqQ3, left + 3, y); y += (_cqQ3.length * 3.5) + 5;
+
+            // ── Nota de rodapé legal da secção ────────────────────────────────
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(6.5);
+            doc.setTextColor(100, 100, 100);
+            const _cqNota = doc.splitTextToSize(
+                'Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admissibilidade de Prova) · ' +
+                'Art. 103.º/104.º RGIT (Fraude Fiscal/Qualificada) · Art. 36.º, n.º 11 CIVA · ' +
+                'Decreto-Lei n.º 28/2019 (SAF-T/DAC7) · Diretiva (UE) 2021/514 (DAC7) · ' +
+                'Lei TVDE (fluxos isentos de comissão) · ISO/IEC 27037:2012 (prova digital)',
+                _cqUseW);
+            doc.text(_cqNota, left, y); y += (_cqNota.length * 3) + 6;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+        }
+        // ══ FIM QUESTÕES PARA O CONTRADITÓRIO ══
+
         // PÁGINA FINAL ISOLADA — TERMO DE ENCERRAMENTO + QR CODE
         // PROTOCOLO UNIFED-GOLD v13.2.1 — LAYOUT CONSOLIDADO
         //
@@ -6264,20 +6377,22 @@ async function exportPDF() {
             const _termUW  = _termW - left - 14;   // largura utilizável (≈182mm)
             const _termMH  = IFDESystem.masterHash || 'N/A';
 
-            // ── Fundo da página final (Navy, consistente com o resto do PDF) ──
-            doc.setFillColor(2, 6, 23);
+            // ── Fundo branco absoluto — AÇÃO 2 UNIFED-GOLD v13.2.1-FINAL ─────
+            // Todas as páginas, incluindo a de fecho, têm fundo #FFFFFF para
+            // garantir legibilidade e sobriedade pericial perante o Tribunal.
+            doc.setFillColor(255, 255, 255);
             doc.rect(0, 0, _termW, doc.internal.pageSize.getHeight(), 'F');
 
-            // ── Linha separadora de abertura ──────────────────────────────────
-            doc.setDrawColor(0, 229, 255);
+            // ── Linha separadora de abertura (preto sóbrio) ───────────────────
+            doc.setDrawColor(0, 0, 0);
             doc.setLineWidth(0.8);
             doc.line(left, y, _termW - left, y);
             y += 6;
 
-            // ── Cabeçalho do Termo ────────────────────────────────────────────
+            // ── Cabeçalho do Termo (preto — fundo branco) ─────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
-            doc.setTextColor(0, 229, 255);           // cyan PROBATUM
+            doc.setTextColor(0, 0, 0);
             doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 7;
 
             // ── Corpo do Termo: número dinâmico ───────────────────────────────
@@ -6286,7 +6401,7 @@ async function exportPDF() {
             const _totalPaginasTermo = doc.internal.getNumberOfPages();
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
-            doc.setTextColor(255, 255, 255);
+            doc.setTextColor(0, 0, 0);
             const _termoTextoIntro = doc.splitTextToSize(
                 `O presente relatório é composto por ${_totalPaginasTermo} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`,
                 _termUW);
@@ -6295,14 +6410,14 @@ async function exportPDF() {
             // ── Master Hash (courier, 6pt — legibilidade forense) ─────────────
             doc.setFont('courier', 'normal');
             doc.setFontSize(6);
-            doc.setTextColor(226, 184, 122);         // gold
+            doc.setTextColor(0, 0, 0);               // preto — fundo branco
             const _hashLines = doc.splitTextToSize(_termMH, _termUW);
             doc.text(_hashLines, left, y); y += (_hashLines.length * 3.5) + 4;
 
             // ── Continuação texto de encerramento ─────────────────────────────
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
-            doc.setTextColor(255, 255, 255);
+            doc.setTextColor(0, 0, 0);
             const _termoTextoCont = doc.splitTextToSize(
                 'constituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.',
                 _termUW);
@@ -6311,15 +6426,15 @@ async function exportPDF() {
             // ── Art. 125.º CPP — Admissibilidade da Prova ────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8);
-            doc.setTextColor(0, 229, 255);
+            doc.setTextColor(30, 60, 120);
             doc.text('ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP', left, y); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
-            doc.setTextColor(220, 220, 220);
+            doc.setTextColor(0, 0, 0);
             const _cpp125Lines = doc.splitTextToSize(
                 'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
                 'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
-                'integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível em sede de Acórdão da Relação nos termos do Art. 125.º CPP ' +
+                'integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP ' +
                 'e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). ' +
                 'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.',
                 _termUW);
@@ -6328,11 +6443,11 @@ async function exportPDF() {
             // ── Selagem Temporal RFC 3161 ─────────────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8);
-            doc.setTextColor(0, 229, 255);
+            doc.setTextColor(30, 60, 120);
             doc.text('SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS:', left, y); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
-            doc.setTextColor(220, 220, 220);
+            doc.setTextColor(0, 0, 0);
             const _rfc3161Lines = doc.splitTextToSize(
                 'Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. ' +
                 'Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.',
@@ -6342,12 +6457,12 @@ async function exportPDF() {
             // ── Banner UNIFED-PROBATUM CERTIFIED ─────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
-            doc.setTextColor(0, 229, 255);
+            doc.setTextColor(30, 60, 120);
             doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.1-GOLD ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
-            doc.setTextColor(140, 160, 180);
+            doc.setTextColor(80, 80, 80);
             doc.text('Estudo de Viabilidade · Consultoria Forense Especializada · Uso restrito a mandato jurídico autorizado',
                 _termW / 2, y, { align: 'center' }); y += 4;
             doc.setFontSize(6);
