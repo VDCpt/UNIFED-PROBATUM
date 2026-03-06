@@ -2574,7 +2574,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.2.1-GOLD-DORA-COMPLIANT',
+    version: 'v13.2.2-GOLD-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -5255,7 +5255,7 @@ async function exportPDF() {
                 doc.setFontSize(5);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(0, 229, 255);
-                doc.text('PROBATUM SEAL v13.2.1-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
+                doc.text('PROBATUM SEAL v13.2.2-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
                 // 4. QR Code — inserido sincronamente com o dataURL pré-gerado
                 // (eliminação da race condition setTimeout QR vs setTimeout save)
@@ -5280,7 +5280,7 @@ async function exportPDF() {
                 doc.setTextColor(30, 60, 120);
                 const certLine1 = '[ UNIFED - PROBATUM CERTIFIED ]';
                 const certLine2 = 'ANALISTA E CONSULTOR FORENSE';
-                const certLine3 = 'v13.2.1-GOLD · Art. 103.º/104.º RGIT';
+                const certLine3 = 'v13.2.2-GOLD · Art. 103.º/104.º RGIT';
                 const certLine4 = 'Art. 32.º CRP · Art. 125.º CPP';
                 doc.text(certLine1, sealX + boxSize / 2, sealY + qrSize + 7,  { align: 'center' });
                 doc.text(certLine2, sealX + boxSize / 2, sealY + qrSize + 10, { align: 'center' });
@@ -5621,6 +5621,142 @@ async function exportPDF() {
         doc.text(`• Extração precisa da tabela "Ganhos líquidos" do extrato`, left, y); y += 5;
         doc.text(`• Cálculo de duas discrepâncias: despesas e SAF-T/Relatório vs DAC7`, left, y); y += 5;
         doc.text(`• Geração de prova técnica auditável com hashes SHA-256`, left, y); y += 10;
+
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO A: DECLARAÇÃO DE INDEPENDÊNCIA E ESCOPO (ISRS 4400)
+        // Protocolo UNIFED-GOLD v13.2.2-GOLD
+        // Fundamento: Norma Internacional ISRS 4400 (Procedimentos Acordados) ·
+        //             Art. 153.º CPP (Compromisso de Honra do Perito) ·
+        //             Art. 467.º CPC (Dever de Imparcialidade)
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 220) { doc.addPage(); pageNumber++; y = 20; }
+        {
+            const _isrsW = doc.internal.pageSize.getWidth() - left - 14;
+
+            doc.setDrawColor(30, 60, 120);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(240, 245, 255);
+            doc.rect(left, y - 3, _isrsW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(30, 60, 120);
+            doc.text('DECLARAÇÃO DE INDEPENDÊNCIA E ESCOPO — ISRS 4400 / ART. 153.º CPP', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const _isrs1 = doc.splitTextToSize(
+                'O presente estudo foi elaborado em estrita conformidade com a Norma Internacional de Serviços Relacionados ISRS 4400 ' +
+                '(Procedimentos Acordados sobre Informação Financeira), garantindo que os procedimentos aplicados são objetivos, ' +
+                'reprodutíveis e auditáveis por qualquer perito independente. O analista declara total independência face às partes ' +
+                'e ausência de conflito de interesses, nos termos do Art. 467.º do CPC e Art. 153.º do CPP.',
+                _isrsW);
+            doc.text(_isrs1, left, y); y += (_isrs1.length * 3.8) + 3;
+
+            const _isrs2 = doc.splitTextToSize(
+                'ESCOPO: O estudo limita-se à análise objetiva dos documentos fornecidos (extratos de plataforma, SAF-T, DAC7, ' +
+                'faturas). As conclusões constituem estudo de viabilidade pericial e não substituem relatório pericial homologado ' +
+                'por Tribunal. A sua produção assenta em metodologia BTOR (Bank Transactions Over Reality), com rastreabilidade ' +
+                'criptográfica completa (SHA-256 + RFC 3161).',
+                _isrsW);
+            doc.text(_isrs2, left, y); y += (_isrs2.length * 3.8) + 6;
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO B: ANÁLISE DE TIPOLOGIAS DE RISCO (Conformidade CEJ / PJ)
+        // Fundamento: RGIT Art. 103.º/104.º · Lei 83/2017 (BCFT) · Diretiva DAC7
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 220) { doc.addPage(); pageNumber++; y = 20; }
+        {
+            const _riskW = doc.internal.pageSize.getWidth() - left - 14;
+
+            doc.setDrawColor(239, 68, 68);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(255, 245, 245);
+            doc.rect(left, y - 3, _riskW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(150, 20, 20);
+            doc.text('ANÁLISE DE TIPOLOGIAS DE RISCO DETETADAS — CEJ / PJ / RGIT', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+
+            const _riskRows = [
+                { tipo: 'FRAUDE FISCAL',
+                  fund: 'Art. 103.º RGIT',
+                  desc: 'Omissão de proveitos e retenção indevida de IVA sobre comissões. Pena: prisão até 3 anos ou multa.' },
+                { tipo: 'FRAUDE FISCAL QUALIFICADA',
+                  fund: 'Art. 104.º RGIT',
+                  desc: 'Quando a vantagem patrimonial obtida excede 15 vezes o salário mínimo nacional anual.' },
+                { tipo: 'BRANQUEAMENTO DE CAPITAIS',
+                  fund: 'Lei 83/2017 (BCFT)',
+                  desc: 'Dissimulação da origem de fundos provenientes de omissão fiscal através de fluxos algorítmicos opacos.' },
+                { tipo: 'GESTÃO DANOSA',
+                  fund: 'Art. 235.º CP',
+                  desc: 'Gestão dolosa que causa prejuízo à Autoridade Tributária e ao parceiro operador.' },
+                { tipo: 'VIOLAÇÃO DAC7',
+                  fund: 'Diretiva (UE) 2021/514',
+                  desc: 'Incumprimento das obrigações de reporte automático de rendimentos às Autoridades Fiscais dos EM.' },
+            ];
+
+            _riskRows.forEach(row => {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7.5);
+                doc.setTextColor(150, 20, 20);
+                doc.text(`▸ ${row.tipo} [${row.fund}]`, left + 2, y); y += 4;
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                const _descLines = doc.splitTextToSize(row.desc, _riskW - 6);
+                doc.text(_descLines, left + 6, y); y += (_descLines.length * 3.5) + 3;
+            });
+            y += 3;
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO C: SALVAGUARDA JURISDICIONAL — "Defesa da Estónia"
+        // Fundamento: Lex Loci Solutionis · Art. 18.º LGT · Diretiva (UE) 2021/514
+        //             Reg. (CE) n.º 593/2008 (Roma I) · Art. 4.º DAC7
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 220) { doc.addPage(); pageNumber++; y = 20; }
+        {
+            const _jurW = doc.internal.pageSize.getWidth() - left - 14;
+
+            doc.setDrawColor(120, 70, 0);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(255, 248, 220);
+            doc.rect(left, y - 3, _jurW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(120, 70, 0);
+            doc.text('SALVAGUARDA JURISDICIONAL — SEDE ESTRANGEIRA NÃO EXIME RESPONSABILIDADE', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 12;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const _jur1 = doc.splitTextToSize(
+                'A eventual invocação de sede social em jurisdição estrangeira (nomeadamente na República da Estónia, ' +
+                'onde diversas plataformas de economia de plataforma estão registadas) não constitui fundamento válido ' +
+                'de exclusão da responsabilidade fiscal e penal em território português.',
+                _jurW);
+            doc.text(_jur1, left, y); y += (_jur1.length * 3.8) + 3;
+
+            const _jur2 = doc.splitTextToSize(
+                'Fundamento legal: (1) Art. 18.º da Lei Geral Tributária (LGT) — a obrigação tributária nasce no local ' +
+                'onde o facto tributário ocorre (Lex Loci Solutionis), independentemente da sede do operador; ' +
+                '(2) Diretiva (UE) 2021/514 (DAC7), Art. 4.º — os operadores de plataformas digitais com utilizadores ' +
+                'em Estados-Membros estão sujeitos a obrigações de reporte à Autoridade Tributária do Estado-Membro de ' +
+                'atividade, independentemente da sua sede; (3) Regulamento (CE) n.º 593/2008 (Roma I) — a lei aplicável ' +
+                'aos contratos de prestação de serviços é a lei do país onde o prestador tem a sua residência habitual ' +
+                'ou, no caso de consumidores, a lei do país de residência deste.',
+                _jurW);
+            doc.text(_jur2, left, y); y += (_jur2.length * 3.8) + 6;
+        }
+        // ══ FIM BLOCOS A, B, C ══
 
         // 7. CERTIFICAÇÃO DIGITAL
         doc.setFontSize(10);
@@ -6246,6 +6382,69 @@ async function exportPDF() {
 
         // ══════════════════════════════════════════════════════════════════════
         // ══════════════════════════════════════════════════════════════════════
+        // BLOCO D: INVERSÃO DO ÓNUS DA PROVA (Condicional: discrepância > 15%)
+        // Protocolo UNIFED-GOLD v13.2.2-GOLD
+        // Fundamento: Art. 344.º CC (Inversão do Ónus da Prova) ·
+        //             Art. 75.º LGT (Presunção de veracidade das declarações)
+        //             Art. 74.º LGT (Ónus da prova)
+        // NOTA: Usa variáveis reais do motor — discrepanciaSaftVsDac7 e totals.ganhos
+        //       (as variáveis totalDiscrepancy/platform.totals.gross não existem no sistema)
+        // ══════════════════════════════════════════════════════════════════════
+        {
+            // Calcular percentagem de discrepância com variáveis reais do sistema
+            const _inversaoBase   = totals.ganhos > 0 ? totals.ganhos : 1;
+            const _inversaoDelta  = Math.abs(cross.discrepanciaSaftVsDac7) + Math.abs(cross.discrepanciaCritica);
+            const _inversaoPct    = (_inversaoDelta / _inversaoBase) * 100;
+
+            if (_inversaoPct > 15) {
+                if (y > 230) { doc.addPage(); pageNumber++; y = 20; }
+
+                const _invW = doc.internal.pageSize.getWidth() - left - 14;
+
+                // Caixa de alerta vermelho subtil
+                doc.setFillColor(255, 235, 235);
+                doc.setDrawColor(180, 0, 0);
+                doc.setLineWidth(0.8);
+                doc.rect(left, y - 3, _invW, 32, 'FD');
+
+                // Cabeçalho
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(180, 0, 0);
+                doc.text(
+                    `⚠ ALERTA DE DESVIO CRÍTICO (${_inversaoPct.toFixed(2)}%) — INVERSÃO DO ÓNUS DA PROVA`,
+                    left + 3, y + 5);
+
+                // Corpo legal
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(80, 0, 0);
+                const _invTexto = doc.splitTextToSize(
+                    'Dada a discrepância material superior a 15% entre o rendimento real extraído dos documentos ' +
+                    'da plataforma e o reporte oficial comunicado à Autoridade Tributária (AT) via SAF-T/DAC7, ' +
+                    'verificam-se os pressupostos legais para a Inversão do Ónus da Prova, nos termos do ' +
+                    'Art. 344.º do Código Civil e Art. 74.º/75.º da Lei Geral Tributária (LGT). ' +
+                    'Cabe à entidade processadora (Plataforma) o ónus de elidir a presunção de omissão de ' +
+                    'rendimentos aqui documentada, sob pena de cristalização da prova material apresentada. ' +
+                    'A discrepância apurada ultrapassa igualmente os limiares das manifestações de fortuna ' +
+                    '(Art. 89.º-A LGT), podendo fundamentar avaliação indireta da matéria coletável.',
+                    _invW - 6);
+                doc.text(_invTexto, left + 3, y + 11);
+                y += 38;
+
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(6.5);
+                doc.text(
+                    'Fundamento: Art. 344.º CC · Art. 74.º/75.º LGT · Art. 89.º-A LGT · Art. 103.º/104.º RGIT',
+                    left, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+            }
+        }
+        // ══ FIM BLOCO D — INVERSÃO DO ÓNUS DA PROVA ══
+
+        // ══════════════════════════════════════════════════════════════════════
         // SECÇÃO: QUESTÕES PARA O CONTRADITÓRIO — PROTOCOLO UNIFED-GOLD v13.2.1-FINAL
         // Fundamento: Art. 327.º CPP (contraditório) · Art. 125.º CPP (admissibilidade)
         // Art. 103.º e 104.º RGIT (Fraude Fiscal) · Decreto-Lei n.º 28/2019 (SAF-T/DAC7)
@@ -6454,11 +6653,65 @@ async function exportPDF() {
                 _termUW);
             doc.text(_rfc3161Lines, left, y); y += (_rfc3161Lines.length * 3.5) + 6;
 
+            // ── Bloco de Assinatura Profissional — CEJ / Art. 153.º CPP ──────
+            // PROTOCOLO UNIFED-GOLD v13.2.2-GOLD
+            // Fundamento: Art. 153.º CPP (Compromisso de Honra) ·
+            //             Art. 467.º CPC (Deveres do Perito) ·
+            //             ISRS 4400 (Independência e Objetividade)
+            // NOTA: Os campos assinalados com [●] devem ser preenchidos pelo perito
+            //       antes da submissão em juízo.
+            {
+                const _sigW = doc.internal.pageSize.getWidth() - left - 14;
+
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.3);
+                doc.line(left, y, left + _sigW, y);
+                y += 5;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(0, 0, 0);
+                doc.text('PERITO ANALISTA RESPONSÁVEL — COMPROMISSO DE HONRA (ART. 153.º CPP)', left, y); y += 6;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                // Nome e cargo — campos a preencher pelo perito
+                const _sigPerito = IFDESystem.config?.perito || '[Nome do Perito — preencher antes de submeter]';
+                const _sigCargo  = IFDESystem.config?.cargo  || '[Cargo e Especialização — preencher antes de submeter]';
+                const _sigOAP    = IFDESystem.config?.oap    || '[N.º de Inscrição / Associação Profissional]';
+
+                doc.text(`Nome:  ${_sigPerito}`, left, y); y += 5;
+                doc.text(`Cargo: ${_sigCargo}`, left, y); y += 5;
+                doc.text(`Ref.:  ${_sigOAP}`, left, y); y += 7;
+
+                const _sigDecl = doc.splitTextToSize(
+                    'Declaro, sob compromisso de honra (Art. 153.º do Código de Processo Penal Português), ' +
+                    'que o presente relatório pericial foi elaborado com independência, objetividade e imparcialidade, ' +
+                    'com base nos documentos fornecidos, aplicando metodologia forense reprodutível (ISRS 4400) ' +
+                    'e que os resultados refletem fielmente a análise técnica efetuada.',
+                    _sigW);
+                doc.text(_sigDecl, left, y); y += (_sigDecl.length * 3.8) + 4;
+
+                // Linha de assinatura física
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.3);
+                const _sigLineX = left + _sigW * 0.55;
+                doc.line(_sigLineX, y + 3, left + _sigW, y + 3);
+                doc.setFontSize(6.5);
+                doc.setTextColor(80, 80, 80);
+                doc.text('Assinatura do Perito', _sigLineX, y + 7);
+                doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, left, y + 7);
+                y += 14;
+
+                doc.setTextColor(0, 0, 0);
+            }
+            // ══ FIM BLOCO DE ASSINATURA ══
+
             // ── Banner UNIFED-PROBATUM CERTIFIED ─────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(30, 60, 120);
-            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.1-GOLD ]',
+            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.2-GOLD ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
