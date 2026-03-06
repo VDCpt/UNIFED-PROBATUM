@@ -1,5 +1,5 @@
 /**
- * UNIFED - PROBATUM SISTEMA DE PERITAGEM FORENSE - v13.1.8-GOLD · COURT READY · DORA COMPLIANT
+ * UNIFED - PROBATUM SISTEMA DE PERITAGEM FORENSE - v13.2.1-GOLD · COURT READY · DORA COMPLIANT
  * VERSAO FINAL ABSOLUTA - EXTRACAO PRECISA DE DADOS — HEADER-BASED CSV MAPPING
  * ====================================================================
  * CORRECOES IMPLEMENTADAS (v13.1.6-GOLD):
@@ -19,7 +19,7 @@
 
 'use strict';
 
-console.log('UNIFED - PROBATUM SCRIPT v13.1.8-GOLD · DORA COMPLIANT · CADEIA DE CUSTÓDIA COMPLETA · HEADER-BASED CSV MAPPING · ATIVADO');
+console.log('UNIFED - PROBATUM SCRIPT v13.2.1-GOLD · DORA COMPLIANT · CADEIA DE CUSTÓDIA COMPLETA · HEADER-BASED CSV MAPPING · ATIVADO');
 
 // ============================================================================
 // 0. HANDSHAKE DE INFRAESTRUTURA — Verificação da Biblioteca OpenTimestamps
@@ -779,7 +779,7 @@ function exportCustodyChainJSON() {
     const logs = ForensicLogger.getLogs();
     const payload = {
         exportedAt: new Date().toISOString(),
-        system: 'UNIFED - PROBATUM v13.1.8-GOLD-CHAIN',
+        system: 'UNIFED - PROBATUM v13.2.1-GOLD-CHAIN',
         standard: 'SHA-256 · PROBATUM INTERNAL SEAL · DORA (UE) 2022/2554',
         totalEntries: logs.length,
         entries: logs
@@ -1001,7 +1001,7 @@ async function submitToOpenTimestamps() {
             submittedAt: new Date().toISOString(),
             calendars:   ['alice.btc.calendar.opentimestamps.org', 'bob.btc.calendar.opentimestamps.org'],
             protocol:    'OpenTimestamps · Bitcoin blockchain',
-            system:      'UNIFED - PROBATUM v13.1.8-GOLD',
+            system:      'UNIFED - PROBATUM v13.2.1-GOLD',
             error:       'Biblioteca OTS não carregada (CDN inacessível na rede atual)'
         }, null, 2);
 
@@ -1158,7 +1158,7 @@ async function submitToOpenTimestamps() {
             submittedAt: new Date().toISOString(),
             calendars:   ['alice.btc.calendar.opentimestamps.org', 'bob.btc.calendar.opentimestamps.org'],
             protocol:    'OpenTimestamps · Bitcoin blockchain',
-            system:      'UNIFED - PROBATUM v13.1.8-GOLD',
+            system:      'UNIFED - PROBATUM v13.2.1-GOLD',
             error:       err.message
         }, null, 2);
 
@@ -1557,7 +1557,7 @@ async function _doOnlineSeal(masterHash) {
         }
     } catch (err) {
         // ── ASYNC PROXY HANDSHAKE FALLBACK (CORS / Timeout) ──────────────────────
-        // Conforme Protocolo UNIFED v13.1.8-GOLD:
+        // Conforme Protocolo UNIFED v13.2.1-GOLD:
         // O browser bloqueia o fetch directo ao FreeTSA por ausência de cabeçalhos
         // CORS no servidor externo — situação estrutural, não erro do sistema.
         // Activação automática de Nível 1: PROBATUM INTERNAL SEAL.
@@ -1809,7 +1809,7 @@ const ForensicLogger = {
             period: yearMonth || 'COMPLETO',
             total_entries: filtered.length,
             rgpd_basis: 'Art. 30.º RGPD (UE) 2016/679 — Registos das Atividades de Tratamento',
-            system: 'UNIFED - PROBATUM v13.1.8-GOLD · DORA COMPLIANT',
+            system: 'UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT',
             logs: filtered
         };
 
@@ -2574,7 +2574,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.1.8-GOLD-DORA-COMPLIANT',
+    version: 'v13.2.1-GOLD-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -2818,7 +2818,7 @@ function openHashModal() {
 // 13. INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded - Inicializando sistema UNIFED - PROBATUM v13.1.8-GOLD');
+    console.log('DOMContentLoaded - Inicializando sistema UNIFED - PROBATUM v13.2.1-GOLD');
     setupStaticListeners();
     populateAnoFiscal();
     populateYears();
@@ -2914,7 +2914,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v13.1.8-GOLD · DORA COMPLIANT... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v13.2.1-GOLD · DORA COMPLIANT... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -2929,7 +2929,7 @@ function showMainInterface() {
             ForensicLogger.addEntry('MAIN_INTERFACE_SHOWN');
         }, 500);
     }
-    logAudit('SISTEMA UNIFED - PROBATUM v13.1.8-GOLD · DORA COMPLIANT · MODO PROFISSIONAL ATIVADO · EXTRAÇÃO PRECISA · CSC ONLINE', 'success');
+    logAudit('SISTEMA UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT · MODO PROFISSIONAL ATIVADO · EXTRAÇÃO PRECISA · CSC ONLINE', 'success');
 
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) analyzeBtn.disabled = false;
@@ -5093,7 +5093,7 @@ async function exportPDF() {
         const left = 14;
 
         // ══════════════════════════════════════════════════════════════════════
-        // UNIFED - PROBATUM v13.1.8-GOLD — VALORES DINÂMICOS DO DASHBOARD
+        // UNIFED - PROBATUM v13.2.1-GOLD — VALORES DINÂMICOS DO DASHBOARD
         // Protocolo: UNIFED-GOLD — Ligação às variáveis globais do motor forense.
         // Substituição de valores hardcoded por referências às variáveis de estado
         // calculadas em performForensicCrossings() — Verdade Material Dinâmica.
@@ -5125,7 +5125,7 @@ async function exportPDF() {
         // Não é forçado um nível específico — o motor decide com base nos dados reais.
 
         // ══════════════════════════════════════════════════════════════════════
-        // UNIFED - PROBATUM v13.1.8-GOLD — MARCA DE ÁGUA DIAGONAL
+        // UNIFED - PROBATUM v13.2.1-GOLD — MARCA DE ÁGUA DIAGONAL
         // "PROVA DIGITAL MATERIAL" — Art. 125.º CPP (Admissibilidade da Prova)
         // Aplicada em todas as páginas. Rotate 45º, fonte cinza translúcido.
         // ══════════════════════════════════════════════════════════════════════
@@ -5148,7 +5148,7 @@ async function exportPDF() {
         };
 
         // ══════════════════════════════════════════════════════════════════════
-        // PRÉ-GERAÇÃO DO QR CODE — PROTOCOLO UNIFED-GOLD v13.1.8
+        // PRÉ-GERAÇÃO DO QR CODE — PROTOCOLO UNIFED-GOLD v13.2.1
         // O QR Code é gerado ANTES da construção do PDF para eliminar
         // a race condition entre setTimeout(QR=100ms) e setTimeout(save=500ms).
         // O dataURL resultante é usado sincronamente em addFooter(isLastPage=true).
@@ -5255,7 +5255,7 @@ async function exportPDF() {
                 doc.setFontSize(5);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(0, 229, 255);
-                doc.text('PROBATUM SEAL v13.1.8-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
+                doc.text('PROBATUM SEAL v13.2.1-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
                 // 4. QR Code — inserido sincronamente com o dataURL pré-gerado
                 // (eliminação da race condition setTimeout QR vs setTimeout save)
@@ -5280,7 +5280,7 @@ async function exportPDF() {
                 doc.setTextColor(30, 60, 120);
                 const certLine1 = '[ UNIFED - PROBATUM CERTIFIED ]';
                 const certLine2 = 'ANALISTA E CONSULTOR FORENSE';
-                const certLine3 = 'v13.1.8-GOLD · Art. 103.º/104.º RGIT';
+                const certLine3 = 'v13.2.1-GOLD · Art. 103.º/104.º RGIT';
                 const certLine4 = 'Art. 32.º CRP · Art. 125.º CPP';
                 doc.text(certLine1, sealX + boxSize / 2, sealY + qrSize + 7,  { align: 'center' });
                 doc.text(certLine2, sealX + boxSize / 2, sealY + qrSize + 10, { align: 'center' });
@@ -5637,7 +5637,7 @@ async function exportPDF() {
         doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
-        doc.text(`Certificação: UNIFED - PROBATUM v13.1.8-GOLD · DORA COMPLIANT`, left, y); y += 5;
+        doc.text(`Certificação: UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT`, left, y); y += 5;
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7);
         doc.text('Este relatório cumpre com o Regulamento (UE) 2022/2554 (DORA) - Digital Operational Resilience Act, assegurando a resiliência operacional digital e a integridade das evidências digitais processadas.', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 8;
@@ -6111,7 +6111,7 @@ async function exportPDF() {
         // ══════════════════════════════════════════════════════════════════════
         // NOTA DE RECONCILIAÇÃO DAC7 + QUESTIONÁRIO ESTRATÉGICO — DINÂMICO
         // Espelha fielmente os painéis .aux-dac7-reconciliation-note e
-        // .dac7-question-contraditorio do Dashboard (v13.1.8-GOLD-AUX).
+        // .dac7-question-contraditorio do Dashboard (v13.2.1-GOLD-AUX).
         // Fonte dos valores: IFDESystem.auxiliaryData.totalNaoSujeitos
         // Fundamento Legal: Lei TVDE · 0% comissão · Art. 125.º CPP
         // ══════════════════════════════════════════════════════════════════════
@@ -6237,49 +6237,56 @@ async function exportPDF() {
             y += (qLegal.length * 4) + 10;
         }
 
-        // ══ CHAMADA FINAL — isLastPage=true: ativa o Selo QR na última página ══
-        // O QR Code já está pré-gerado como dataURL (_qrDataUrl) e é inserido
-        // sincronamente — sem race condition, sem setTimeout.
-        // Conformidade: DORA (UE) 2022/2554 · RFC 3161 · Art. 125.º CPP
-        addFooter(doc, pageNumber, true);
+        // ══════════════════════════════════════════════════════════════════════
+        // PÁGINA FINAL ISOLADA — TERMO DE ENCERRAMENTO + QR CODE
+        // PROTOCOLO UNIFED-GOLD v13.2.1 — LAYOUT CONSOLIDADO
+        //
+        // FLUXO GARANTIDO:
+        //   ① doc.addPage() INCONDICIONAL → página exclusiva e limpa
+        //   ② Texto: Termo + Art. 125.º CPP + RFC 3161 + Banner PROBATUM
+        //   ③ addFooter(isLastPage=true) → QR Code fixo no rodapé desta página
+        //   ④ Segunda passagem → renumeração correcta de todas as páginas
+        //
+        // PROIBIÇÃO DE SOBREPOSIÇÃO:
+        //   O texto pára em y ≤ 215mm. O QR Code ocupa [225mm, 275mm] (sealY).
+        //   Nunca há texto por cima ou por baixo do Selo QR.
+        //
+        // Fundamento Legal: Art. 125.º CPP · Art. 103.º RGIT · ISO/IEC 27037:2012
+        // ══════════════════════════════════════════════════════════════════════
 
-        // ══════════════════════════════════════════════════════════════════════
-        // TERMO DE ENCERRAMENTO — ÚLTIMA PÁGINA (APÓS QR CODE)
-        // Protocolo UNIFED-GOLD v13.2.1 — Reposicionamento Forense
-        // Impresso APÓS addFooter(isLastPage=true) para que o número de páginas
-        // retornado por doc.internal.getNumberOfPages() seja o total REAL
-        // (inclui a página do QR Code), garantindo fidedignidade no Acórdão.
-        // Fundamento: Art. 125.º CPP · Art. 103.º RGIT · ISO/IEC 27037:2012
-        // ══════════════════════════════════════════════════════════════════════
+        // ① Página nova INCONDICIONAL (não condicional) — garante isolamento total
+        doc.addPage();
+        pageNumber++;
+        y = 20;
+
         {
-            // Garantir nova página se espaço insuficiente (y > 200mm)
-            if (y > 200) {
-                doc.addPage();
-                pageNumber++;
-                y = 20;
-            }
-
             const _termW   = doc.internal.pageSize.getWidth();
-            const _termUW  = _termW - left - 14;   // largura utilizável (182mm)
+            const _termUW  = _termW - left - 14;   // largura utilizável (≈182mm)
             const _termMH  = IFDESystem.masterHash || 'N/A';
 
-            // ── Linha separadora ──────────────────────────────────────────────
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(1);
+            // ── Fundo da página final (Navy, consistente com o resto do PDF) ──
+            doc.setFillColor(2, 6, 23);
+            doc.rect(0, 0, _termW, doc.internal.pageSize.getHeight(), 'F');
+
+            // ── Linha separadora de abertura ──────────────────────────────────
+            doc.setDrawColor(0, 229, 255);
+            doc.setLineWidth(0.8);
             doc.line(left, y, _termW - left, y);
-            y += 5;
+            y += 6;
 
             // ── Cabeçalho do Termo ────────────────────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
-            doc.setTextColor(0, 0, 0);
-            doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 6;
+            doc.setTextColor(0, 229, 255);           // cyan PROBATUM
+            doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 7;
+
+            // ── Corpo do Termo: número dinâmico ───────────────────────────────
+            // Neste ponto doc.internal.getNumberOfPages() reflecte o total REAL
+            // (inclui esta página final), garantindo fidedignidade no Acórdão.
+            const _totalPaginasTermo = doc.internal.getNumberOfPages();
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
-
-            // ── Corpo do Termo: número dinâmico lido APÓS geração completa ────
-            // doc.internal.getNumberOfPages() neste ponto reflecte o total real.
-            const _totalPaginasTermo = doc.internal.getNumberOfPages();
+            doc.setTextColor(255, 255, 255);
             const _termoTextoIntro = doc.splitTextToSize(
                 `O presente relatório é composto por ${_totalPaginasTermo} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`,
                 _termUW);
@@ -6288,12 +6295,14 @@ async function exportPDF() {
             // ── Master Hash (courier, 6pt — legibilidade forense) ─────────────
             doc.setFont('courier', 'normal');
             doc.setFontSize(6);
+            doc.setTextColor(226, 184, 122);         // gold
             const _hashLines = doc.splitTextToSize(_termMH, _termUW);
             doc.text(_hashLines, left, y); y += (_hashLines.length * 3.5) + 4;
 
-            // ── Continuação do texto de encerramento ──────────────────────────
+            // ── Continuação texto de encerramento ─────────────────────────────
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
+            doc.setTextColor(255, 255, 255);
             const _termoTextoCont = doc.splitTextToSize(
                 'constituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.',
                 _termUW);
@@ -6302,11 +6311,11 @@ async function exportPDF() {
             // ── Art. 125.º CPP — Admissibilidade da Prova ────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8);
-            doc.setTextColor(30, 60, 120);
+            doc.setTextColor(0, 229, 255);
             doc.text('ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP', left, y); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(220, 220, 220);
             const _cpp125Lines = doc.splitTextToSize(
                 'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
                 'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
@@ -6315,37 +6324,52 @@ async function exportPDF() {
                 'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.',
                 _termUW);
             doc.text(_cpp125Lines, left, y); y += (_cpp125Lines.length * 3.5) + 6;
-            doc.setTextColor(0, 0, 0);
 
             // ── Selagem Temporal RFC 3161 ─────────────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8);
+            doc.setTextColor(0, 229, 255);
             doc.text('SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS:', left, y); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
+            doc.setTextColor(220, 220, 220);
             const _rfc3161Lines = doc.splitTextToSize(
                 'Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. ' +
                 'Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.',
                 _termUW);
-            doc.text(_rfc3161Lines, left, y); y += (_rfc3161Lines.length * 3.5) + 4;
+            doc.text(_rfc3161Lines, left, y); y += (_rfc3161Lines.length * 3.5) + 6;
 
-            // ── Sello UNIFED-PROBATUM CERTIFIED (rodapé do Termo) ────────────
+            // ── Banner UNIFED-PROBATUM CERTIFIED ─────────────────────────────
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
-            doc.setTextColor(30, 60, 120);
+            doc.setTextColor(0, 229, 255);
             doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.1-GOLD ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
-            doc.setTextColor(100, 100, 100);
+            doc.setTextColor(140, 160, 180);
             doc.text('Estudo de Viabilidade · Consultoria Forense Especializada · Uso restrito a mandato jurídico autorizado',
                 _termW / 2, y, { align: 'center' }); y += 4;
             doc.setFontSize(6);
             doc.text('Fundamentação: RGIT Art. 103.º (Fraude Fiscal) · Art. 104.º (Fraude Qualificada) · CRP Art. 32.º · CPP Art. 125.º',
                 _termW / 2, y, { align: 'center' });
             doc.setTextColor(0, 0, 0);
+
+            // ── ZONA DE EXCLUSÃO DO QR CODE ───────────────────────────────────
+            // O texto acima pára aqui (y ≤ ~145mm para documentos padrão).
+            // O Selo QR ocupa [sealY ≈ 225mm, sealY+boxSize ≈ 275mm].
+            // Garantia: nenhum doc.text() é chamado após esta linha nesta página.
+            // ③ addFooter(isLastPage=true) a seguir — QR Code posicionado no
+            //   canto inferior direito em coordenadas fixas (não dependentes de y).
         }
-        // ══ FIM TERMO DE ENCERRAMENTO ══
+        // ══ FIM BLOCO TEXTO PÁGINA FINAL ══
+
+        // ③ CHAMADA FINAL — isLastPage=true: Selo QR no rodapé desta última página
+        // O QR Code usa coordenadas ABSOLUTAS (sealX, sealY calculados a partir
+        // do canto inferior direito), independentes da variável y do texto.
+        // Nenhum texto é impresso após esta chamada nesta página.
+        addFooter(doc, pageNumber, true);
+        // ══ FIM PÁGINA FINAL ISOLADA ══
 
         // ══════════════════════════════════════════════════════════════════════
         // SEGUNDA PASSAGEM — CORRECÇÃO DE NUMERAÇÃO (PROTOCOLO UNIFED-GOLD)
@@ -7251,7 +7275,7 @@ window.injectAuxiliaryHelperBoxes = injectAuxiliaryHelperBoxes;
 window.resetAuxiliaryData = resetAuxiliaryData;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v13.1.8-GOLD GOLD · COURT READY · DORA COMPLIANT
+   FIM DO FICHEIRO SCRIPT.JS · v13.2.1-GOLD GOLD · COURT READY · DORA COMPLIANT
    UNIFED - PROBATUM — PERSISTÊNCIA NORMATIVA E SINCRONIZAÇÃO TEMPORAL
    CORREÇÕES IMPLEMENTADAS:
    ✓ robustSAFTParser v13.1.6-GOLD: Header-Based CSV Mapping (mapeamento dinâmico
@@ -7266,7 +7290,7 @@ window.resetAuxiliaryData = resetAuxiliaryData;
    ✓ generateQRCode: CorrectLevel.L + string compacta UNIFED|SESSION|HASH
    ✓ DORA (UE) 2022/2554 — cláusula no PDF e nos badges
 
-   NOVO — v13.1.8-GOLD-AUX (Módulo Auxiliar Pericial):
+   NOVO — v13.2.1-GOLD-AUX (Módulo Auxiliar Pericial):
    ✓ IFDESystem.auxiliaryData: Non-Interfering Data Object — isolado de financials
      Campos: campanhas, portagens, gorjetas, cancelamentos, totalNaoSujeitos
      Base Legal: Lei TVDE · 0% comissão · Art. 125.º CPP
