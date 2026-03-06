@@ -2574,7 +2574,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.2.2-GOLD-DORA-COMPLIANT',
+    version: 'v13.2.1-GOLD-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -5255,7 +5255,7 @@ async function exportPDF() {
                 doc.setFontSize(5);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(0, 229, 255);
-                doc.text('PROBATUM SEAL v13.2.2-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
+                doc.text('PROBATUM SEAL v13.2.1-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
                 // 4. QR Code — inserido sincronamente com o dataURL pré-gerado
                 // (eliminação da race condition setTimeout QR vs setTimeout save)
@@ -5280,7 +5280,7 @@ async function exportPDF() {
                 doc.setTextColor(30, 60, 120);
                 const certLine1 = '[ UNIFED - PROBATUM CERTIFIED ]';
                 const certLine2 = 'ANALISTA E CONSULTOR FORENSE';
-                const certLine3 = 'v13.2.2-GOLD · Art. 103.º/104.º RGIT';
+                const certLine3 = 'v13.2.1-GOLD · Art. 103.º/104.º RGIT';
                 const certLine4 = 'Art. 32.º CRP · Art. 125.º CPP';
                 doc.text(certLine1, sealX + boxSize / 2, sealY + qrSize + 7,  { align: 'center' });
                 doc.text(certLine2, sealX + boxSize / 2, sealY + qrSize + 10, { align: 'center' });
@@ -6675,14 +6675,14 @@ async function exportPDF() {
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
-                // Nome e cargo — campos a preencher pelo perito
-                const _sigPerito = IFDESystem.config?.perito || '[Nome do Perito — preencher antes de submeter]';
-                const _sigCargo  = IFDESystem.config?.cargo  || '[Cargo e Especialização — preencher antes de submeter]';
-                const _sigOAP    = IFDESystem.config?.oap    || '[N.º de Inscrição / Associação Profissional]';
+                // Identificação do Analista Responsável — hardcoded (UNIFED-GOLD v13.2.1)
+                const _sigResponsavel = 'Eduardo Monteiro';
+                const _sigCargo       = 'Analista e Consultor Forense Independente de Investigação e Big Data Analytics / Consultor Técnico';
+                const _sigRegisto     = 'Consultor Forense Independente — Sem inscrição obrigatória em ordem profissional para a natureza do parecer';
 
-                doc.text(`Nome:  ${_sigPerito}`, left, y); y += 5;
+                doc.text(`Nome:  ${_sigResponsavel}`, left, y); y += 5;
                 doc.text(`Cargo: ${_sigCargo}`, left, y); y += 5;
-                doc.text(`Ref.:  ${_sigOAP}`, left, y); y += 7;
+                doc.text(`Ref.:  ${_sigRegisto}`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - left - 14 }); y += 7;
 
                 const _sigDecl = doc.splitTextToSize(
                     'Declaro, sob compromisso de honra (Art. 153.º do Código de Processo Penal Português), ' +
