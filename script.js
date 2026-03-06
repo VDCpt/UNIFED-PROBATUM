@@ -5418,7 +5418,7 @@ async function exportPDF() {
             { desc: 'Invoiced Commissions / Comissões Faturadas (PT1124+PT1125)',     value: totals.faturaPlataforma,  source: 'Faturas BTF' },
             { desc: '-------------------------------------------',  value: null,                          source: '' },
             { desc: '[!] Revenue Omission / Omissão Receita — Brutos vs DAC7',     value: cross.discrepanciaSaftVsDac7,      source: 'Smoking Gun 1', isGap: true },
-            { desc: '[X] Expense Omission / Omissão Custos — Retenção vs Fatura [89.26%]', value: cross.discrepanciaCritica,       source: 'Smoking Gun 2', isCritical: true },
+            { desc: `[X] Expense Omission / Omissão Custos — Retenção vs Fatura [${_pctOmissaoStr}]`, value: cross.discrepanciaCritica,       source: 'Smoking Gun 2', isCritical: true },
             { desc: 'IVA Omitido (23% · Autoliquidação CIVA)',         value: cross.ivaFalta,          source: 'Cálculo CIVA',  isGap: true },
             { desc: 'IVA Omitido (6% · Serviços Transporte)',          value: cross.ivaFalta6,           source: 'Cálculo CIVA',  isGap: true }
         ];
@@ -5747,7 +5747,7 @@ async function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         const notaPrincLines = doc.splitTextToSize(
-            'A analise detetou praticas de obscurecimento de dados por parte da plataforma sob exame, nomeadamente a alteracao semestral de sintaxe (moeda e separadores decimais) e a utilizacao do termo "Ganhos Liquidos" para designar meras transferencias bancarias, ocultando a natureza das retencoes efetuadas sem o devido suporte fiscal.',
+            'A analise detetou praticas de obscurecimento de dados por parte da plataforma sob exame, nomeadamente a alteracao anual da estrutura de reporte (Ledger) e da sintaxe utilizada (moeda e separadores decimais), bem como a utilizacao do termo "Ganhos Liquidos" para designar meras transferencias bancarias, ocultando a natureza das retencoes efetuadas sem o devido suporte fiscal.',
             adendaUsableW);
         doc.text(notaPrincLines, left, y); y += (notaPrincLines.length * 4.5) + 6;
 
@@ -5759,7 +5759,7 @@ async function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         const p1Lines = doc.splitTextToSize(
-            'Detetou-se a alteracao deliberada de separadores decimais (ponto vs. virgula) e do posicionamento do simbolo monetario (EUR) entre periodos semestrais — exemplo: "7755.16EUR" torna-se "EUR 7.731,22" no semestre seguinte. Esta mutacao sintatica sistematica dificulta a leitura algoritmica automatica e impede a reconciliacao direta por auditores externos, constituindo indicio de manipulacao intencional do formato dos dados com o proposito de dificultar a auditoria forense.',
+            'Dada a volatilidade das plataformas digitais, o sistema detetou que a estrutura de reporte (Ledger) e objeto de atualizacao anual. Exemplo material verificado na transicao 2024/2025: o campo anteriormente designado "Portagens" transitou para "Reembolsos de despesas". Adicionalmente, detetou-se a alteracao deliberada de separadores decimais (ponto vs. virgula) e do posicionamento do simbolo monetario (EUR) entre periodos anuais — exemplo: "7755.16EUR" torna-se "EUR 7.731,22" no ano seguinte. O IFDE PROBATUM garante a reconciliacao de ambos os campos para efeitos de reconstrucao de passivo fiscal. Esta mutacao sintatica e semantica sistematica dificulta a leitura algoritmica automatica e impede a reconciliacao direta por auditores externos, constituindo indicio de manipulacao intencional do formato dos dados com o proposito de dificultar a auditoria forense.',
             adendaIndentW - 3);
         doc.text(p1Lines, left + 3, y); y += (p1Lines.length * 4.5) + 5;
 
@@ -6219,7 +6219,8 @@ async function exportPDF() {
             const auxRows = [
                 { label: 'Ganhos da campanha (Campanhas)',        val: _aux.campanhas   || 0, note: '0% comissão · incentivo plataforma' },
                 { label: 'Gorjetas dos passageiros (Tips)',        val: _aux.gorjetas    || 0, note: '0% comissão · transferência P2P'    },
-                { label: 'Portagens (Tolls)',                      val: _aux.portagens   || 0, note: 'reembolso operacional'               },
+                { label: IFDESystem.selectedYear >= 2025 ? 'Reembolsos de Despesas / Portagens (2025+)' : 'Portagens (Tolls / 2024)',
+                  val: _aux.portagens || 0, note: 'reembolso operacional' },
                 { label: 'Taxas de Cancelamento',                  val: _aux.cancelamentos || 0, note: 'já incluído em Despesas'           },
             ];
             auxRows.forEach(row => {
@@ -6235,7 +6236,7 @@ async function exportPDF() {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(120, 70, 0);
-            doc.text(`TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): ${formatCurrency(_auxTotalNS)}`, left + 2, y + 2);
+            doc.text(`TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + ${IFDESystem.selectedYear >= 2025 ? "Reembolsos/Portagens" : "Portagens"}): ${formatCurrency(_auxTotalNS)}`, left + 2, y + 2);
             doc.setTextColor(0, 0, 0);
             y += 12;
 
@@ -6273,7 +6274,7 @@ async function exportPDF() {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             const contraditorio = doc.splitTextToSize(
-                `Os valores isentos de comissão (Campanhas + Gorjetas + Portagens = ` +
+                `Os valores isentos de comissão (Campanhas + Gorjetas + ${IFDESystem.selectedYear >= 2025 ? 'Reembolsos/Portagens' : 'Portagens'} = ` +
                 `${formatCurrency(_auxTotalNS)}) foram indevidamente incluídos no cálculo ` +
                 'do rendimento bruto para efeitos de reporte SAF-T / DAC7? ' +
                 'Se sim, porque é que foi aplicada uma presunção de rendimento sobre valores ' +
@@ -6382,12 +6383,38 @@ function processAuxiliaryPlatformData(text, filename) {
         /Campaign\s+(?:earnings?|bonus)\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
     );
 
-    // 2. Portagens: "Portagens"
-    const portageMatch = text.match(
-        /Portagens?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
-    ) || text.match(
-        /Tolls?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
-    );
+    // 2. Portagens (2024) / Reembolsos de despesas (2025) — Regex Agnóstica
+    // ── PROTOCOLO UNIFED-GOLD v13.2 ─────────────────────────────────────────
+    // A Bolt alterou a designação ANUALMENTE: "Portagens" (≤2024) passou a
+    // "Reembolsos de despesas" a partir do ano fiscal 2025.
+    // O regex cobre AMBAS as designações para garantir a reconciliação histórica
+    // de passivo fiscal independentemente do período auditado.
+    // Formato CSV: "Campo","valor" (extrato exportado pela plataforma)
+    // Formato Texto Plano: campo: valor (PDF "Ganhos da Empresa")
+    // Fundamento Legal: Art. 103.º RGIT · Art. 125.º CPP · ISO/IEC 27037:2012
+    // ──────────────────────────────────────────────────────────────────────────
+    let portagens = 0;
+    // Padrão CSV: "Portagens","1.23" | "Reembolsos de despesas","1.23"
+    const tollCsvRegex = /"(?:Portagens|Reembolsos de despesas)\n?","([\d.,-]+)"/g;
+    let tollCsvMatch;
+    while ((tollCsvMatch = tollCsvRegex.exec(text)) !== null) {
+        portagens += normalizeNumericValue(tollCsvMatch[1]);
+    }
+    // Padrão Texto Plano (PDF): "Portagens: 5.00" | "Reembolsos de despesas: 5.00"
+    if (portagens === 0) {
+        const portageTextMatch = text.match(
+            /(?:Portagens?|Reembolsos\s+de\s+despesas)\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+        ) || text.match(
+            /Tolls?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+        );
+        if (portageTextMatch && portageTextMatch[1]) {
+            portagens = normalizeNumericValue(portageTextMatch[1]);
+        }
+    }
+    // Rótulo dinâmico: regista o termo real encontrado para uso na UI e no PDF
+    const portageLabel = (IFDESystem.selectedYear >= 2025)
+        ? 'REEMBOLSOS / PORTAGENS (2025+)'
+        : 'PORTAGENS (2024)';
 
     // 3. Gorjetas: "Gorjetas dos passageiros"
     const tipsMatch = text.match(
@@ -6404,10 +6431,12 @@ function processAuxiliaryPlatformData(text, filename) {
     );
 
     // ── Normalização e acumulação (Non-Interfering — só toca auxiliaryData) ──
-    const campanhas   = campaignMatch && campaignMatch[1] ? normalizeNumericValue(campaignMatch[1]) : 0;
-    const portagens   = portageMatch  && portageMatch[1]  ? normalizeNumericValue(portageMatch[1])  : 0;
-    const gorjetas    = tipsMatch     && tipsMatch[1]     ? normalizeNumericValue(tipsMatch[1])     : 0;
-    const cancelamentos = cancelMatch && cancelMatch[1]   ? normalizeNumericValue(cancelMatch[1])   : 0;
+    // ── Normalização dos campos de texto plano ────────────────────────────────
+    // Nota: `portagens` já foi calculado acima via regex agnóstica (2024+2025).
+    const campanhas     = campaignMatch && campaignMatch[1] ? normalizeNumericValue(campaignMatch[1]) : 0;
+    // portagens: já declarado como let acima — não redeclarar
+    const gorjetas      = tipsMatch    && tipsMatch[1]     ? normalizeNumericValue(tipsMatch[1])     : 0;
+    const cancelamentos = cancelMatch  && cancelMatch[1]   ? normalizeNumericValue(cancelMatch[1])   : 0;
 
     // Acumulação (suporte multi-ficheiro)
     IFDESystem.auxiliaryData.campanhas       += campanhas;
@@ -6467,6 +6496,37 @@ function _updateAuxiliaryBoxes() {
     setBox('auxBoxGorjetasValue',   aux.gorjetas);
     setBox('auxBoxTotalNSValue',    aux.totalNaoSujeitos);
     setBox('auxBoxCancelValue',     aux.cancelamentos);
+
+    // ── Rótulo dinâmico da BOX 2: Portagens (2024) vs Reembolsos de despesas (2025+) ──
+    // Protocolo UNIFED-GOLD v13.2 — Adaptação anual da nomenclatura da plataforma.
+    // O advogado e o juiz identificam visualmente a adaptação técnica do perito.
+    const anoFiscal = IFDESystem.selectedYear || new Date().getFullYear();
+    const labelEl   = document.getElementById('auxBoxPortagensLabel');
+    const descEl    = document.getElementById('auxBoxPortagensDesc');
+    const boxEl     = document.getElementById('auxBoxPortagens');
+    if (labelEl) {
+        if (anoFiscal >= 2025) {
+            labelEl.textContent = 'REEMBOLSOS / PORTAGENS';
+            if (descEl) descEl.textContent = 'Reembolsos de despesas (2025+)';
+            if (boxEl) {
+                boxEl.setAttribute('title', "Extraído de: 'Reembolsos de despesas' (2025+) — reembolso operacional");
+                boxEl.setAttribute('data-field', 'Reembolsos de despesas');
+                boxEl.classList.remove('year-2024');
+                boxEl.classList.add('year-2025');
+                if (aux.portagens > 0) boxEl.classList.add('has-value');
+            }
+        } else {
+            labelEl.textContent = 'PORTAGENS';
+            if (descEl) descEl.textContent = 'Reembolso operacional (2024)';
+            if (boxEl) {
+                boxEl.setAttribute('title', "Extraído de: 'Portagens' (2024) — reembolso operacional");
+                boxEl.setAttribute('data-field', 'Portagens');
+                boxEl.classList.remove('year-2025');
+                boxEl.classList.add('year-2024');
+                if (aux.portagens > 0) boxEl.classList.add('has-value');
+            }
+        }
+    }
 
     // Nota DAC7: visibilidade condicional — mostrar "zona cinzenta" se totalNaoSujeitos > 0
     const dac7NoteEl = document.getElementById('auxDac7ReconciliationNote');
@@ -6532,15 +6592,18 @@ function injectAuxiliaryHelperBoxes() {
                 <div class="aux-box-legal-tag">Isento comissão · 0%</div>
             </div>
 
-            <!-- BOX 2: PORTAGENS -->
-            <div class="small-info-box aux-box-tolls" id="auxBoxPortagens"
-                 data-field="Portagens"
-                 title="Extraído de: 'Portagens' — reembolso operacional">
+            <!-- BOX 2: PORTAGENS (2024) / REEMBOLSOS DE DESPESAS (2025+) -->
+            <!-- Rótulo dinâmico: actualizado por _updateAuxiliaryBoxLabel() em função do ano fiscal -->
+            <div class="small-info-box aux-box-tolls info-box-refunds" id="auxBoxPortagens"
+                 data-field="Portagens|Reembolsos de despesas"
+                 data-year-label-2024="PORTAGENS (2024)"
+                 data-year-label-2025="REEMBOLSOS / PORTAGENS (2025+)"
+                 title="Extraído de: 'Portagens' (2024) ou 'Reembolsos de despesas' (2025+) — reembolso operacional">
                 <div class="aux-box-icon"><i class="fas fa-road"></i></div>
                 <div class="aux-box-body">
-                    <h5 class="aux-box-label">PORTAGENS</h5>
+                    <h5 class="aux-box-label" id="auxBoxPortagensLabel">PORTAGENS</h5>
                     <p class="aux-box-value" id="auxBoxPortagensValue">0,00 €</p>
-                    <span class="aux-box-desc">Reembolso operacional</span>
+                    <span class="aux-box-desc" id="auxBoxPortagensDesc">Reembolso operacional</span>
                 </div>
                 <div class="aux-box-legal-tag">Custo reembolsado · 0%</div>
             </div>

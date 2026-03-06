@@ -3408,3 +3408,69 @@ body.dual-screen .stat-card p {
 }
 
 /* ═══ FIM — Módulo Auxiliar Pericial · v13.1.8-GOLD-AUX · UNIFED - PROBATUM ═══ */
+
+
+/* ============================================================================
+   REALCE FORENSE — CAMPO ADAPTADO 2025 (PORTAGENS → REEMBOLSOS DE DESPESAS)
+   Protocolo UNIFED-GOLD v13.2 · Art. 125.º CPP · Identificação Visual Pericial
+   Permite que o advogado e o juiz identifiquem a adaptação técnica ao novo
+   formato de reporte da plataforma (alteração anual de nomenclatura do Ledger).
+   ============================================================================ */
+
+/* ── Caixa de Reembolsos/Portagens — realce visual de campo adaptado 2025 ── */
+.info-box-refunds {
+    border-left: 3px solid var(--accent-primary) !important;
+    background: rgba(0, 229, 255, 0.05) !important;
+    position: relative;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.info-box-refunds::after {
+    content: "ADAPTADO 2025 (REF: REEMBOLSOS)";
+    font-size: 0.55rem;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    color: var(--accent-primary);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    font-family: var(--font-mono, 'Courier New', monospace);
+    opacity: 0.85;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Ocultar o badge "ADAPTADO 2025" em anos fiscais ≤ 2024
+   (controlado via classe JS aplicada pelo _updateAuxiliaryBoxes) */
+.info-box-refunds.year-2024::after {
+    content: "PORTAGENS (2024)";
+    color: #8b9cb5;
+    font-weight: 600;
+}
+
+.info-box-refunds.year-2025::after {
+    content: "ADAPTADO 2025 (REF: REEMBOLSOS)";
+    color: var(--accent-primary);
+    font-weight: 800;
+}
+
+/* ── Badge pericial no hover — exibe lei aplicável ── */
+.info-box-refunds:hover::before {
+    content: "Lei TVDE · Reembolso Operacional · 0% Comissão";
+    font-size: 0.45rem;
+    position: absolute;
+    bottom: 3px;
+    left: 8px;
+    color: rgba(0, 229, 255, 0.6);
+    font-family: var(--font-mono, 'Courier New', monospace);
+    pointer-events: none;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+}
+
+/* ── Linha superior de destaque quando valor > 0 ── */
+.info-box-refunds.has-value {
+    border-top: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.08);
+}
