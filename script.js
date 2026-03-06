@@ -5417,8 +5417,8 @@ async function exportPDF() {
             { desc: 'Retained Commissions / Comissões Retidas (Extrato)',    value: totals.despesas,    source: 'Plataforma Digital',  isGap: true },
             { desc: 'Invoiced Commissions / Comissões Faturadas (PT1124+PT1125)',     value: totals.faturaPlataforma,  source: 'Faturas BTF' },
             { desc: '-------------------------------------------',  value: null,                          source: '' },
-            { desc: '[!] Revenue Omission / Omissão Receita — Brutos vs DAC7',     value: cross.discrepanciaSaftVsDac7,      source: 'Smoking Gun 1', isGap: true },
-            { desc: `[X] Expense Omission / Omissão Custos — Retenção vs Fatura [${_pctOmissaoStr}]`, value: cross.discrepanciaCritica,       source: 'Smoking Gun 2', isCritical: true },
+            { desc: '[!] SAF-T Valor Bruto Total vs DAC7 (Revenue Omission)',       value: cross.discrepanciaSaftVsDac7,      source: 'Smoking Gun 1', isGap: true },
+            { desc: `[X] Diferencial de Base em Análise (Despesas/Comissões vs Fatura) [${_pctOmissaoStr}]`, value: cross.discrepanciaCritica, source: 'Smoking Gun 2', isCritical: true },
             { desc: 'IVA Omitido (23% · Autoliquidação CIVA)',         value: cross.ivaFalta,          source: 'Cálculo CIVA',  isGap: true },
             { desc: 'IVA Omitido (6% · Serviços Transporte)',          value: cross.ivaFalta6,           source: 'Cálculo CIVA',  isGap: true }
         ];
@@ -5533,7 +5533,7 @@ async function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text('SMOKING GUN 1 — Revenue Omission / Omissão de Receita (DAC7):', left, y); y += 5;
+        doc.text('SMOKING GUN 1 — SAF-T Valor Bruto Total vs DAC7 / Omissão de Receita:', left, y); y += 5;
         doc.setFont('helvetica', 'normal');
         doc.text(`  Ganhos Brutos (Auditado):          ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
         doc.text(`  Ganhos Reportados (DAC7):          ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
@@ -5543,7 +5543,7 @@ async function exportPDF() {
 
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'bold');
-        doc.text('SMOKING GUN 2 — Expense Omission / Omissão de Custos (Faturação BTF):', left, y); y += 5;
+        doc.text('SMOKING GUN 2 — Diferencial de Base em Análise (Despesas/Comissões vs Fatura BTF):', left, y); y += 5;
         doc.setFont('helvetica', 'normal');
         doc.text(`  Comissões Retidas (Extrato):       ${formatCurrency(totals.despesas)}`, left, y); y += 4;
         doc.text(`  Comissões Faturadas (BTF):         ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
@@ -5630,7 +5630,7 @@ async function exportPDF() {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`Sistema certificado de peritagem forense com selo de`, left, y); y += 4;
+        doc.text(`Sistema de peritagem forense estruturado em conformidade com as normas, com selo de`, left, y); y += 4;
         doc.text(`integridade digital SHA-256. Todos os relatórios são`, left, y); y += 4;
         doc.text(`temporalmente selados e auditáveis.`, left, y); y += 8;
 
@@ -5661,9 +5661,9 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.text(`I. ANÁLISE PERICIAL (${periodoTexto}):`, left, y); y += 5;
         doc.text(currentLang === 'pt' ? 'Duas discrepâncias fundamentais detetadas (Verdade Material Auditada):' : 'Two fundamental critical divergences detected (Audited Material Truth):', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 5;
-        const anal1 = doc.splitTextToSize(`1. ${currentLang === 'pt' ? 'Omissão de Custos (Expense Omission)' : 'Expense Omission'}: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissao.toFixed(2)}%) [Smoking Gun 2]`, doc.internal.pageSize.getWidth() - 30);
+        const anal1 = doc.splitTextToSize(`1. ${currentLang === 'pt' ? 'Diferencial de Base em Análise (Despesas/Comissões vs Fatura)' : 'Base Differential Under Analysis (Expenses/Commissions vs Invoice)'}: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissao.toFixed(2)}%) [Smoking Gun 2]`, doc.internal.pageSize.getWidth() - 30);
         doc.text(anal1, left, y); y += (anal1.length * 4) + 2;
-        const anal2 = doc.splitTextToSize(`2. ${currentLang === 'pt' ? 'Omissão de Receita / Revenue Omission (DAC7)' : 'Revenue Omission (DAC7)'}: ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr}) [Smoking Gun 1]`, doc.internal.pageSize.getWidth() - 30);
+        const anal2 = doc.splitTextToSize(`2. ${currentLang === 'pt' ? 'SAF-T Valor Bruto Total vs DAC7 (Revenue Omission)' : 'SAF-T Total Gross Value vs DAC7 (Revenue Omission)'}: ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr}) [Smoking Gun 1]`, doc.internal.pageSize.getWidth() - 30);
         doc.text(anal2, left, y); y += (anal2.length * 4) + 4;
 
         // 9. FACTOS CONSTATADOS
@@ -5674,19 +5674,19 @@ async function exportPDF() {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`II. MATERIAL FACTS / FACTOS CONSTATADOS (Verdade Material / Material Truth):`, left, y); y += 5;
+        doc.text(`II. GANHOS LÍQUIDOS vs TRANSFERÊNCIAS BANCÁRIAS / MATERIAL FACTS — Verdade Material Auditada:`, left, y); y += 5;
         doc.text(`Gross Earnings / Ganhos Brutos (Auditado · Set-Dez):   ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
         doc.text(`Retained Commissions / Comissões Retidas (Extrato):    ${formatCurrency(totals.despesas)}`, left, y); y += 4;
         doc.text(`Invoiced Commissions / Comissões Faturadas (BTF):      ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(239, 68, 68);
-        doc.text(`Expense Omission / Omissão de Custos [SG-2]:           ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
+        doc.text(`Diferencial de Base em Análise (Despesas/Comissões vs Fatura) [SG-2]: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
-        doc.text(`III. REVENUE vs DAC7 / RECEITA vs REPORTE DAC7 (Smoking Gun 1):`, left, y); y += 5;
-        doc.text(`Gross Earnings / Ganhos Brutos (Set-Dez Auditado):     ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
-        doc.text(`Reporte DAC7 (Plataforma Digital · AT):       ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
+        doc.text(`III. SAF-T VALOR BRUTO TOTAL vs DAC7 / REVENUE vs DAC7 (Smoking Gun 1):`, left, y); y += 5;
+        doc.text(`SAF-T Valor Bruto Total vs Ganhos — Ganhos Brutos (Auditado): ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
+        doc.text(`Reporte DAC7 (Plataforma Digital · AT):                        ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 158, 11);
-        doc.text(`Revenue Omission (DAC7·AT) / Omissão Receita:          ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 6;
+        doc.text(`SAF-T Valor Bruto Total vs DAC7 / Omissão Receita:     ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
         // 10. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO
@@ -5703,6 +5703,7 @@ async function exportPDF() {
         doc.text(`Expense Omission / Omissao Custos:                ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 4;
         doc.text(`Annual Omitted Base / Projecao Anual:             ${formatCurrency(cross.discrepanciaCritica * 12)}`, left, y); y += 4;
         doc.text(`Estimated IRC Impact / Impacto IRC Anual:         ${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}`, left, y); y += 4;
+        doc.text(`  Contribuição IMT/AMT Omitida (5%):              ${formatCurrency(cross.discrepancia5IMT)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(239, 68, 68);
         const macroLine4 = doc.splitTextToSize(`MACRO IMPACT / IMPACTO MACROECONOMICO (7 Anos - Mercado Portugues PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30);
@@ -5787,6 +5788,20 @@ async function exportPDF() {
             adendaIndentW);
         doc.text(p3Lines, left + 3, y); y += (p3Lines.length * 4.5) + 6;
 
+        // ── PONTO 4: Desalinhamento Temporal (Pagamentos vs Faturação) ──
+        // UNIFED-GOLD v13.2 — Adenda Forense · Ofuscação Temporal
+        // Fundamento legal: Art. 103.º RGIT · Art. 125.º CPP · ISO/IEC 27037:2012
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        const h4Lines = doc.splitTextToSize('4. TEMPORAL MISMATCH / Desalinhamento Temporal (Pagamentos Semanais vs Reporte Mensal):', adendaUsableW);
+        doc.text(h4Lines, left, y); y += (h4Lines.length * 4.5) + 2;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const p4Lines = doc.splitTextToSize(
+            'As plataformas procedem ao pagamento dos prestadores por transferencia bancaria semanal, contudo, a emissao dos documentos de reporte fiscal (extratos e faturas) ocorre em formato mensal agregado. Esta assimetria temporal constitui uma tatica de ofuscacao que inviabiliza a reconciliacao bancaria direta (cruzamento 1:1 entre extrato bancario e documento de reporte), dificultando deliberadamente auditorias financeiras e a deteção atempada das discrepâncias.',
+            adendaIndentW);
+        doc.text(p4Lines, left + 3, y); y += (p4Lines.length * 4.5) + 6;
+
         // ── Quadro tributário ──
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
@@ -5799,6 +5814,7 @@ async function exportPDF() {
         doc.text(`  VAT 6% / IVA 6% Omitido (Transporte):            ${formatCurrency(cross.ivaFalta6)}`, left, y); y += 4;
         doc.text(`  Revenue Omission (DAC7) / Omissão Receita:        ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 4;
         doc.text(`  Expense Omission / Omissão Custos (BTF):          ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
+        doc.text(`  Contribuição IMT/AMT Omitida (5%):              ${formatCurrency(cross.discrepancia5IMT)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(239, 68, 68);
@@ -6098,7 +6114,7 @@ async function exportPDF() {
         doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 6;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
-        doc.text(`O presente relatório é composto por ${TOTAL_PAGES} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`, left, y); y += 4;
+        doc.text(`O presente relatório é composto por ${doc.getNumberOfPages()} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`, left, y); y += 4;
         doc.setFont('courier', 'normal');
         doc.setFontSize(6);
         doc.text(IFDESystem.masterHash || 'N/A', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 8;
