@@ -6671,7 +6671,7 @@ async function exportPDF() {
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8);
                 doc.setTextColor(0, 0, 0);
-                doc.text('PERITO ANALISTA RESPONSÁVEL — COMPROMISSO DE HONRA (ART. 153.º CPP)', left, y); y += 6;
+                doc.text('CONSULTOR TÉCNICO — COMPROMISSO DE SEGUIMENTO DE NORMAS DE HONRA (ART. 153.º CPP)', left, y); y += 6;
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
@@ -6685,10 +6685,11 @@ async function exportPDF() {
                 doc.text(`Ref.:  ${_sigRegisto}`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - left - 14 }); y += 7;
 
                 const _sigDecl = doc.splitTextToSize(
-                    'Declaro, sob compromisso de honra (Art. 153.º do Código de Processo Penal Português), ' +
-                    'que o presente relatório pericial foi elaborado com independência, objetividade e imparcialidade, ' +
-                    'com base nos documentos fornecidos, aplicando metodologia forense reprodutível (ISRS 4400) ' +
-                    'e que os resultados refletem fielmente a análise técnica efetuada.',
+                    'Declaro, sob compromisso de honra, que o presente relatório técnico foi elaborado em qualidade ' +
+                    'de Consultor Técnico Independente, assumindo os deveres de independência, objetividade e ' +
+                    'imparcialidade previstos no artigo 153.º do Código de Processo Penal Português para peritos, ' +
+                    'com base exclusivamente nos documentos fornecidos, mediante aplicação de metodologia forense ' +
+                    'reprodutível (ISRS 4400), certificando que os resultados traduzem fielmente a análise técnica realizada.',
                     _sigW);
                 doc.text(_sigDecl, left, y); y += (_sigDecl.length * 3.8) + 4;
 
@@ -6699,8 +6700,8 @@ async function exportPDF() {
                 doc.line(_sigLineX, y + 3, left + _sigW, y + 3);
                 doc.setFontSize(6.5);
                 doc.setTextColor(80, 80, 80);
-                doc.text('Assinatura do Perito', _sigLineX, y + 7);
-                doc.text(`Data: ${new Date().toLocaleDateString('pt-PT')}`, left, y + 7);
+                doc.text('Ass.  Consultor Técnico', _sigLineX, y + 7);
+                doc.text('Data: 06/03/2026', left, y + 7);
                 y += 14;
 
                 doc.setTextColor(0, 0, 0);
