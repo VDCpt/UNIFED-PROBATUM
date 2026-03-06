@@ -6104,82 +6104,8 @@ async function exportPDF() {
         const assinaturaLines = doc.splitTextToSize(t.clausulaAssinaturaDigital, doc.internal.pageSize.getWidth() - 30);
         doc.text(assinaturaLines, left, y); y += (assinaturaLines.length * 4) + 10;
 
-        y += 10;
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(1);
-        doc.line(left, y, doc.internal.pageSize.getWidth() - left, y);
-        y += 5;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 6;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text(`O presente relatório é composto por ${doc.getNumberOfPages()} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`, left, y); y += 4;
-        doc.setFont('courier', 'normal');
-        doc.setFontSize(6);
-        doc.text(IFDESystem.masterHash || 'N/A', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 8;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text(`constituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 6;
-
-        // ── Art. 125.º CPP — Admissibilidade da Prova (Acórdão da Relação) ──
-        y += 3;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.setTextColor(30, 60, 120);
-        doc.text('ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP', left, y); y += 5;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(0, 0, 0);
-        const cpp125Text = 'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
-            'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
-            'integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível em sede de Acórdão da Relação nos termos do Art. 125.º CPP ' +
-            'e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). ' +
-            'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.';
-        const cpp125Lines = doc.splitTextToSize(cpp125Text, doc.internal.pageSize.getWidth() - 30);
-        doc.text(cpp125Lines, left, y); y += (cpp125Lines.length * 4) + 8;
-        doc.setTextColor(0, 0, 0);
-
-        // ── Texto de Selagem RFC 3161 e Repositório (Pág. 8) ──────────────────────
-        y += 4;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.setTextColor(0, 0, 0);
-        doc.text('SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS:', left, y); y += 5;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        const rfc3161ClosingText = 'Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.';
-        const rfc3161Lines = doc.splitTextToSize(rfc3161ClosingText, doc.internal.pageSize.getWidth() - 30);
-        doc.text(rfc3161Lines, left, y); y += (rfc3161Lines.length * 4) + 6;
-
-        // ── Metodologia de Selagem RFC 3161 ─────────────────────────────────────────
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.text('METODOLOGIA DE SELAGEM RFC 3161:', left, y); y += 5;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        const metodologiaSelo = 'Metodologia de Selagem RFC 3161: A integridade temporal desta prova é assegurada pela submissão do Master Hash a uma Autoridade de Selagem de Tempo (TSA) via protocolo RFC 3161, gerando uma evidência criptográfica (.tsr) que impede a retroatividade ou alteração da prova após a data de emissão.';
-        const metodoSLines = doc.splitTextToSize(metodologiaSelo, doc.internal.pageSize.getWidth() - 30);
-        doc.text(metodoSLines, left, y); y += (metodoSLines.length * 4) + 8;
-
-        // ── Selo de Certificação UNIFED - PROBATUM CERTIFIED (corpo da página 8) ─────
-        // SCP: mantido e expandido com sobreposição obrigatória conforme Protocolo UNIFED-GOLD
-        if (y > 230) { doc.addPage(); pageNumber++; y = 20; }
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.setTextColor(30, 60, 120);
-        doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.1.8-GOLD ]',
-            doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 5;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(6.5);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Estudo de Viabilidade · Consultoria Forense Especializada · Uso restrito a mandato jurídico autorizado',
-            doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 4;
-        doc.setFontSize(6);
-        doc.text('Fundamentação: RGIT Art. 103.º (Fraude Fiscal) · Art. 104.º (Fraude Qualificada) · CRP Art. 32.º · CPP Art. 125.º',
-            doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-        doc.setTextColor(0, 0, 0);
-        y += 6;
+        // ── Selo PROBATUM CERTIFIED movido para o Termo de Encerramento (após QR Code) ──
+        // Protocolo UNIFED-GOLD v13.2.1 — já impresso no bloco final consolidado.
 
 
         // ══════════════════════════════════════════════════════════════════════
@@ -6316,6 +6242,110 @@ async function exportPDF() {
         // sincronamente — sem race condition, sem setTimeout.
         // Conformidade: DORA (UE) 2022/2554 · RFC 3161 · Art. 125.º CPP
         addFooter(doc, pageNumber, true);
+
+        // ══════════════════════════════════════════════════════════════════════
+        // TERMO DE ENCERRAMENTO — ÚLTIMA PÁGINA (APÓS QR CODE)
+        // Protocolo UNIFED-GOLD v13.2.1 — Reposicionamento Forense
+        // Impresso APÓS addFooter(isLastPage=true) para que o número de páginas
+        // retornado por doc.internal.getNumberOfPages() seja o total REAL
+        // (inclui a página do QR Code), garantindo fidedignidade no Acórdão.
+        // Fundamento: Art. 125.º CPP · Art. 103.º RGIT · ISO/IEC 27037:2012
+        // ══════════════════════════════════════════════════════════════════════
+        {
+            // Garantir nova página se espaço insuficiente (y > 200mm)
+            if (y > 200) {
+                doc.addPage();
+                pageNumber++;
+                y = 20;
+            }
+
+            const _termW   = doc.internal.pageSize.getWidth();
+            const _termUW  = _termW - left - 14;   // largura utilizável (182mm)
+            const _termMH  = IFDESystem.masterHash || 'N/A';
+
+            // ── Linha separadora ──────────────────────────────────────────────
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(1);
+            doc.line(left, y, _termW - left, y);
+            y += 5;
+
+            // ── Cabeçalho do Termo ────────────────────────────────────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.text('TERMO DE ENCERRAMENTO — CONSULTORIA FORENSE', left, y); y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+
+            // ── Corpo do Termo: número dinâmico lido APÓS geração completa ────
+            // doc.internal.getNumberOfPages() neste ponto reflecte o total real.
+            const _totalPaginasTermo = doc.internal.getNumberOfPages();
+            const _termoTextoIntro = doc.splitTextToSize(
+                `O presente relatório é composto por ${_totalPaginasTermo} páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:`,
+                _termUW);
+            doc.text(_termoTextoIntro, left, y); y += (_termoTextoIntro.length * 4) + 2;
+
+            // ── Master Hash (courier, 6pt — legibilidade forense) ─────────────
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(6);
+            const _hashLines = doc.splitTextToSize(_termMH, _termUW);
+            doc.text(_hashLines, left, y); y += (_hashLines.length * 3.5) + 4;
+
+            // ── Continuação do texto de encerramento ──────────────────────────
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const _termoTextoCont = doc.splitTextToSize(
+                'constituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.',
+                _termUW);
+            doc.text(_termoTextoCont, left, y); y += (_termoTextoCont.length * 4) + 6;
+
+            // ── Art. 125.º CPP — Admissibilidade da Prova ────────────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 60, 120);
+            doc.text('ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP', left, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(0, 0, 0);
+            const _cpp125Lines = doc.splitTextToSize(
+                'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
+                'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
+                'integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível em sede de Acórdão da Relação nos termos do Art. 125.º CPP ' +
+                'e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). ' +
+                'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.',
+                _termUW);
+            doc.text(_cpp125Lines, left, y); y += (_cpp125Lines.length * 3.5) + 6;
+            doc.setTextColor(0, 0, 0);
+
+            // ── Selagem Temporal RFC 3161 ─────────────────────────────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.text('SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS:', left, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            const _rfc3161Lines = doc.splitTextToSize(
+                'Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. ' +
+                'Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.',
+                _termUW);
+            doc.text(_rfc3161Lines, left, y); y += (_rfc3161Lines.length * 3.5) + 4;
+
+            // ── Sello UNIFED-PROBATUM CERTIFIED (rodapé do Termo) ────────────
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(30, 60, 120);
+            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.1-GOLD ]',
+                _termW / 2, y, { align: 'center' }); y += 5;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Estudo de Viabilidade · Consultoria Forense Especializada · Uso restrito a mandato jurídico autorizado',
+                _termW / 2, y, { align: 'center' }); y += 4;
+            doc.setFontSize(6);
+            doc.text('Fundamentação: RGIT Art. 103.º (Fraude Fiscal) · Art. 104.º (Fraude Qualificada) · CRP Art. 32.º · CPP Art. 125.º',
+                _termW / 2, y, { align: 'center' });
+            doc.setTextColor(0, 0, 0);
+        }
+        // ══ FIM TERMO DE ENCERRAMENTO ══
 
         // ══════════════════════════════════════════════════════════════════════
         // SEGUNDA PASSAGEM — CORRECÇÃO DE NUMERAÇÃO (PROTOCOLO UNIFED-GOLD)
@@ -6590,7 +6620,7 @@ function injectAuxiliaryHelperBoxes() {
         <div class="aux-section-header">
             <i class="fas fa-layer-group"></i>
             <span>INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO</span>
-            <span class="aux-badge-legal">Lei TVDE · 0% Comissão</span>
+            <!-- badge Lei TVDE removido — v13.2.1: título mantido sem referência normativa no cabeçalho -->
         </div>
 
         <div class="aux-boxes-grid">

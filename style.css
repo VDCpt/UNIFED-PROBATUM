@@ -3428,17 +3428,20 @@ body.dual-screen .stat-card p {
 
 .info-box-refunds::after {
     content: "ADAPTADO 2025 (REF: REEMBOLSOS)";
-    font-size: 0.55rem;
+    font-size: 0.45rem !important; /* Reduzido para evitar transbordamento */
     position: absolute;
-    top: 4px;
-    right: 8px;
+    top: 2px;
+    right: 5px;
     color: var(--accent-primary);
     font-weight: 800;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     font-family: var(--font-mono, 'Courier New', monospace);
-    opacity: 0.85;
+    opacity: 0.7;
     pointer-events: none;
     white-space: nowrap;
+    max-width: 90%; /* Limite de segurança */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Ocultar o badge "ADAPTADO 2025" em anos fiscais ≤ 2024
