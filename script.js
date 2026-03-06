@@ -6391,12 +6391,12 @@ async function exportPDF() {
         //       (as variáveis totalDiscrepancy/platform.totals.gross não existem no sistema)
         // ══════════════════════════════════════════════════════════════════════
         {
-            // Calcular percentagem de discrepância com variáveis reais do sistema
-            const _inversaoBase   = totals.ganhos > 0 ? totals.ganhos : 1;
-            const _inversaoDelta  = Math.abs(cross.discrepanciaSaftVsDac7) + Math.abs(cross.discrepanciaCritica);
-            const _inversaoPct    = (_inversaoDelta / _inversaoBase) * 100;
+            // Cálculo de discrepância — PROTOCOLO UNIFED-GOLD v13.2.1
+            const totalDiscrepancy  = Math.abs(IFDESystem.analysis.crossings.discrepanciaSaftVsDac7 || 0);
+            const grossBase         = IFDESystem.documents.platform?.totals?.ganhos || totals.ganhos || 1;
+            const percDiscrepancia  = (totalDiscrepancy / grossBase) * 100;
 
-            if (_inversaoPct > 15) {
+            if (percDiscrepancia > 15) {
                 if (y > 230) { doc.addPage(); pageNumber++; y = 20; }
 
                 const _invW = doc.internal.pageSize.getWidth() - left - 14;
@@ -6412,7 +6412,7 @@ async function exportPDF() {
                 doc.setFontSize(9);
                 doc.setTextColor(180, 0, 0);
                 doc.text(
-                    `⚠ ALERTA DE DESVIO CRÍTICO (${_inversaoPct.toFixed(2)}%) — INVERSÃO DO ÓNUS DA PROVA`,
+                    `⚠ ALERTA DE DESVIO CRÍTICO (${percDiscrepancia.toFixed(2)}%) — INVERSÃO DO ÓNUS DA PROVA`,
                     left + 3, y + 5);
 
                 // Corpo legal
