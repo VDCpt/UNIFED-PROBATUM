@@ -2659,7 +2659,26 @@ const IFDESystem = {
     forensicMetadata: null,
     chart: null,
     discrepancyChart: null,
-    counts: { total: 0 }
+    counts: { total: 0 },
+
+    // ============================================================================
+    // AUXILIARYDATA — NON-INTERFERING DATA OBJECT (Encapsulamento Pericial)
+    // ISOLAMENTO TOTAL: Este objeto NÃO interfere com IFDESystem.financials,
+    // IFDESystem.analysis.totals nem com qualquer variável de estado de cálculo fiscal.
+    // Os valores aqui armazenados são fluxos de caixa de terceiros (0% comissão)
+    // que NÃO devem ser incluídos na base tributável da plataforma.
+    // Fundamento Legal: Lei TVDE · Art. 125.º CPP (Integridade da Prova)
+    // Conformidade: DORA (UE) 2022/2554 · ISO/IEC 27037:2012
+    // ============================================================================
+    auxiliaryData: {
+        campanhas:           0,   // "Ganhos da campanha" — fluxo de incentivo, isento de comissão
+        portagens:           0,   // "Portagens" — reembolso de custo operacional
+        gorjetas:            0,   // "Gorjetas dos passageiros" — transferência direta P2P
+        cancelamentos:       0,   // "Cancelamentos" — já reflectido nas Despesas/Comissões
+        totalNaoSujeitos:    0,   // Soma (campanhas + portagens + gorjetas)
+        processedFrom:       [],  // Rastreabilidade: ficheiros que geraram estes valores
+        extractedAt:         null // Timestamp ISO da última extração
+    }
 };
 
 let lastLogTime = 0;
@@ -2920,6 +2939,9 @@ function showMainInterface() {
 
     const exportJSONBtn = document.getElementById('exportJSONBtn');
     if (exportJSONBtn) exportJSONBtn.disabled = false;
+
+    // Injeção das Helper Boxes de Apoio Pericial (DocumentFragment — Non-Interfering)
+    injectAuxiliaryHelperBoxes();
 
     setTimeout(forensicDataSynchronization, 1000);
 }
@@ -3622,6 +3644,10 @@ async function processFile(file, type) {
             ValueSource.registerValue('stmtGanhosValue', extracted.ganhos, file.name, 'extração tabela Ganhos líquidos');
             ValueSource.registerValue('stmtDespesasValue', extracted.despesas, file.name, 'extração tabela Ganhos líquidos');
             ValueSource.registerValue('stmtGanhosLiquidosValue', extracted.ganhosLiq, file.name, 'extração tabela Ganhos líquidos');
+
+            // ── EXTRAÇÃO AUXILIAR — Non-Interfering (Campanhas / Portagens / Gorjetas / Cancelamentos) ──
+            // Chamada após processStatement — não interfere com os totais financeiros principais
+            processAuxiliaryPlatformData(text, file.name);
 
             logAudit(`📊 Extrato processado (v12.8.9): ${file.name} | Ganhos: ${formatCurrency(extracted.ganhos)} | Despesas: ${formatCurrency(extracted.despesas)} | Líquido: ${formatCurrency(extracted.ganhosLiq)}`, 'success');
             ForensicLogger.addEntry('STATEMENT_PROCESSED', { filename: file.name, ...extracted });
@@ -6200,7 +6226,322 @@ async function exportPDF() {
 // ============================================================================
 // 25. FUNÇÕES AUXILIARES
 // ============================================================================
+// ============================================================================
+// MÓDULO AUXILIAR PERICIAL — processAuxiliaryPlatformData()
+// DOM Injection via DocumentFragment · Non-Interfering Data Objects
+// Regex Pattern Matching para Extratos de Plataforma (PDF "Ganhos da Empresa")
+//
+// IMUTABILIDADE GARANTIDA: Esta função NÃO modifica, acede ou interfere com:
+//   - calculateDiscrepancy()       [PROTEGIDA — Core Freeze]
+//   - robustSAFTParser()           [PROTEGIDA — Core Freeze]
+//   - IFDESystem.financials        [PROTEGIDA — Core Freeze]
+//   - IFDESystem.analysis.totals   [PROTEGIDA — Core Freeze]
+//
+// Os valores extraídos são persistidos em IFDESystem.auxiliaryData (isolado).
+//
+// Fundamento Legal:
+//   • Gorjetas e Campanhas: isentos de comissão (0%) — Lei TVDE
+//   • Portagens: reembolso operacional — não integram rendimento bruto
+//   • Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554
+// ============================================================================
+function processAuxiliaryPlatformData(text, filename) {
+    if (!text || typeof text !== 'string') return;
+
+    // ── REGEX PATTERN MATCHING para campos do PDF "Ganhos da Empresa" ────────
+    // Cada padrão tenta múltiplas variações tipográficas do mesmo campo.
+    // String.match() — conforme instrução de implementação forense.
+
+    // 1. Campanhas: "Ganhos da campanha"
+    const campaignMatch = text.match(
+        /Ganhos\s+da\s+campa[nñ]ha\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    ) || text.match(
+        /Campaign\s+(?:earnings?|bonus)\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    );
+
+    // 2. Portagens: "Portagens"
+    const portageMatch = text.match(
+        /Portagens?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    ) || text.match(
+        /Tolls?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    );
+
+    // 3. Gorjetas: "Gorjetas dos passageiros"
+    const tipsMatch = text.match(
+        /Gorjetas\s+dos\s+passageiros\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    ) || text.match(
+        /(?:Tips?|Gorjetas?)\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    );
+
+    // 4. Cancelamentos: "Cancelamentos" / "Cancel fees"
+    const cancelMatch = text.match(
+        /Cancelamentos?\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    ) || text.match(
+        /(?:Cancel(?:lation)?\s+fees?)\s*[:\-–]?\s*(?:€\s*)?([\d][.\d]*[,\d]*\s*€?)/i
+    );
+
+    // ── Normalização e acumulação (Non-Interfering — só toca auxiliaryData) ──
+    const campanhas   = campaignMatch && campaignMatch[1] ? normalizeNumericValue(campaignMatch[1]) : 0;
+    const portagens   = portageMatch  && portageMatch[1]  ? normalizeNumericValue(portageMatch[1])  : 0;
+    const gorjetas    = tipsMatch     && tipsMatch[1]     ? normalizeNumericValue(tipsMatch[1])     : 0;
+    const cancelamentos = cancelMatch && cancelMatch[1]   ? normalizeNumericValue(cancelMatch[1])   : 0;
+
+    // Acumulação (suporte multi-ficheiro)
+    IFDESystem.auxiliaryData.campanhas       += campanhas;
+    IFDESystem.auxiliaryData.portagens       += portagens;
+    IFDESystem.auxiliaryData.gorjetas        += gorjetas;
+    IFDESystem.auxiliaryData.cancelamentos   += cancelamentos;
+    IFDESystem.auxiliaryData.totalNaoSujeitos =
+        forensicRound(IFDESystem.auxiliaryData.campanhas +
+                      IFDESystem.auxiliaryData.portagens  +
+                      IFDESystem.auxiliaryData.gorjetas);
+    IFDESystem.auxiliaryData.extractedAt = new Date().toISOString();
+
+    if (filename && !IFDESystem.auxiliaryData.processedFrom.includes(filename)) {
+        IFDESystem.auxiliaryData.processedFrom.push(filename);
+    }
+
+    // ── Actualizar boxes de UI via IDs (DOM já injetado por injectAuxiliaryHelperBoxes) ──
+    _updateAuxiliaryBoxes();
+
+    // ── Log forense ──────────────────────────────────────────────────────────
+    const anyFound = campanhas > 0 || portagens > 0 || gorjetas > 0 || cancelamentos > 0;
+    if (anyFound) {
+        logAudit(
+            `[AUX] ${filename || 'Extrato'} — ` +
+            `Campanhas: ${formatCurrency(campanhas)} | ` +
+            `Portagens: ${formatCurrency(portagens)} | ` +
+            `Gorjetas: ${formatCurrency(gorjetas)} | ` +
+            `Cancelamentos: ${formatCurrency(cancelamentos)} | ` +
+            `Total Não Sujeitos: ${formatCurrency(IFDESystem.auxiliaryData.totalNaoSujeitos)}`,
+            'success'
+        );
+        ForensicLogger.addEntry('AUXILIARY_DATA_EXTRACTED', {
+            filename,
+            campanhas,
+            portagens,
+            gorjetas,
+            cancelamentos,
+            totalNaoSujeitos: IFDESystem.auxiliaryData.totalNaoSujeitos
+        });
+    } else {
+        logAudit(
+            `[AUX] ${filename || 'Extrato'} — Campos auxiliares não encontrados neste ficheiro.`,
+            'info'
+        );
+    }
+}
+
+// ── Actualização interna das boxes de UI (chamada após cada extração) ─────────
+function _updateAuxiliaryBoxes() {
+    const aux = IFDESystem.auxiliaryData;
+    const setBox = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = formatCurrency(val);
+    };
+    setBox('auxBoxCampanhasValue',  aux.campanhas);
+    setBox('auxBoxPortagensValue',  aux.portagens);
+    setBox('auxBoxGorjetasValue',   aux.gorjetas);
+    setBox('auxBoxTotalNSValue',    aux.totalNaoSujeitos);
+    setBox('auxBoxCancelValue',     aux.cancelamentos);
+
+    // Nota DAC7: visibilidade condicional — mostrar "zona cinzenta" se totalNaoSujeitos > 0
+    const dac7NoteEl = document.getElementById('auxDac7ReconciliationNote');
+    if (dac7NoteEl && aux.totalNaoSujeitos > 0) {
+        dac7NoteEl.style.display = 'block';
+        const noteSpan = document.getElementById('auxDac7NoteValue');
+        if (noteSpan) noteSpan.textContent = formatCurrency(aux.totalNaoSujeitos);
+        const noteSpanQ = document.getElementById('auxDac7NoteValueQ');
+        if (noteSpanQ) noteSpanQ.textContent = formatCurrency(aux.totalNaoSujeitos);
+    }
+}
+
+// ============================================================================
+// injectAuxiliaryHelperBoxes() — DOM Injection via DocumentFragment
+// Injeta as 5 "Indicação de Apoio Pericial" boxes SEM interferir na main-grid.
+// Chamada uma única vez no initializeDashboard().
+// ============================================================================
+function injectAuxiliaryHelperBoxes() {
+    const targetId = 'auxiliaryHelperSection';
+
+    // Verificar se já foram injetadas (idempotência)
+    if (document.getElementById(targetId)) return;
+
+    const container = document.getElementById('dashboardAlerts');
+    if (!container) {
+        console.warn('[AUX] Container dashboardAlerts não encontrado. Injeção adiada.');
+        return;
+    }
+
+    // ── DocumentFragment — zero re-renders da main-grid ──────────────────────
+    const frag = document.createDocumentFragment();
+
+    const wrapper = document.createElement('div');
+    wrapper.id = targetId;
+    wrapper.className = 'auxiliary-helper-section';
+    wrapper.setAttribute('data-unifed-module', 'AUXILIARY_PERICIAL_v1');
+    wrapper.setAttribute('data-legal', 'Lei TVDE · Art. 125.º CPP · ISO/IEC 27037:2012');
+
+    wrapper.innerHTML = `
+        <!-- ══ SECÇÃO DE INDICAÇÃO DE APOIO PERICIAL ══════════════════════════════
+             UNIFED - PROBATUM · Módulo Auxiliar de Dados de Plataforma
+             Isolado de IFDESystem.financials (Non-Interfering Data Objects)
+             Valores: fluxos de caixa de terceiros — 0% comissão — Lei TVDE
+             ══════════════════════════════════════════════════════════════════ -->
+        <div class="aux-section-header">
+            <i class="fas fa-layer-group"></i>
+            <span>INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO</span>
+            <span class="aux-badge-legal">Lei TVDE · 0% Comissão</span>
+        </div>
+
+        <div class="aux-boxes-grid">
+
+            <!-- BOX 1: CAMPANHAS -->
+            <div class="small-info-box aux-box-campaigns" id="auxBoxCampanhas"
+                 data-field="Ganhos da campanha"
+                 title="Extraído de: 'Ganhos da campanha' — PDF Ganhos da Empresa">
+                <div class="aux-box-icon"><i class="fas fa-bullhorn"></i></div>
+                <div class="aux-box-body">
+                    <h5 class="aux-box-label">CAMPANHAS</h5>
+                    <p class="aux-box-value" id="auxBoxCampanhasValue">0,00 €</p>
+                    <span class="aux-box-desc">Ganhos da campanha</span>
+                </div>
+                <div class="aux-box-legal-tag">Isento comissão · 0%</div>
+            </div>
+
+            <!-- BOX 2: PORTAGENS -->
+            <div class="small-info-box aux-box-tolls" id="auxBoxPortagens"
+                 data-field="Portagens"
+                 title="Extraído de: 'Portagens' — reembolso operacional">
+                <div class="aux-box-icon"><i class="fas fa-road"></i></div>
+                <div class="aux-box-body">
+                    <h5 class="aux-box-label">PORTAGENS</h5>
+                    <p class="aux-box-value" id="auxBoxPortagensValue">0,00 €</p>
+                    <span class="aux-box-desc">Reembolso operacional</span>
+                </div>
+                <div class="aux-box-legal-tag">Custo reembolsado · 0%</div>
+            </div>
+
+            <!-- BOX 3: GORJETAS -->
+            <div class="small-info-box aux-box-tips" id="auxBoxGorjetas"
+                 data-field="Gorjetas dos passageiros"
+                 title="Extraído de: 'Gorjetas dos passageiros' — transferência P2P direta">
+                <div class="aux-box-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                <div class="aux-box-body">
+                    <h5 class="aux-box-label">GORJETAS</h5>
+                    <p class="aux-box-value" id="auxBoxGorjetasValue">0,00 €</p>
+                    <span class="aux-box-desc">Gorjetas dos passageiros</span>
+                </div>
+                <div class="aux-box-legal-tag">Transferência P2P · 0%</div>
+            </div>
+
+            <!-- BOX 4: TOTAL NÃO SUJEITOS -->
+            <div class="small-info-box aux-box-total-ns highlighted" id="auxBoxTotalNS"
+                 data-field="Total Não Sujeitos"
+                 title="Soma: Campanhas + Portagens + Gorjetas — fluxos isentos de comissão">
+                <div class="aux-box-icon"><i class="fas fa-sigma"></i></div>
+                <div class="aux-box-body">
+                    <h5 class="aux-box-label">TOTAL NÃO SUJEITOS</h5>
+                    <p class="aux-box-value highlighted" id="auxBoxTotalNSValue">0,00 €</p>
+                    <span class="aux-box-desc">Σ Campanhas + Portagens + Gorjetas</span>
+                </div>
+                <div class="aux-box-legal-tag">Fora da base tributável</div>
+            </div>
+
+            <!-- BOX 5: TAXAS DE CANCELAMENTO -->
+            <div class="small-info-box aux-box-cancel" id="auxBoxCancel"
+                 data-field="Cancelamentos"
+                 title="Taxas de cancelamento — comissão já incluída nas Despesas/Comissões">
+                <div class="aux-box-icon"><i class="fas fa-ban"></i></div>
+                <div class="aux-box-body">
+                    <h5 class="aux-box-label">TAXAS CANCELAMENTO</h5>
+                    <p class="aux-box-value" id="auxBoxCancelValue">0,00 €</p>
+                    <span class="aux-box-desc">Cancelamentos (já em Despesas)</span>
+                </div>
+                <div class="aux-box-legal-tag aux-tag-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Comissão incluída nos −Despesas
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── NOTA DE RECONCILIAÇÃO DAC7 ─────────────────────────────────────
+             Explica a "zona cinzenta" entre o reportado à AT e o valor líquido
+             recebido pelo motorista. Conforme instrução de implementação forense.
+             ─────────────────────────────────────────────────────────────────── -->
+        <div class="aux-dac7-reconciliation-note" id="auxDac7ReconciliationNote" style="display:none;">
+            <div class="dac7-note-header">
+                <i class="fas fa-balance-scale-right"></i>
+                <strong>NOTA DE RECONCILIAÇÃO DAC7 — ZONA CINZENTA IDENTIFICADA</strong>
+            </div>
+            <p>
+                O sistema UNIFED-PROBATUM isolou
+                <strong id="auxDac7NoteValue" class="dac7-highlight">0,00 €</strong>
+                em valores <em>não sujeitos a comissão</em> (Campanhas + Portagens + Gorjetas).
+                A soma destes campos explica a <strong>"zona cinzenta"</strong> entre o valor
+                reportado à Autoridade Tributária (DAC7) e o valor líquido recebido pelo motorista.
+            </p>
+            <div class="dac7-question-contraditorio">
+                <p class="dac7-q-label"><i class="fas fa-gavel"></i> QUESTIONÁRIO ESTRATÉGICO AO ADVOGADO (CONTRADITÓRIO)</p>
+                <p class="dac7-q-text">
+                    <em>"Considerando que o sistema UNIFED-PROBATUM isolou
+                    <strong id="auxDac7NoteValueQ" class="dac7-highlight"></strong> em Gorjetas e Campanhas,
+                    pode a parte contrária confirmar se estes valores (isentos de comissão) foram
+                    indevidamente incluídos na base de cálculo para o apuramento de rendimentos brutos
+                    reportados no SAF-T? Se sim, por que razão foi aplicada uma presunção de rendimento
+                    sobre valores que legalmente não sofrem retenção ou comissão pela plataforma (Lei TVDE)?"</em>
+                </p>
+            </div>
+        </div>
+    `;
+
+    frag.appendChild(wrapper);
+
+    // Injetar APÓS o container dashboardAlerts — sem tocar na main-grid
+    container.parentNode.insertBefore(frag, container.nextSibling);
+
+    console.log('[UNIFED-AUX] ✅ Auxiliary Helper Boxes injetadas via DocumentFragment. Non-Interfering. Core Freeze mantido.');
+    ForensicLogger.addEntry('AUX_BOXES_INJECTED', {
+        module: 'AUXILIARY_PERICIAL_v1',
+        targetAfter: 'dashboardAlerts',
+        method: 'DocumentFragment',
+        boxes: ['Campanhas', 'Portagens', 'Gorjetas', 'TotalNaoSujeitos', 'Cancelamentos']
+    });
+}
+
+// ── Reset auxiliaryData no clearConsole / resetAllValues ─────────────────────
+function resetAuxiliaryData() {
+    IFDESystem.auxiliaryData = {
+        campanhas:        0,
+        portagens:        0,
+        gorjetas:         0,
+        cancelamentos:    0,
+        totalNaoSujeitos: 0,
+        processedFrom:    [],
+        extractedAt:      null
+    };
+    _updateAuxiliaryBoxes();
+    const dac7NoteEl = document.getElementById('auxDac7ReconciliationNote');
+    if (dac7NoteEl) dac7NoteEl.style.display = 'none';
+}
+
 function generateMasterHash() {
+    // ── forensicSummary: inclui auxiliaryData para imutabilidade da análise ──
+    // Conforme instrução: "o MasterHash final inclui estes novos campos no
+    // metadata.forensicSummary para garantir a imutabilidade da análise."
+    const forensicSummary = {
+        auxiliaryData: {
+            campanhas:        IFDESystem.auxiliaryData.campanhas,
+            portagens:        IFDESystem.auxiliaryData.portagens,
+            gorjetas:         IFDESystem.auxiliaryData.gorjetas,
+            cancelamentos:    IFDESystem.auxiliaryData.cancelamentos,
+            totalNaoSujeitos: IFDESystem.auxiliaryData.totalNaoSujeitos,
+            processedFrom:    IFDESystem.auxiliaryData.processedFrom,
+            extractedAt:      IFDESystem.auxiliaryData.extractedAt,
+            legalBasis:       'Lei TVDE · 0% comissão · Art. 125.º CPP'
+        }
+    };
+
     const data = JSON.stringify({
         client: IFDESystem.client,
         docs: IFDESystem.documents,
@@ -6210,7 +6551,8 @@ function generateMasterHash() {
         twoAxis: IFDESystem.analysis.twoAxis,
         timestamp: Date.now(),
         timestampRFC3161: new Date().toUTCString(),
-        version: IFDESystem.version
+        version: IFDESystem.version,
+        metadata: { forensicSummary }
     });
     IFDESystem.masterHash = CryptoJS.SHA256(data).toString();
     setElementText('masterHashValue', IFDESystem.masterHash);
@@ -6478,6 +6820,9 @@ function resetAllValues() {
 
     generateMasterHash();
     ForensicLogger.addEntry('VALUES_RESET');
+
+    // Reset dos dados auxiliares (Non-Interfering) — sincronizado com o reset principal
+    resetAuxiliaryData();
 }
 
 function resetSystem() {
@@ -6668,9 +7013,12 @@ window.openLogsModal = openLogsModal;
 window.openHashModal = openHashModal;
 window.clearConsole = clearConsole;
 window.filterDAC7ByPeriod = filterDAC7ByPeriod;
+window.processAuxiliaryPlatformData = processAuxiliaryPlatformData;
+window.injectAuxiliaryHelperBoxes = injectAuxiliaryHelperBoxes;
+window.resetAuxiliaryData = resetAuxiliaryData;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v13.1.6-GOLD GOLD · COURT READY · DORA COMPLIANT
+   FIM DO FICHEIRO SCRIPT.JS · v13.1.8-GOLD GOLD · COURT READY · DORA COMPLIANT
    UNIFED - PROBATUM — PERSISTÊNCIA NORMATIVA E SINCRONIZAÇÃO TEMPORAL
    CORREÇÕES IMPLEMENTADAS:
    ✓ robustSAFTParser v13.1.6-GOLD: Header-Based CSV Mapping (mapeamento dinâmico
@@ -6684,4 +7032,19 @@ window.filterDAC7ByPeriod = filterDAC7ByPeriod;
    ✓ Box "OMISSÃO DE DESPESAS %": (Despesas/Ganhos)*100 — Big Data v13.0
    ✓ generateQRCode: CorrectLevel.L + string compacta UNIFED|SESSION|HASH
    ✓ DORA (UE) 2022/2554 — cláusula no PDF e nos badges
+
+   NOVO — v13.1.8-GOLD-AUX (Módulo Auxiliar Pericial):
+   ✓ IFDESystem.auxiliaryData: Non-Interfering Data Object — isolado de financials
+     Campos: campanhas, portagens, gorjetas, cancelamentos, totalNaoSujeitos
+     Base Legal: Lei TVDE · 0% comissão · Art. 125.º CPP
+   ✓ processAuxiliaryPlatformData(text, filename): Regex Pattern Matching para
+     "Ganhos da campanha", "Gorjetas dos passageiros", "Portagens", "Cancelamentos"
+     via String.match() — chamada após SchemaRegistry.processStatement()
+   ✓ injectAuxiliaryHelperBoxes(): DOM Injection via DocumentFragment
+     5 div.small-info-box injetadas APÓS #dashboardAlerts (sem tocar na main-grid)
+     Nota de Reconciliação DAC7 incluída — explica a "zona cinzenta" AT vs motorista
+   ✓ generateMasterHash(): incluí IFDESystem.auxiliaryData no metadata.forensicSummary
+     garantindo imutabilidade da análise sobre os campos auxiliares
+   ✓ resetAuxiliaryData(): sincronizado com resetAllValues() — purga total coerente
+   ✓ Questionário Estratégico ao Advogado (Contraditório) integrado na Nota DAC7
    ===================================================================== */

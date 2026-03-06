@@ -3149,3 +3149,262 @@ body.dual-screen .stat-card p {
     text-transform: uppercase;
 }
 /* ═══ FIM — Cadeia de Custódia CSS · v13.1.8-GOLD-CHAIN · UNIFED - PROBATUM ═══ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MÓDULO AUXILIAR PERICIAL — INDICAÇÃO DE APOIO PERICIAL
+   UNIFED - PROBATUM v13.1.8-GOLD-AUX
+   Non-Interfering UI Components — Encapsulamento total da main-grid
+   Lei TVDE · Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Wrapper da secção auxiliar ────────────────────────────────────────────── */
+.auxiliary-helper-section {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.25rem 1rem;
+    background: rgba(0, 229, 255, 0.03);
+    border: 1px solid rgba(0, 229, 255, 0.18);
+    border-radius: var(--border-radius, 8px);
+    position: relative;
+    overflow: hidden;
+}
+
+.auxiliary-helper-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 12px,
+        rgba(0, 229, 255, 0.015) 12px,
+        rgba(0, 229, 255, 0.015) 14px
+    );
+    pointer-events: none;
+}
+
+/* ── Cabeçalho da secção ───────────────────────────────────────────────────── */
+.aux-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #00e5ff;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+}
+
+.aux-section-header i {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.aux-badge-legal {
+    margin-left: auto;
+    padding: 0.18rem 0.55rem;
+    background: rgba(226, 184, 122, 0.12);
+    border: 1px solid rgba(226, 184, 122, 0.35);
+    border-radius: 3px;
+    color: #e2b87a;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+/* ── Grid das boxes ────────────────────────────────────────────────────────── */
+.aux-boxes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Box individual (small-info-box) ───────────────────────────────────────── */
+.small-info-box {
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 15, 30, 0.7);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    border-radius: 6px;
+    padding: 0.85rem 0.8rem 0.55rem;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 0;
+}
+
+.small-info-box:hover {
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.08);
+}
+
+.aux-box-icon {
+    font-size: 1.1rem;
+    color: rgba(0, 229, 255, 0.55);
+    margin-bottom: 0.35rem;
+}
+
+.aux-box-body {
+    flex: 1;
+}
+
+.aux-box-label {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin: 0 0 0.2rem;
+}
+
+.aux-box-value {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #00e5ff;
+    margin: 0 0 0.2rem;
+    line-height: 1.2;
+}
+
+.aux-box-value.highlighted {
+    color: #e2b87a;
+    font-size: 1.1rem;
+}
+
+.aux-box-desc {
+    font-size: 0.6rem;
+    color: #475569;
+    display: block;
+    line-height: 1.3;
+}
+
+/* ── Variações cromáticas por tipo ─────────────────────────────────────────── */
+.aux-box-campaigns { border-color: rgba(74, 222, 128, 0.2); }
+.aux-box-campaigns .aux-box-icon  { color: rgba(74, 222, 128, 0.65); }
+.aux-box-campaigns .aux-box-value { color: #4ade80; }
+
+.aux-box-tolls { border-color: rgba(148, 163, 184, 0.2); }
+.aux-box-tolls .aux-box-value { color: #94a3b8; }
+
+.aux-box-tips { border-color: rgba(196, 148, 255, 0.2); }
+.aux-box-tips .aux-box-icon  { color: rgba(196, 148, 255, 0.65); }
+.aux-box-tips .aux-box-value { color: #c494ff; }
+
+.aux-box-total-ns {
+    border-color: rgba(226, 184, 122, 0.35);
+    background: rgba(226, 184, 122, 0.04);
+}
+.aux-box-total-ns .aux-box-icon  { color: rgba(226, 184, 122, 0.7); }
+
+.aux-box-cancel {
+    border-color: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.03);
+}
+.aux-box-cancel .aux-box-icon  { color: rgba(239, 68, 68, 0.6); }
+.aux-box-cancel .aux-box-value { color: #ef4444; }
+
+/* ── Etiqueta legal no rodapé de cada box ───────────────────────────────────── */
+.aux-box-legal-tag {
+    font-size: 0.55rem;
+    color: #334155;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 0.5rem;
+    padding-top: 0.35rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.aux-tag-warning {
+    color: rgba(239, 68, 68, 0.65);
+}
+
+/* ── Nota de Reconciliação DAC7 ─────────────────────────────────────────────── */
+.aux-dac7-reconciliation-note {
+    background: rgba(226, 184, 122, 0.05);
+    border: 1px solid rgba(226, 184, 122, 0.25);
+    border-left: 3px solid #e2b87a;
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-top: 0.75rem;
+}
+
+.dac7-note-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #e2b87a;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+}
+
+.dac7-highlight {
+    color: #e2b87a;
+    font-weight: 700;
+}
+
+/* ── Questionário Estratégico ao Advogado ───────────────────────────────────── */
+.dac7-question-contraditorio {
+    margin-top: 0.8rem;
+    padding: 0.7rem 0.8rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(0, 229, 255, 0.2);
+    border-radius: 3px;
+}
+
+.dac7-q-label {
+    color: #00e5ff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin: 0 0 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dac7-q-text {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    line-height: 1.75;
+    margin: 0;
+}
+
+.dac7-q-text em {
+    font-style: italic;
+    color: #cbd5e1;
+}
+
+.dac7-q-text strong {
+    color: #e2e8f0;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .aux-boxes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .aux-section-header {
+        font-size: 0.62rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .aux-boxes-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ═══ FIM — Módulo Auxiliar Pericial · v13.1.8-GOLD-AUX · UNIFED - PROBATUM ═══ */
