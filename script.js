@@ -3892,12 +3892,12 @@ function activateDemoMode() {
 
     // ── 3. Período Temporal: 2.º Semestre ────────────────────────────────────
     IFDESystem.selectedPeriodo = '2s';
-    const periodoEl = document.getElementById('periodoSelector');
+    const periodoEl = document.getElementById('periodoAnalise');
     if (periodoEl) periodoEl.value = '2s';
 
     // ── 4. Plataforma: Outra -------------------------------------------────
     IFDESystem.selectedPlatform = 'outra';
-    const platformEl = document.getElementById('platformSelect');
+    const platformEl = document.getElementById('selPlatformFixed');
     if (platformEl) platformEl.value = 'outra';
 
     // ── 5. Meses do 2.º Semestre: Jul–Dez 2024 ──────────────────────────────
@@ -3952,10 +3952,6 @@ function activateDemoMode() {
         IFDESystem.documents.dac7.totals.q2              = 0;
         IFDESystem.documents.dac7.totals.q3              = 3775.16;
         IFDESystem.documents.dac7.totals.q4              = 3980.00;
-        IFDESystem.documents.dac7.totals.dac7Q1          = 0;
-        IFDESystem.documents.dac7.totals.dac7Q2          = 0;
-        IFDESystem.documents.dac7.totals.dac7Q3          = 3775.16;
-        IFDESystem.documents.dac7.totals.dac7Q4          = 3980.00;
         IFDESystem.documents.dac7.totals.dac7TotalPeriodo = 7755.16;
         IFDESystem.documents.dac7.totals.receitaAnual    = 7755.16;
 
@@ -4413,12 +4409,6 @@ function filterDAC7ByPeriod() {
         'trimestral': `${IFDESystem.selectedTrimestre || 1}.º Trimestre`,
         'mensal': 'Mensal'
     }[periodo] || periodo;
-
-    // Actualizar display do total DAC7 se existir campo dedicado
-    const dac7TotalDisplay = document.getElementById('dac7TotalValue');
-    if (dac7TotalDisplay) {
-        dac7TotalDisplay.textContent = formatCurrency(periodoTotal);
-    }
 
     logAudit(`📅 Filtro DAC7 aplicado: ${periodoLabel} — Total: ${formatCurrency(periodoTotal)}`, 'info');
     ForensicLogger.addEntry('DAC7_PERIOD_FILTER', { periodo, visible, periodoTotal });
@@ -6393,7 +6383,7 @@ async function exportPDF() {
         {
             // Cálculo de discrepância — PROTOCOLO UNIFED-GOLD v13.2.1
             const totalDiscrepancy  = Math.abs(IFDESystem.analysis.crossings.discrepanciaSaftVsDac7 || 0);
-            const grossBase         = IFDESystem.documents.platform?.totals?.ganhos || totals.ganhos || 1;
+            const grossBase         = totals.ganhos || 1;
             const percDiscrepancia  = (totalDiscrepancy / grossBase) * 100;
 
             if (percDiscrepancia > 15) {
@@ -7291,8 +7281,7 @@ function resetAllValues() {
     IFDESystem.documents.invoices.totals = { invoiceValue: 0, records: 0 };
     IFDESystem.documents.dac7.totals = {
         records: 0, q1: 0, q2: 0, q3: 0, q4: 0,
-        dac7Q1: 0, dac7Q2: 0, dac7Q3: 0, dac7Q4: 0,
-        dac7TotalPeriodo: 0, totalPeriodo: 0, receitaAnual: 0
+        totalPeriodo: 0, receitaAnual: 0
     };
     IFDESystem.documents.control.totals = { records: 0 };
 
