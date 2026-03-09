@@ -277,28 +277,47 @@ async function renderSankeyToImage(analysis) {
     ctx.fillStyle = 'rgba(0,229,255,0.7)';
     ctx.fillText('Read-Only · Art. 125.o CPP · Output Enrichment Layer', W / 2, 55);
 
-    var ganhos    = t.ganhos || 0;
+    // ── Variáveis para o Sankey ─────────────────────────────────────────────
+    // NODO RAIZ (esquerda): Volume Transacional Real = Ganhos Extrato + Omissões C2
+    var ganhos    = t.ganhos    || 0;
     var dac7      = t.dac7TotalPeriodo || 0;
-    var declarado = t.saftBruto || 0;
-    var despesas  = t.despesas || 0;
-    var omissao   = Math.abs(c.discrepanciaCritica || 0);
+    var saftBruto = t.saftBruto || 0;
+    var despesas  = t.despesas  || 0;
+    var fatPlat   = t.faturaPlataforma || 0;
+    var omissaoC2 = Math.abs(c.discrepanciaCritica || 0);   // C2: Desp vs Fatura
+    var omissaoC1 = Math.abs(c.c1_delta || (saftBruto - dac7)); // C1: SAF-T vs DAC7
     var passivo   = Math.abs(c.ivaFalta || 0) + Math.abs(c.ircEstimado || 0);
 
+    // Volume Transacional Real = Ganhos reais do motorista + valores omitidos/retidos
+    var volumeReal = ganhos + omissaoC2;
+
+    // Ramo "Reportado": o que chegou às autoridades (DAC7) — subset do volume real
+    var reportado  = Math.min(dac7, volumeReal);
+
+    // Ramo "Omitidos/Retidos": o que não foi reportado nem entregue ao motorista
+    var omitidos   = volumeReal - reportado;
+
+    // ── Nós do Diagrama de Fluxo Forense ────────────────────────────────────
+    // Estrutura: [0] Nó Raiz → bifurca para [1] Reportado e [2] Omitidos
+    //            [2] Omitidos → alimenta [3] Passivo Tributário
     var nodes = [
-        { x:  60, y: 100, w: 160, h: 80, label: 'Receita\nPlataforma', value: ganhos,    color: '#3B82F6' },
-        { x: 340, y:  80, w: 160, h: 80, label: 'DAC7\nReportado',    value: dac7,       color: '#8B5CF6' },
-        { x: 340, y: 200, w: 160, h: 80, label: 'Declarado\nSAF-T',   value: declarado,  color: '#06B6D4' },
-        { x: 620, y: 100, w: 160, h: 80, label: 'Despesas\nDeclaradas',value: despesas,  color: '#10B981' },
-        { x: 900, y:  80, w: 160, h: 80, label: 'Omissao\nDetetada',  value: omissao,    color: '#EF4444' },
-        { x:1180, y: 100, w: 160, h: 80, label: 'Passivo\nTributario',value: passivo,    color: '#F59E0B' }
+        // Nó Principal (esquerda) — Volume Transacional Real
+        { x:  60, y: 200, w: 200, h: 100, label: 'Volume Transacional\nReal (Ganhos +\nOmissoes)',  value: volumeReal, color: '#3B82F6' },
+        // Ramo superior — Reportado ao Estado (DAC7/SAF-T)
+        { x: 420, y:  80, w: 200, h: 100, label: 'Reportado\n(DAC7 / SAF-T)',                       value: reportado,  color: '#10B981' },
+        // Ramo inferior — Fuga (Valores Omitidos/Retidos Ilegalmente)
+        { x: 420, y: 330, w: 200, h: 100, label: 'Valores Omitidos\n/ Retidos\nIlegalmente',        value: omitidos,   color: '#EF4444' },
+        // Nó final — Passivo Tributário resultante das omissões
+        { x: 790, y: 330, w: 200, h: 100, label: 'Passivo\nTributario\n(IVA + IRC)',                value: passivo,    color: '#F59E0B' }
     ];
 
     var flows = [
-        { from: 0, to: 1, color: '#8B5CF6', opacity: 0.35 },
-        { from: 0, to: 2, color: '#06B6D4', opacity: 0.35 },
-        { from: 2, to: 3, color: '#10B981', opacity: 0.35 },
-        { from: 3, to: 4, color: '#EF4444', opacity: 0.50 },
-        { from: 4, to: 5, color: '#F59E0B', opacity: 0.60 }
+        // Volume Real → Reportado (fluxo legítimo)
+        { from: 0, to: 1, color: '#10B981', opacity: 0.50 },
+        // Volume Real → Omitidos (fluxo de fuga — evidência forense)
+        { from: 0, to: 2, color: '#EF4444', opacity: 0.65 },
+        // Omitidos → Passivo Tributário (consequência fiscal)
+        { from: 2, to: 3, color: '#F59E0B', opacity: 0.70 }
     ];
 
     flows.forEach(function(f) {
@@ -343,14 +362,15 @@ async function renderSankeyToImage(analysis) {
     ctx.font = '12px Courier New, monospace';
     ctx.textAlign = 'left';
     [
-        { color: '#EF4444', text: 'Omissao: ' + _fmtEur(omissao) + ' (' + (c.percentagemOmissao || 0).toFixed(2) + '%)' },
-        { color: '#F59E0B', text: 'IVA 23%: ' + _fmtEur(c.ivaFalta || 0) + ' | IRC: ' + _fmtEur(c.ircEstimado || 0) },
-        { color: '#8B5CF6', text: 'DAC7 Gap: ' + _fmtEur(Math.abs(c.discrepanciaSaftVsDac7 || 0)) }
+        { color: '#3B82F6', text: 'Volume Real: ' + _fmtEur(volumeReal) },
+        { color: '#10B981', text: 'Reportado (DAC7/SAF-T): ' + _fmtEur(reportado) },
+        { color: '#EF4444', text: 'Omitido/Retido: ' + _fmtEur(omitidos) + ' (' + (c.percentagemOmissao || 0).toFixed(2) + '%)' },
+        { color: '#F59E0B', text: 'Passivo Trib. (IVA+IRC): ' + _fmtEur(passivo) }
     ].forEach(function(lg, i) {
         ctx.fillStyle = lg.color;
-        ctx.fillRect(60 + i * 420, H - 45, 14, 14);
+        ctx.fillRect(60 + i * 320, H - 45, 14, 14);
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(lg.text, 80 + i * 420, H - 33);
+        ctx.fillText(lg.text, 80 + i * 320, H - 33);
     });
 
     var dataURL = canvas.toDataURL('image/png');

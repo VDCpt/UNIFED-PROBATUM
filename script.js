@@ -1909,7 +1909,7 @@ const ValueSource = {
 // ============================================================================
 const translations = {
     pt: {
-        startBtn: "INICIAR PERÍCIA v12.8",
+        startBtn: "INICIAR PERÍCIA v13.3.0-DIAMOND",
         splashLogsBtn: "REGISTO DE ATIVIDADES (LOG)",
         navDemo: "CASO SIMULADO",
         langBtn: "EN",
@@ -1924,7 +1924,7 @@ const translations = {
         lblPlatform: "PLATAFORMA DIGITAL",
         btnEvidence: "GESTÃO DE EVIDÊNCIAS",
         btnAnalyze: "EXECUTAR PERÍCIA",
-        btnPDF: "RELATÓRIO PERICIAL",
+        btnPDF: "PARECER TÉCNICO",
         cardNet: "VALOR LÍQUIDO RECONSTRUÍDO",
         cardComm: "COMISSÕES DETETADAS",
         cardJuros: "DISCREPÂNCIA COMISSÕES",
@@ -1933,7 +1933,7 @@ const translations = {
         irc: "IRC (21% + Derrama)",
         iva6: "IVA 6% OMITIDO",
         iva23: "IVA 23% OMITIDO",
-        kpiTitle: "TRIANGULAÇÃO FINANCEIRA · BIG DATA ALGORITHM v12.8",
+        kpiTitle: "TRIANGULAÇÃO FINANCEIRA · BIG DATA ALGORITHM v13.3.0-DIAMOND",
         kpiGross: "BRUTO REAL",
         kpiCommText: "COMISSÕES",
         kpiNetText: "LÍQUIDO",
@@ -2029,7 +2029,7 @@ const translations = {
         clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatório é selado com o Master Hash SHA-256 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento."
     },
     en: {
-        startBtn: "START FORENSIC EXAM v12.8",
+        startBtn: "START FORENSIC EXAM v13.3.0-DIAMOND",
         splashLogsBtn: "ACTIVITY LOG (GDPR Art. 30)",
         navDemo: "SIMULATED CASE",
         langBtn: "PT",
@@ -2044,7 +2044,7 @@ const translations = {
         lblPlatform: "DIGITAL PLATFORM",
         btnEvidence: "DIGITAL EVIDENCE MANAGEMENT",
         btnAnalyze: "EXECUTE FORENSIC EXAM",
-        btnPDF: "EXPERT REPORT",
+        btnPDF: "EXPERT OPINION",
         cardNet: "RECONSTRUCTED NET VALUE",
         cardComm: "DETECTED COMMISSIONS",
         cardJuros: "COMMISSION DISCREPANCY",
@@ -2053,7 +2053,7 @@ const translations = {
         irc: "CIT (21% + Surtax)",
         iva6: "VAT 6% OMITTED",
         iva23: "VAT 23% OMITTED",
-        kpiTitle: "FINANCIAL TRIANGULATION · BIG DATA ALGORITHM v12.8",
+        kpiTitle: "FINANCIAL TRIANGULATION · BIG DATA ALGORITHM v13.3.0-DIAMOND",
         kpiGross: "REAL GROSS",
         kpiCommText: "COMMISSIONS",
         kpiNetText: "NET",
@@ -4315,38 +4315,69 @@ function performForensicCrossings() {
     const dac7Total = totals.dac7TotalPeriodo || 0;
     const ganhosLiquidos = totals.ganhosLiquidos || 0;
 
-    cross.saftVsDac7Alert = Math.abs(saftBruto - dac7Total) > 0.01;
-    cross.saftVsGanhosAlert = Math.abs(saftBruto - ganhos) > 0.01;
-
-    // Primeira discrepância: Despesas (Extrato) vs Faturas
-    cross.discrepanciaCritica = despesas - faturaPlataforma;
-    cross.percentagemOmissao = despesas > 0 ? (cross.discrepanciaCritica / despesas) * 100 : 0;
-    cross.ivaFalta = cross.discrepanciaCritica * 0.23;
-    cross.ivaFalta6 = cross.discrepanciaCritica * 0.06;
-
-    // Segunda discrepância: Ganhos Reais (Extrato) vs DAC7 comunicado — SMOKING GUN
-    // Fórmula: Ganhos Reais - DAC7 reportado = subcomunicação da plataforma ao Estado
-    // Demo: 10.157,73 € - 7.755,16 € = 2.402,57 €
-    cross.discrepanciaSaftVsDac7 = ganhos - dac7Total;
-    cross.percentagemSaftVsDac7 = ganhos > 0 ? (cross.discrepanciaSaftVsDac7 / ganhos) * 100 : 0;
-
-    cross.percentagemDiscrepancia = despesas > 0 ? (cross.discrepanciaCritica / despesas) * 100 : 0;
+    // ═══════════════════════════════════════════════════════════════════════
+    // MATRIZ DOS 4 CRUZAMENTOS FORENSES — UNIFED-PROBATUM v13.3.0-DIAMOND
+    // Implementa os 4 eixos de prova da falha sistemática da plataforma.
+    // ═══════════════════════════════════════════════════════════════════════
 
     const mesesDados = IFDESystem.dataMonths.size || 1;
+
+    // ── C1: SAF-T Valor Bruto Total vs DAC7 ─────────────────────────────────
+    // Prova: O que a plataforma fatura internamente vs o que reporta ao Estado
+    cross.c1_saftBruto       = saftBruto;
+    cross.c1_dac7            = dac7Total;
+    cross.c1_delta           = saftBruto - dac7Total;
+    cross.c1_pct             = saftBruto > 0 ? (cross.c1_delta / saftBruto) * 100 : 0;
+    cross.saftVsDac7Alert    = Math.abs(cross.c1_delta) > 0.01;
+
+    // ── C2: Despesas/Comissões (Extrato) vs Faturado (Plataforma) ───────────
+    // Prova rainha: retenção ilegal — o que reteve vs o que emitiu em fatura
+    cross.c2_despesas        = despesas;
+    cross.c2_faturaPlataforma= faturaPlataforma;
+    cross.discrepanciaCritica= despesas - faturaPlataforma;   // alias histórico mantido
+    cross.c2_delta           = cross.discrepanciaCritica;
+    cross.c2_pct             = despesas > 0 ? (cross.c2_delta / despesas) * 100 : 0;
+    cross.percentagemOmissao = cross.c2_pct;                  // alias histórico mantido
+    cross.ivaFalta           = cross.discrepanciaCritica * 0.23;
+    cross.ivaFalta6          = cross.discrepanciaCritica * 0.06;
+
+    // ── C3: SAF-T Valor Bruto Total vs GANHOS (EXTRATO) ─────────────────────
+    // Prova: Viagens faturadas pelo sistema vs transferências efetivas ao motorista
+    cross.c3_saftBruto       = saftBruto;
+    cross.c3_ganhos          = ganhos;
+    cross.c3_delta           = saftBruto - ganhos;
+    cross.c3_pct             = saftBruto > 0 ? (cross.c3_delta / saftBruto) * 100 : 0;
+    cross.saftVsGanhosAlert  = Math.abs(cross.c3_delta) > 0.01;
+
+    // ── C4: GANHOS LÍQUIDOS (Declarados/Fiscais) vs LÍQUIDO (EXTRATO) ───────
+    // Prova final: diferença no bolso do sujeito passivo
+    // Líquido Declarado = saftBruto - faturaPlataforma  (o que o contribuinte deveria ter recebido)
+    // Líquido Real      = ganhosLiquidos                (o que efectivamente recebeu)
+    cross.c4_liquidoDeclarado = saftBruto - faturaPlataforma;
+    cross.c4_liquidoReal      = ganhosLiquidos;
+    cross.c4_delta            = cross.c4_liquidoDeclarado - ganhosLiquidos;
+    cross.c4_pct              = cross.c4_liquidoDeclarado > 0
+                                    ? (cross.c4_delta / cross.c4_liquidoDeclarado) * 100
+                                    : 0;
+
+    // ── Variáveis derivadas (compatibilidade histórica + novos cálculos) ────
+    cross.discrepanciaSaftVsDac7  = ganhos - dac7Total;        // alias histórico (C1 proxy via ganhos)
+    cross.percentagemSaftVsDac7   = ganhos > 0 ? (cross.discrepanciaSaftVsDac7 / ganhos) * 100 : 0;
+    cross.percentagemDiscrepancia = cross.c2_pct;
+
     const discrepanciaMensalMedia = cross.discrepanciaCritica / mesesDados;
-
     cross.btor = despesas;
-    cross.btf = faturaPlataforma;
+    cross.btf  = faturaPlataforma;
 
-    cross.impactoMensalMercado = discrepanciaMensalMedia * 38000;
-    cross.impactoAnualMercado = cross.impactoMensalMercado * 12;
-    cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+    cross.impactoMensalMercado  = discrepanciaMensalMedia * 38000;
+    cross.impactoAnualMercado   = cross.impactoMensalMercado * 12;
+    cross.impactoSeteAnosMercado= cross.impactoAnualMercado * 7;
 
-    cross.discrepancia5IMT = cross.discrepanciaSaftVsDac7 * 0.05;
-    cross.agravamentoBrutoIRC = cross.discrepanciaSaftVsDac7 * 12;
-    cross.ircEstimado = cross.agravamentoBrutoIRC * 0.21;
-
-    cross.bigDataAlertActive = Math.abs(cross.discrepanciaCritica) > 0.01;
+    cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;
+    // CORRIGIDO v13.3.0-DIAMOND: normalização semestral→anual via mesesDados
+    cross.agravamentoBrutoIRC  = (cross.discrepanciaSaftVsDac7 / mesesDados) * 12;
+    cross.ircEstimado          = cross.agravamentoBrutoIRC * 0.21;
+    cross.bigDataAlertActive   = Math.abs(cross.discrepanciaCritica) > 0.01;
 
     const baseComparacao = Math.max(saftBruto, ganhos, dac7Total);
     IFDESystem.analysis.verdict = getRiskVerdict(Math.abs(cross.discrepanciaCritica), baseComparacao);
@@ -4355,14 +4386,23 @@ function performForensicCrossings() {
         IFDESystem.analysis.verdict.percent = cross.percentagemDiscrepancia.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
     }
 
-    logAudit(`🔫 SMOKING GUN: Despesas ${formatCurrency(despesas)} vs Fatura ${formatCurrency(faturaPlataforma)} = ${formatCurrency(cross.discrepanciaCritica)} (${cross.percentagemOmissao.toFixed(2)}%)`, 'error');
-    logAudit(`📊 SAF-T vs DAC7 (${IFDESystem.selectedPeriodo}): ${formatCurrency(saftBruto)} vs ${formatCurrency(dac7Total)} = ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${cross.percentagemSaftVsDac7.toFixed(2)}%)`, 'warning');
-    logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)}`, 'error');
-    logAudit(`💰 IVA em falta (6%): ${formatCurrency(cross.ivaFalta6)}`, 'info');
+    // ── Audit Log — 4 eixos forenses individuais ────────────────────────────
+    logAudit(`━━ MATRIZ FORENSE v13.3.0-DIAMOND ━━ Período: ${IFDESystem.selectedPeriodo} | Meses: ${mesesDados}`, 'info');
+    logAudit(`[C1] SAF-T Bruto (${formatCurrency(saftBruto)}) vs DAC7 (${formatCurrency(dac7Total)}) → Δ ${formatCurrency(cross.c1_delta)} (${cross.c1_pct.toFixed(2)}%) — Sub-comunicação plataforma→Estado`, 'warning');
+    logAudit(`[C2] 🔫 SMOKING GUN — Despesas/Comissões (${formatCurrency(despesas)}) vs Faturado (${formatCurrency(faturaPlataforma)}) → Δ ${formatCurrency(cross.c2_delta)} (${cross.c2_pct.toFixed(2)}%) — Retenção ilegal provada`, 'error');
+    logAudit(`[C3] SAF-T Bruto (${formatCurrency(saftBruto)}) vs Ganhos Extrato (${formatCurrency(ganhos)}) → Δ ${formatCurrency(cross.c3_delta)} (${cross.c3_pct.toFixed(2)}%) — Viagens faturadas vs transferências efectivas`, 'warning');
+    logAudit(`[C4] Líquido Declarado (${formatCurrency(cross.c4_liquidoDeclarado)}) vs Líquido Real (${formatCurrency(ganhosLiquidos)}) → Δ ${formatCurrency(cross.c4_delta)} (${cross.c4_pct.toFixed(2)}%) — Diferença final no bolso`, 'error');
+    logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)} | IVA em falta (6%): ${formatCurrency(cross.ivaFalta6)}`, 'error');
+    logAudit(`📐 Agravamento IRC Anual (corrigido): ${formatCurrency(cross.agravamentoBrutoIRC)} | IRC Est. (21%): ${formatCurrency(cross.ircEstimado)}`, 'info');
 
     // NIFAF trigger relocated to updateDashboard() — see _nifafAlertedHash guard
 
-    ForensicLogger.addEntry('CROSSINGS_CALCULATED', {
+    ForensicLogger.addEntry('CROSSINGS_CALCULATED_4AXES', {
+        c1_saftVsDac7:    { delta: cross.c1_delta,  pct: cross.c1_pct  },
+        c2_despVsFatura:  { delta: cross.c2_delta,  pct: cross.c2_pct  },
+        c3_saftVsGanhos:  { delta: cross.c3_delta,  pct: cross.c3_pct  },
+        c4_liqDecVsReal:  { delta: cross.c4_delta,  pct: cross.c4_pct  },
+        // Legacy aliases
         discrepancy: cross.discrepanciaCritica,
         saftVsDac7: cross.discrepanciaSaftVsDac7,
         percentage: cross.percentagemOmissao,
@@ -5117,7 +5157,7 @@ async function exportPDF() {
     }
 
     ForensicLogger.addEntry('PDF_EXPORT_STARTED');
-    logAudit('📄 A gerar Parecer Pericial (Estilo Institucional v12.8.9)...', 'info');
+    logAudit('📄 A gerar Parecer Técnico (Estilo Institucional v13.3.0-DIAMOND)...', 'info');
 
     try {
         const { jsPDF } = window.jspdf;
@@ -5287,6 +5327,19 @@ async function exportPDF() {
         // eliminar falhas quando pageNumber excede TOTAL_PAGES por overflow.
         // ══════════════════════════════════════════════════════════════════════
         const addFooter = (doc, pageNum, isLastPage = false) => {
+            // ── CADEIA CRIPTOGRÁFICA: Master Hash SHA-256 no rodapé de cada página ──
+            if (!isLastPage) {
+                const _mhShort = (IFDESystem.masterHash || 'HASH_INDISPONIVEL').substring(0, 32) + '…';
+                const _mhY = doc.internal.pageSize.getHeight() - 4;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(5.2);
+                doc.setTextColor(140, 140, 140);
+                doc.text(
+                    `SHA-256: ${_mhShort} | UNIFED-PROBATUM v13.3.0-DIAMOND · Elo Criptográfico — Art. 125.º CPP`,
+                    doc.internal.pageSize.getWidth() / 2, _mhY, { align: 'center' }
+                );
+                doc.setTextColor(0, 0, 0);
+            }
             // ── MARCA DE ÁGUA: aplicada a cada página via addFooter ───────────
             addWatermark(doc);
             // ─────────────────────────────────────────────────────────────────
@@ -5902,19 +5955,45 @@ async function exportPDF() {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`II. GANHOS LÍQUIDOS vs TRANSFERÊNCIAS BANCÁRIAS / MATERIAL FACTS — Verdade Material Auditada:`, left, y); y += 5;
-        doc.text(`Gross Earnings / Ganhos Brutos (Auditado · Set-Dez):   ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
-        doc.text(`Retained Commissions / Comissões Retidas (Extrato):    ${formatCurrency(totals.despesas)}`, left, y); y += 4;
-        doc.text(`Invoiced Commissions / Comissões Faturadas (BTF):      ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(239, 68, 68);
-        doc.text(`Diferencial de Base em Análise (Despesas/Comissões vs Fatura) [SG-2]: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 6;
+
+        // ── C1: SAF-T Valor Bruto Total vs DAC7 ─────────────────────────────
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 80, 160);
+        doc.text('C1. SAF-T VALOR BRUTO TOTAL vs DAC7 (Sub-comunicação Plataforma→Estado):', left, y); y += 5;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
+        doc.text(`     SAF-T Valor Bruto Total (Faturação Interna):  ${formatCurrency(totals.saftBruto)}`, left, y); y += 4;
+        doc.text(`     DAC7 Reportado à AT (Plataforma Digital):     ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 158, 11);
+        doc.text(`     → Δ C1: ${formatCurrency(cross.c1_delta || (totals.saftBruto - totals.dac7TotalPeriodo))} (${(cross.c1_pct || 0).toFixed(2)}%) — Omissão de receita ao Estado`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
-        doc.text(`III. SAF-T VALOR BRUTO TOTAL vs DAC7 / REVENUE vs DAC7 (Smoking Gun 1):`, left, y); y += 5;
-        doc.text(`SAF-T Valor Bruto Total vs Ganhos — Ganhos Brutos (Auditado): ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
-        doc.text(`Reporte DAC7 (Plataforma Digital · AT):                        ${formatCurrency(totals.dac7TotalPeriodo)}`, left, y); y += 4;
+        // ── C2: Despesas/Comissões (Extrato) vs Faturado (Plataforma) ───────
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 80, 160);
+        doc.text('C2. DESPESAS/COMISSÕES EXTRATO vs FATURADO (Prova Rainha — Retenção Ilegal):', left, y); y += 5;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
+        doc.text(`     Comissões Retidas — Extrato Bancário (BTOR):  ${formatCurrency(totals.despesas)}`, left, y); y += 4;
+        doc.text(`     Comissões Faturadas — Plataforma (BTF):       ${formatCurrency(totals.faturaPlataforma)}`, left, y); y += 4;
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(239, 68, 68);
+        doc.text(`     → Δ C2 [SG-2]: ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr}) — Diferencial de Base em Análise`, left, y); y += 6;
+        doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
+
+        // ── C3: SAF-T Valor Bruto Total vs GANHOS (EXTRATO) ─────────────────
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 80, 160);
+        doc.text('C3. SAF-T VALOR BRUTO TOTAL vs GANHOS (EXTRATO) (Viagens Faturadas vs Transferências):', left, y); y += 5;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
+        doc.text(`     SAF-T Valor Bruto (Viagens Faturadas Sistema): ${formatCurrency(totals.saftBruto)}`, left, y); y += 4;
+        doc.text(`     Ganhos Extrato (Transferências Efectivas):      ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 158, 11);
-        doc.text(`SAF-T Valor Bruto Total vs DAC7 / Omissão Receita:     ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 6;
+        doc.text(`     → Δ C3: ${formatCurrency(cross.c3_delta || (totals.saftBruto - totals.ganhos))} (${(cross.c3_pct || 0).toFixed(2)}%) — Gap entre faturado e transferido`, left, y); y += 6;
+        doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
+
+        // ── C4: Ganhos Líquidos Declarados vs Líquido Real (Extrato) ────────
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 80, 160);
+        doc.text('C4. GANHOS LÍQUIDOS DECLARADOS vs LÍQUIDO REAL EXTRATO (Impacto Final SP):', left, y); y += 5;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
+        doc.text(`     Líquido Declarado/Fiscal (SAF-T − Fatura):     ${formatCurrency(cross.c4_liquidoDeclarado || (totals.saftBruto - totals.faturaPlataforma))}`, left, y); y += 4;
+        doc.text(`     Líquido Real — Extrato (Ganhos Líquidos SP):   ${formatCurrency(totals.ganhosLiquidos)}`, left, y); y += 4;
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(239, 68, 68);
+        doc.text(`     → Δ C4: ${formatCurrency(cross.c4_delta || 0)} (${(cross.c4_pct || 0).toFixed(2)}%) — Diferença final no bolso do sujeito passivo`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
 
         // 10. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO
@@ -7012,7 +7091,7 @@ async function exportPDF() {
                 doc.setFontSize(6.5);
                 doc.setTextColor(80, 80, 80);
                 doc.text('Ass.  Consultor Técnico', _sigLineX, y + 7);
-                doc.text('Data: 06/03/2026', left, y + 7);
+                doc.text('Data: ' + new Date().toLocaleDateString('pt-PT'), left, y + 7); // DATA DINÂMICA v13.3.0-DIAMOND
                 y += 14;
 
                 doc.setTextColor(0, 0, 0);
