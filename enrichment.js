@@ -595,8 +595,10 @@ async function exportDOCX() {
         para('As evidencias digitais foram certificadas com hash SHA-256 nos termos do Art. 125.o do CPP:', false, '20', '333333'),
         para('', false), tbl(srcRows), para('', false), hr(), para('', false),
 
-        para('IV. SINTESE JURIDICA E ESTRATEGIA DE CONTRA-INTERROGATORIO', true, '26', '003366'),
+        para('IV. SÍNTESE JURÍDICA E ESTRATÉGIA DE CONTRA-INTERROGATÓRIO', true, '26', '003366'),
         para('Gerada por IA Argumentativa (RAG + In-Context Learning - claude-sonnet-4-20250514) · NEXUS v13.3.0-DIAMOND', false, '16', '888888'),
+        para('AVISO OBRIGATÓRIO: Esta síntese é instrumento de suporte argumentativo para o advogado mandatário. NÃO substitui parecer jurídico nem constitui peça processual autónoma.', true, '18', 'AA0000'),
+        para('⚠ JURISPRUDÊNCIA — NOTA CRÍTICA: Quaisquer referências a acórdãos, processos ou decisões judiciais incluídas abaixo foram geradas por modelo de linguagem (IA) e podem não corresponder a decisões reais existentes. DEVEM ser verificadas pelo advogado antes de qualquer uso processual. O UNIFED-PROBATUM não garante a autenticidade de referências jurisprudenciais geradas por IA.', false, '18', 'CC4400'),
         para('', false)
     ].concat(narrativeParas).concat([
         para('', false), hr(), para('', false),

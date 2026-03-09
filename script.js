@@ -2020,6 +2020,7 @@ const translations = {
         revenueGapDesc: "SAF-T Bruto vs Ganhos",
         expenseGapDesc: "Despesas/Comissões (Extrato) vs Faturadas (BTF)",
         hashModalTitle: "VERIFICAÇÃO DE INTEGRIDADE · CADEIA DE CUSTÓDIA",
+        omissaoDespesasPctTitle: "Percentagem Cobrada Pela Plataforma",
         closeHashBtnText: "VALIDAR E FECHAR",
         notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, o ficheiro SAF-T (.xml) é substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet, sendo os movimentos extratados pelo ficheiro Ganhos da Empresa. O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019.\"",
         parecerTecnicoFinal: "PARECER TÉCNICO DE CONCLUSÃO:\n\"Com base na análise algorítmica dos dados cruzados, detetaram-se duas discrepâncias fundamentais: (1) diferença entre comissões retidas nos extratos e valores faturados pela plataforma, e (2) diferença entre o total do SAF-T e o reportado em DAC7. A utilização de identificadores SHA-256 e selagem QR Code assegura que este parecer é uma Prova Digital Material imutável. Recomenda-se a sua utilização imediata em sede judicial para proteção do mandato e fundamentação de pedido de auditoria externa.\"",
@@ -2130,6 +2131,7 @@ const translations = {
         revenueGapDesc: "SAF-T Gross vs Earnings",
         expenseGapDesc: "Expenses/Commissions (Statement) vs Invoiced (BTF)",
         hashModalTitle: "INTEGRITY VERIFICATION · CHAIN OF CUSTODY",
+        omissaoDespesasPctTitle: "Platform Commission Rate (%)",
         closeHashBtnText: "VALIDATE AND CLOSE",
         notaMetodologica: "FORENSIC METHODOLOGICAL NOTE:\n\"Due to the administrative latency in the availability of the SAF-T (.xml) file by the platforms, this forensic examination uses the Data Proxy: Fleet Extract method. This methodology consists of extracting primary raw data directly from the management portal (Fleet). The 'Company Earnings' file (Fleet/Ledger) is treated here as the supporting Ledger, holding material probative value as it constitutes the primary source of records that integrate the final tax report. Legal framework: Decree-Law No. 28/2019, which regulates the integrity of data processing and the validity of electronic documents as primary records.\"",
         parecerTecnicoFinal: "FINAL TECHNICAL OPINION:\n\"Based on the algorithmic analysis of the crossed data, two fundamental discrepancies were detected: (1) difference between commissions withheld in statements and amounts invoiced by the platform, and (2) difference between the SAF-T total and the DAC7 reported amount. The use of SHA-256 identifiers and QR Code sealing ensures that this opinion is an immutable Material Digital Evidence. Its immediate use in court is recommended to protect the mandate and substantiate a request for an external audit.\"",
@@ -3472,6 +3474,7 @@ function switchLanguage() {
 
     setElementText('hashModalTitle', t.hashModalTitle);
     setElementText('closeHashBtnText', t.closeHashBtnText);
+    setElementText('omissaoDespesasPctTitle', t.omissaoDespesasPctTitle);
 
     if (IFDESystem.analysis.totals) {
         updateDashboard();
@@ -4425,8 +4428,17 @@ function selectQuestions(riskKey) {
         return true;
     });
 
-    const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-    IFDESystem.analysis.selectedQuestions = shuffled.slice(0, 6);
+    // PROTOCOLO v13.3.0-DIAMOND: Ordenação por prioridade (high → med → low)
+    // + aleatorização dentro de cada nível para diversidade pericial
+    const PRIORITY_ORDER = { high: 0, med: 1, low: 2 };
+    const sorted = [...filtered].sort((a, b) => {
+        const pa = PRIORITY_ORDER[a.type] ?? 2;
+        const pb = PRIORITY_ORDER[b.type] ?? 2;
+        if (pa !== pb) return pa - pb;
+        return 0.5 - Math.random(); // aleatorização dentro do mesmo nível
+    });
+    // Top 10 — as primeiras 5 são obrigatoriamente de nível "high" (máxima prioridade)
+    IFDESystem.analysis.selectedQuestions = sorted.slice(0, 10);
 
     ForensicLogger.addEntry('QUESTIONS_SELECTED', { count: IFDESystem.analysis.selectedQuestions.length, riskKey });
 }
@@ -5331,15 +5343,16 @@ async function exportPDF() {
         // eliminar falhas quando pageNumber excede TOTAL_PAGES por overflow.
         // ══════════════════════════════════════════════════════════════════════
         const addFooter = (doc, pageNum, isLastPage = false) => {
-            // ── CADEIA CRIPTOGRÁFICA: Documento selado no rodapé de cada página ──
+            // ── RODAPÉ CRIPTOGRÁFICO (todas as páginas não-seladas) ─────────────
+            // Uma única linha no rodapé — elimina sobreposição de texto
             if (!isLastPage) {
-                const _mhShort = (IFDESystem.masterHash || 'HASH_INDISPONIVEL').substring(0, 32) + '…';
+                const _mhFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
                 const _mhY = doc.internal.pageSize.getHeight() - 4;
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(5.2);
-                doc.setTextColor(140, 140, 140);
+                doc.setFont('courier', 'normal');
+                doc.setFontSize(5.0);
+                doc.setTextColor(130, 130, 130);
                 doc.text(
-                    `Documento selado com Master Hash SHA-256: ${_mhShort} | UNIFED-PROBATUM v13.3.0-DIAMOND · Art. 125.º CPP`,
+                    'Documento selado com Master Hash SHA-256: ' + _mhFull,
                     doc.internal.pageSize.getWidth() / 2, _mhY, { align: 'center' }
                 );
                 doc.setTextColor(0, 0, 0);
@@ -5371,14 +5384,8 @@ async function exportPDF() {
             doc.setTextColor(100, 100, 100);
             doc.text(`Página ${pageNum} de ${TOTAL_PAGES}`, margin, pageHeight - 10);
 
-            // RODAPÉ OBRIGATÓRIO v13.3.0-DIAMOND: Selo criptográfico em todas as páginas
-            const hashFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
-            doc.setFontSize(5);
-            doc.setFont('courier', 'normal');
-            doc.text(
-                'Documento selado com Master Hash SHA-256: ' + hashFull,
-                pageWidth / 2, pageHeight - 5, { align: 'center' }
-            );
+            // RODAPÉ OBRIGATÓRIO v13.3.0-DIAMOND: Selo criptográfico gerido pelo bloco !isLastPage acima
+            // (eliminada linha duplicada que causava sobreposição de texto)
 
             // ══════════════════════════════════════════════════════════════════
             // SELO DE CERTIFICAÇÃO PROBATUM — ativado por isLastPage=true
@@ -5988,8 +5995,8 @@ async function exportPDF() {
         doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 80, 160);
         doc.text('C3. SAF-T VALOR BRUTO TOTAL vs GANHOS (EXTRATO) (Viagens Faturadas vs Transferências):', left, y); y += 5;
         doc.setFont('helvetica', 'normal'); doc.setTextColor(0, 0, 0);
-        doc.text(`     SAF-T Valor Bruto (Viagens Faturadas Sistema): ${formatCurrency(totals.saftBruto)}`, left, y); y += 4;
-        doc.text(`     Ganhos Extrato (Transferências Efectivas):      ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
+        doc.text(`     SAF-T Valor Bruto (Viagens Faturadas — Sistema):  ${formatCurrency(totals.saftBruto)}`, left, y); y += 4;
+        doc.text(`     Ganhos Extrato (Transferências Efetivas — Banco): ${formatCurrency(totals.ganhos)}`, left, y); y += 4;
         doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 158, 11);
         doc.text(`     → Δ C3: ${formatCurrency(cross.c3_delta || (totals.saftBruto - totals.ganhos))} (${(cross.c3_pct || 0).toFixed(2)}%) — Gap entre faturado e transferido`, left, y); y += 6;
         doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
@@ -6010,31 +6017,90 @@ async function exportPDF() {
         doc.text('10. IMPACTO FISCAL / FISCAL IMPACT & MANAGEMENT AGGRAVATION', left, y);
         y += 8;
 
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text(`VAT 23% / IVA Omitido (23% Autoliquidacao CIVA):  ${formatCurrency(cross.ivaFalta)}`, left, y); y += 4;
-        doc.text(`VAT 6% / IVA Omitido (6% Transporte):             ${formatCurrency(cross.ivaFalta6)}`, left, y); y += 4;
-        doc.text(`Revenue Omission (DAC7) / Omissao Receita:        ${formatCurrency(cross.discrepanciaSaftVsDac7)} (${_pctReceitaStr})`, left, y); y += 4;
-        doc.text(`Expense Omission / Omissao Custos:                ${formatCurrency(cross.discrepanciaCritica)} (${_pctOmissaoStr})`, left, y); y += 4;
-        doc.text(`Annual Omitted Base / Projecao Anual:             ${formatCurrency(cross.discrepanciaCritica * 12)}`, left, y); y += 4;
-        doc.text(`Estimated IRC Impact / Impacto IRC Anual:         ${formatCurrency(cross.discrepanciaCritica * 12 * 0.21)}`, left, y); y += 4;
-        doc.text(`  Contribuição IMT/AMT Omitida (5%):              ${formatCurrency(cross.discrepancia5IMT)}`, left, y); y += 4;
-        // ── Cruzamentos adicionais (sincronização Dashboard → PDF · v13.2.1-FINAL) ──
-        doc.text(`Agravamento Bruto IRC (Anual × 12):               ${formatCurrency(cross.agravamentoBrutoIRC)}`, left, y); y += 4;
-        doc.text(`IRC Estimado (21% sobre agravamento anual):       ${formatCurrency(cross.ircEstimado)}`, left, y); y += 4;
-        doc.text(`Impacto Mensal Mercado (38.000 condutores PT):    ${formatCurrency(cross.impactoMensalMercado)}`, left, y); y += 4;
-        doc.text(`Impacto Anual Mercado (38.000 condutores PT):     ${formatCurrency(cross.impactoAnualMercado)}`, left, y); y += 4;
-        doc.text(`% Omissão Receita SAF-T vs DAC7:                  ${(cross.percentagemSaftVsDac7 || 0).toFixed(2)}%`, left, y); y += 4;
-        doc.text(`% Diferencial de Base em Análise (Desp. vs Fat.): ${(cross.percentagemOmissao || 0).toFixed(2)}%`, left, y); y += 4;
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(239, 68, 68);
-        const macroLine4 = doc.splitTextToSize(`MACRO IMPACT / IMPACTO MACROECONOMICO (7 Anos - Mercado Portugues PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30);
-        doc.text(macroLine4, left, y); y += (macroLine4.length * 4.5) + 2;
-        doc.setFont('helvetica', 'italic');
+        // ── Tabela de impacto fiscal — 3 colunas: Indicador | Valor | % ──────
+        const FIS_COL_DESC = left;
+        const FIS_COL_DESCW = 100;   // mm — descrição
+        const FIS_COL_VAL  = 118;    // mm — valor (right-aligned)
+        const FIS_COL_PCT  = 163;    // mm — % (right-aligned)
+        const FIS_PAGE_W   = doc.internal.pageSize.getWidth() - left;
+
+        // Cabeçalho da tabela
         doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setFillColor(30, 30, 80);
+        doc.rect(left, y - 4, FIS_PAGE_W - 14, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.text('Indicador Fiscal / Tax Indicator', FIS_COL_DESC + 1, y);
+        doc.text('Valor (€)', FIS_COL_VAL, y, { align: 'right' });
+        doc.text('%', FIS_COL_PCT, y, { align: 'right' });
+        doc.setTextColor(0, 0, 0);
+        y += 6;
+
+        // Linha de fundo da tabela
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(0.2);
+        doc.line(left, y - 1, FIS_PAGE_W, y - 1);
+
+        const fisRows = [
+            { desc: 'VAT 23% / IVA Omitido (23% Autoliquidação CIVA)',    val: cross.ivaFalta,                      pct: null,      highlight: false },
+            { desc: 'VAT 6% / IVA Omitido (6% Transporte)',               val: cross.ivaFalta6,                     pct: null,      highlight: false },
+            { desc: 'Revenue Omission (DAC7) / Omissão de Receita',       val: cross.discrepanciaSaftVsDac7,         pct: _pctReceitaStr, highlight: false },
+            { desc: 'Expense Omission / Omissão de Custos (C2)',           val: cross.discrepanciaCritica,            pct: _pctOmissaoStr, highlight: true  },
+            { desc: 'Annual Omitted Base / Projeção Anual (C2 × 12 meses)',val: cross.discrepanciaCritica * 12,      pct: null,      highlight: false },
+            { desc: 'Estimated IRC Impact / Impacto IRC Anual',            val: cross.discrepanciaCritica * 12 * 0.21,pct: null,      highlight: false },
+            { desc: 'Contribuição IMT/AMT Omitida (5%)',                   val: cross.discrepancia5IMT,              pct: null,      highlight: false },
+            { desc: 'Agravamento Bruto IRC (C2 ÷ Meses × 12)',            val: cross.agravamentoBrutoIRC,           pct: null,      highlight: false },
+            { desc: 'IRC Estimado (21% sobre Agravamento Anual)',          val: cross.ircEstimado,                   pct: null,      highlight: false },
+            { desc: 'Impacto Mensal · 38.000 condutores PT',               val: cross.impactoMensalMercado,          pct: null,      highlight: false },
+            { desc: 'Impacto Anual · 38.000 condutores × 12 meses PT',    val: cross.impactoAnualMercado,           pct: null,      highlight: false },
+            { desc: '% Omissão Receita SAF-T vs DAC7',                     val: null,                                pct: (cross.percentagemSaftVsDac7 || 0).toFixed(2) + '%', highlight: false },
+            { desc: '% Diferencial de Base em Análise (Desp. vs Fat.)',    val: null,                                pct: (cross.percentagemOmissao || 0).toFixed(2) + '%',    highlight: false }
+        ];
+
+        fisRows.forEach((row, i) => {
+            const bg = i % 2 === 0 ? 252 : 245;
+            doc.setFillColor(bg, bg, bg);
+            doc.rect(left, y - 3, FIS_PAGE_W - 14, 6.5, 'F');
+
+            if (row.highlight) {
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(180, 20, 20);
+            } else {
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(30, 30, 30);
+            }
+
+            const descLines = doc.splitTextToSize(row.desc, FIS_COL_DESCW);
+            doc.setFontSize(7.5);
+            doc.text(descLines, FIS_COL_DESC + 1, y);
+
+            if (row.val !== null) {
+                doc.text(formatCurrency(row.val), FIS_COL_VAL, y, { align: 'right' });
+            }
+            if (row.pct) {
+                doc.text(row.pct, FIS_COL_PCT, y, { align: 'right' });
+            }
+            y += Math.max(descLines.length * 4.5, 6.5);
+        });
+
+        y += 4;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(239, 68, 68);
+        const macroLine4 = doc.splitTextToSize(
+            `MACRO IMPACT 7 ANOS (38.000 condutores × 12 meses × 7 anos): ${formatCurrency(_impactoMercado7Anos)}`,
+            doc.internal.pageSize.getWidth() - 30);
+        doc.text(macroLine4, left, y); y += (macroLine4.length * 4.5) + 2;
+
+        // Nota metodológica da projeção macroeconómica
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7);
         doc.setTextColor(100, 100, 100);
-        const footLine = doc.splitTextToSize('Projection supports legal relevance for elite law firms. / Projecao fundamenta relevancia para escritorios de elite (PT).', doc.internal.pageSize.getWidth() - 35);
-        doc.text(footLine, left + 5, y); y += (footLine.length * 3.5) + 2;
+        const macroNota = doc.splitTextToSize(
+            'Projeção = Omissão Mensal Média × 38.000 motoristas TVDE ativos (INE/IMT) × 12 meses × 7 anos (prazo Art. 45.º LGT). ' +
+            'Fundamenta relevância sistémica para escritórios de litígio especializado.',
+            doc.internal.pageSize.getWidth() - 35);
+        doc.text(macroNota, left + 5, y); y += (macroNota.length * 3.5) + 2;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
@@ -6153,7 +6219,7 @@ async function exportPDF() {
 
         // ══════════════════════════════════════════════════════════════════════
         // PÁGINA 5A — DIAGRAMA DE FLUXO FINANCEIRO (SANKEY)
-        // v13.2.2-GOLD · Output Enrichment Layer · Dynamic Canvas-to-PDF Injection
+        // v13.3.0-DIAMOND · Output Enrichment Layer · Dynamic Canvas-to-PDF Injection
         // Gerado em memória por renderSankeyToImage() — Dashboard inalterado.
         // Fundamento: Evidência Visual do "caminho do dinheiro" (Money Flow Analysis)
         // Conformidade: Art. 125.º CPP · ISO/IEC 27037:2012
@@ -6366,6 +6432,18 @@ async function exportPDF() {
             doc.text('Gerado por: generateLegalNarrative() · enrichment.js v13.3.0-DIAMOND', left, y); y += 4;
             doc.text('Modelo: claude-sonnet-4-20250514 · RAG + In-Context Learning · Base Legal: CIVA/CIRC/RGIT/CPP/DAC7', left, y); y += 4;
             doc.text('AVISO: Esta síntese é instrumento de suporte argumentativo. Não substitui parecer jurídico. Uso restrito a mandato autorizado.', left, y);
+            y += 8;
+            // ── AVISO ESPECÍFICO: Referências jurisprudenciais geradas por IA ──
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6.5);
+            doc.setTextColor(180, 60, 0);
+            const jurNota = doc.splitTextToSize(
+                '⚠ NOTA CRÍTICA — JURISPRUDÊNCIA: Quaisquer referências a acórdãos, processos ou decisões judiciais ' +
+                'incluídas nesta síntese são geradas por IA (modelo probabilístico) e podem não corresponder a decisões reais. ' +
+                'DEVEM ser verificadas e validadas pelo advogado mandatário antes de qualquer uso processual. ' +
+                'O sistema UNIFED-PROBATUM não garante a autenticidade de referências jurisprudenciais geradas por IA.',
+                doc.internal.pageSize.getWidth() - 28);
+            doc.text(jurNota, left, y); y += jurNota.length * 3.5;
 
             addFooter(doc, pageNumber);
         }
@@ -6562,17 +6640,21 @@ async function exportPDF() {
         doc.setFontSize(8);
 
         let questionsToShow = [];
-        if (IFDESystem.analysis.selectedQuestions.length >= 15) {
-            questionsToShow = IFDESystem.analysis.selectedQuestions.slice(0, 15);
-        } else {
-            questionsToShow = [...IFDESystem.analysis.selectedQuestions];
-            const additionalQuestions = QUESTIONS_CACHE.filter(q =>
-                !questionsToShow.some(sq => sq.id === q.id) &&
-                (q.type === 'high' || q.type === 'med')
-            ).slice(0, 15 - questionsToShow.length);
-            questionsToShow = [...questionsToShow, ...additionalQuestions];
+        if (IFDESystem.analysis.selectedQuestions && IFDESystem.analysis.selectedQuestions.length > 0) {
+            // Já ordenadas por prioridade em selectQuestions() — manter ordem
+            questionsToShow = IFDESystem.analysis.selectedQuestions.slice(0, 10);
+        }
+        // Preencher até 10 com questões "high" não duplicadas se necessário
+        if (questionsToShow.length < 10) {
+            const PRIORITY_ORDER = { high: 0, med: 1, low: 2 };
+            const additional = QUESTIONS_CACHE
+                .filter(q => !questionsToShow.some(sq => sq.id === q.id))
+                .sort((a, b) => (PRIORITY_ORDER[a.type] ?? 2) - (PRIORITY_ORDER[b.type] ?? 2))
+                .slice(0, 10 - questionsToShow.length);
+            questionsToShow = [...questionsToShow, ...additional];
         }
 
+        // Top 5 = questões mais importantes (obrigatoriamente bold)
         const topQuestionIds = questionsToShow.slice(0, 5).map(q => q.id);
 
         questionsToShow.forEach((q, index) => {
@@ -6580,14 +6662,19 @@ async function exportPDF() {
 
             if (isTop) {
                 doc.setFont('helvetica', 'bold');
+                doc.setTextColor(180, 20, 20); // vermelho escuro para questões críticas
             } else {
                 doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
             }
 
-            const questionText = `${index + 1}. ${q.text}`;
+            const prefix = isTop ? `${index + 1}. [★ CRÍTICA] ` : `${index + 1}. `;
+            const questionText = prefix + q.text;
             const splitText = doc.splitTextToSize(questionText, doc.internal.pageSize.getWidth() - 30);
             doc.text(splitText, left, y);
             y += (splitText.length * 4) + 2;
+
+            doc.setTextColor(0, 0, 0); // reset cor
 
             if (y > 270) {
                 doc.addPage();
@@ -7083,7 +7170,7 @@ async function exportPDF() {
                 doc.text(`Ref.:  ${_sigRegisto}`, left, y, { maxWidth: doc.internal.pageSize.getWidth() - left - 14 }); y += 7;
 
                 const _sigDecl = doc.splitTextToSize(
-                    'Declaro, sob compromisso de honra, que o presente relatório técnico foi elaborado em qualidade ' +
+                    'Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado em qualidade ' +
                     'de Consultor Técnico Independente, assumindo os deveres de independência, objetividade e ' +
                     'imparcialidade previstos no artigo 153.º do Código de Processo Penal Português para peritos, ' +
                     'com base exclusivamente nos documentos fornecidos, mediante aplicação de metodologia forense ' +
