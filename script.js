@@ -27,7 +27,7 @@
 
 'use strict';
 
-console.log('UNIFED - PROBATUM SCRIPT v13.2.3-GOLD · DORA COMPLIANT · CADEIA DE CUSTÓDIA COMPLETA · NIFAF GUARD · INTEGRITY SEAL · DOCX EXPORT · AI ADVERSARIAL · ATIVADO');
+console.log('UNIFED - PROBATUM SCRIPT v13.2.4-PREMIUM · DORA COMPLIANT · ATF · INTEGRITY SEAL · DOCX · AI ADVERSARIAL · NIFAF GUARD · ATIVADO');
 
 // ============================================================================
 // 0. HANDSHAKE DE INFRAESTRUTURA — Verificação da Biblioteca OpenTimestamps
@@ -2582,7 +2582,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.2.3-GOLD-DORA-COMPLIANT',
+    version: 'v13.2.4-PREMIUM-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -2597,6 +2597,7 @@ const IFDESystem = {
     processedFiles: new Set(),
     dataMonths: new Set(),
     fileSources: new Map(),
+    monthlyData: {}, // ATF — Análise Temporal Forense (Read-Only, non-interfering with fiscalcalc)
     documents: {
         control: { files: [], hashes: {}, totals: { records: 0 } },
         saft: { files: [], hashes: {}, totals: { records: 0, iliquido: 0, iva: 0, bruto: 0 } },
@@ -3155,14 +3156,18 @@ function setupMainListeners() {
     const exportJSONBtn = document.getElementById('exportJSONBtn');
     if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportDataJSON);
 
-    // DOCX Export — v13.2.3-GOLD (Minuta de Petição Inicial)
+    // DOCX Export — v13.2.4-PREMIUM
     const exportDOCXBtn = document.getElementById('exportDOCXBtn');
     if (exportDOCXBtn) exportDOCXBtn.addEventListener('click', () => {
-        if (typeof window.exportDOCX === 'function') {
-            window.exportDOCX();
-        } else {
-            showToast('Módulo DOCX não disponível. Verifique o carregamento de enrichment.js.', 'error');
-        }
+        if (typeof window.exportDOCX === 'function') window.exportDOCX();
+        else showToast('Módulo DOCX não disponível.', 'error');
+    });
+
+    // ATF — Análise Temporal Forense
+    const atfBtn = document.getElementById('atfModalBtn');
+    if (atfBtn) atfBtn.addEventListener('click', () => {
+        if (typeof window.openATFModal === 'function') window.openATFModal();
+        else showToast('Módulo ATF não disponível.', 'warning');
     });
 
     const resetBtn = document.getElementById('resetBtn');
@@ -3662,6 +3667,17 @@ async function processFile(file, type) {
             ValueSource.registerValue('stmtGanhosValue', extracted.ganhos, file.name, 'extração tabela Ganhos líquidos');
             ValueSource.registerValue('stmtDespesasValue', extracted.despesas, file.name, 'extração tabela Ganhos líquidos');
             ValueSource.registerValue('stmtGanhosLiquidosValue', extracted.ganhosLiq, file.name, 'extração tabela Ganhos líquidos');
+
+            // ── ATF: Populate monthlyData (non-interfering) ─────────────────────
+            if (yearMonth) {
+                if (!IFDESystem.monthlyData[yearMonth]) {
+                    IFDESystem.monthlyData[yearMonth] = { ganhos: 0, despesas: 0, ganhosLiq: 0 };
+                }
+                IFDESystem.monthlyData[yearMonth].ganhos    += extracted.ganhos    || 0;
+                IFDESystem.monthlyData[yearMonth].despesas  += extracted.despesas  || 0;
+                IFDESystem.monthlyData[yearMonth].ganhosLiq += extracted.ganhosLiq || 0;
+            }
+            // ── ATF FIM ──
 
             // ── EXTRAÇÃO AUXILIAR — Non-Interfering (Campanhas / Portagens / Gorjetas / Cancelamentos) ──
             // Chamada após processStatement — não interfere com os totais financeiros principais
@@ -4344,6 +4360,8 @@ function performForensicCrossings() {
     logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)}`, 'error');
     logAudit(`💰 IVA em falta (6%): ${formatCurrency(cross.ivaFalta6)}`, 'info');
 
+    // NIFAF trigger relocated to updateDashboard() — see _nifafAlertedHash guard
+
     ForensicLogger.addEntry('CROSSINGS_CALCULATED', {
         discrepancy: cross.discrepanciaCritica,
         saftVsDac7: cross.discrepanciaSaftVsDac7,
@@ -4510,11 +4528,8 @@ function showTwoAxisAlerts() {
     // -------------------------------------------───────────────────────────
 }
 
-// ── NIFAF Session Guard — v13.2.3-GOLD ───────────────────────────────────────
-// Controlo de Estado Único: o pulso sonoro só dispara quando o Master Hash muda
-// E a percentagem de omissão é > 15%. Evita disparos em loop ou redundantes.
-// A variável _nifafAlertedHash é atualizada com o hash que gerou o último alerta.
-// Reset automático a null quando clearConsole() é chamado (purga total).
+// ── NIFAF Session Guard — v13.2.4-PREMIUM ────────────────────────────────────
+// Controlo de Estado Único: dispara apenas quando o hash muda E omissão > 15%.
 let _nifafAlertedHash = null;
 // ── FIM NIFAF Session Guard ──
 
@@ -4645,19 +4660,15 @@ function updateDashboard() {
         quantumBox.style.display = (Math.abs(cross.impactoSeteAnosMercado) > 0) ? 'block' : 'none';
     }
 
-    // ── NIFAF: Gatilho Pericial — Orquestração em updateDashboard() ───────────
-    // v13.2.3-GOLD: Controlo de Estado Único (_nifafAlertedHash guard).
-    // Condições de disparo: (1) omissão > 15% — indício Art. 104.º RGIT;
-    //                       (2) hash atual diferente do último que gerou alerta.
-    // Garante: 1 pulso por processamento único. Zero loops. Zero ruído espúrio.
+    // ── NIFAF Gatilho Orquestrado — v13.2.4-PREMIUM ──────────────────────────
     {
-        const _currentHash = IFDESystem.masterHash || '';
-        if (cross.percentagemOmissao > 15 && _currentHash && _currentHash !== _nifafAlertedHash) {
-            _nifafAlertedHash = _currentHash;
+        const _ch = IFDESystem.masterHash || '';
+        if (cross.percentagemOmissao > 15 && _ch && _ch !== _nifafAlertedHash) {
+            _nifafAlertedHash = _ch;
             if (window.NIFAF) window.NIFAF.playCriticalAlert();
         }
     }
-    // ── FIM NIFAF Gatilho ──
+    // ── FIM NIFAF ──
 
     activateIntermittentAlerts();
 }
@@ -5219,7 +5230,7 @@ async function exportPDF() {
         // ══ FIM PRÉ-GERAÇÃO QR ══
 
         // ══════════════════════════════════════════════════════════════════════
-        // CAMADA DE ENRIQUECIMENTO DE SAÍDA — v13.2.3-GOLD
+        // CAMADA DE ENRIQUECIMENTO DE SAÍDA — v13.2.2-GOLD
         // Asynchronous Post-Computation Orchestration
         // Ponto de injeção: APÓS geração do Master Hash, ANTES da construção de páginas.
         // Padrão: Read-Only sobre IFDESystem.analysis (Fonte de Verdade Imutável).
@@ -5228,35 +5239,45 @@ async function exportPDF() {
         // ══════════════════════════════════════════════════════════════════════
         let _enrichLegalNarrative = null;
         let _enrichSankeyImage    = null;
-        // _enrichIntegritySeal: invocado diretamente em jsPDF — não gera imagem separada
+        let _enrichTemporalImage  = null;
 
         if (typeof window.generateLegalNarrative === 'function') {
             try {
-                logAudit('🤖 [v13.2.3] A gerar Síntese Jurídica + Simulador Adversarial (IA)...', 'info');
+                logAudit('🤖 [v13.2.4] A gerar Síntese Jurídica + Simulador Adversarial (IA)...', 'info');
                 _enrichLegalNarrative = await window.generateLegalNarrative(IFDESystem.analysis);
-                logAudit('✅ [v13.2.3] Síntese Jurídica + Contra-Interrogatório gerados.', 'success');
+                logAudit('✅ [v13.2.4] Síntese Jurídica + Contra-Interrogatório gerados.', 'success');
             } catch (_aiErr) {
                 _enrichLegalNarrative = '[Síntese jurídica indisponível — motor forense íntegro]';
-                logAudit('⚠ [v13.2.3] IA indisponível — PDF gerado sem síntese narrativa.', 'warning');
+                logAudit('⚠ [v13.2.4] IA indisponível — PDF gerado sem síntese (CORS/offline).', 'warning');
             }
         }
 
         if (typeof window.renderSankeyToImage === 'function') {
             try {
-                logAudit('📊 [v13.2.3] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
+                logAudit('📊 [v13.2.4] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
                 _enrichSankeyImage = await window.renderSankeyToImage(IFDESystem.analysis);
                 if (_enrichSankeyImage) {
-                    logAudit('✅ [v13.2.3] Diagrama Sankey renderizado com sucesso.', 'success');
+                    logAudit('✅ [v13.2.4] Diagrama Sankey renderizado com sucesso.', 'success');
                 } else {
-                    logAudit('⚠ [v13.2.3] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
+                    logAudit('⚠ [v13.2.4] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
                 }
             } catch (_sankeyErr) {
                 _enrichSankeyImage = null;
-                logAudit('⚠ [v13.2.3] Erro Sankey — PDF gerado sem diagrama.', 'warning');
+                logAudit('⚠ [v13.2.2] Erro Sankey — PDF gerado sem diagrama.', 'warning');
             }
         }
-
-        logAudit('🔏 [v13.2.3] Integrity Seal (Selo Holográfico) será estampado na página de encerramento.', 'info');
+        if (typeof window.generateTemporalChartImage === 'function') {
+            try {
+                logAudit('📅 [v13.2.4] A renderizar Gráfico ATF (Análise Temporal Forense)...', 'info');
+                _enrichTemporalImage = await window.generateTemporalChartImage(IFDESystem.monthlyData, IFDESystem.analysis);
+                if (_enrichTemporalImage) {
+                    logAudit('✅ [v13.2.4] Gráfico ATF renderizado com sucesso.', 'success');
+                }
+            } catch (_atfErr) {
+                _enrichTemporalImage = null;
+                logAudit('⚠ [v13.2.4] ATF gráfico indisponível — PDF sem análise temporal.', 'warning');
+            }
+        }
         // ══ FIM INICIALIZAÇÃO DA CAMADA DE ENRIQUECIMENTO ══
 
         // ══════════════════════════════════════════════════════════════════════
@@ -6109,8 +6130,71 @@ async function exportPDF() {
         }
 
         // ══════════════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════════════════
+        // PÁGINA 5-ATF — ANÁLISE TEMPORAL FORENSE (ATF)
+        // v13.2.4-PREMIUM · Tendências · Outliers 2σ · Índice de Recidiva
+        // ══════════════════════════════════════════════════════════════════════
+        if (_enrichTemporalImage) {
+            doc.addPage();
+            pageNumber++;
+            y = 20;
+
+            doc.setFillColor(13, 27, 42);
+            doc.rect(10, 10, doc.internal.pageSize.getWidth() - 20, 12, 'F');
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 229, 255);
+            doc.text('ANÁLISE TEMPORAL FORENSE (ATF) — TENDÊNCIAS · OUTLIERS 2σ · ÍNDICE DE RECIDIVA · v13.2.4-PREMIUM',
+                doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
+            doc.setTextColor(0, 0, 0);
+            y = 30;
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const atfNota = doc.splitTextToSize(
+                'Gráfico temporal derivado dos extratos mensais processados. ' +
+                'Outliers marcados a vermelho (> 2σ) indicam meses com anomalia estatística — ' +
+                'constitui indício de comportamento oportunístico para efeitos do Art. 104.º RGIT. ' +
+                'Gerado em canvas invisível — Dashboard inalterado.',
+                doc.internal.pageSize.getWidth() - 28);
+            doc.text(atfNota, left, y);
+            y += (atfNota.length * 3.5) + 5;
+            doc.setTextColor(0, 0, 0);
+
+            const atfImgW = doc.internal.pageSize.getWidth() - 28;
+            const atfImgH = atfImgW * (420 / 1200);
+            doc.addImage(_enrichTemporalImage, 'PNG', left, y, atfImgW, atfImgH);
+            y += atfImgH + 6;
+
+            // Score de Persistência
+            if (typeof window.computeTemporalAnalysis === 'function') {
+                try {
+                    const _atfData = window.computeTemporalAnalysis(IFDESystem.monthlyData, IFDESystem.analysis);
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(239, 68, 68);
+                    doc.text(`SCORE DE PERSISTÊNCIA (SP): ${_atfData.persistenceScore.toFixed(1)}/100`, left, y); y += 5;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(_atfData.persistenceLabel, left, y); y += 4;
+                    if (_atfData.outlierMonths.length > 0) {
+                        doc.setTextColor(239, 68, 68);
+                        doc.text(`Meses com Outlier (>2σ): ${_atfData.outlierMonths.join(', ')}`, left, y); y += 4;
+                        doc.setTextColor(0, 0, 0);
+                    }
+                    doc.setFontSize(6.5);
+                    doc.setFont('courier', 'normal');
+                    doc.setTextColor(120, 120, 120);
+                    doc.text('Módulo ATF v13.2.4-PREMIUM · Read-Only · IFDESystem.monthlyData · DORA (UE) 2022/2554', left, y + 3);
+                } catch (_e) { /* fallback silencioso */ }
+            }
+            addFooter(doc, pageNumber);
+        }
+
         // PÁGINA 5B — SÍNTESE JURÍDICA ASSISTIDA POR IA
-        // v13.2.2-GOLD · RAG + In-Context Learning (claude-sonnet-4-20250514)
+        // v13.2.4-PREMIUM · RAG + In-Context Learning (claude-sonnet-4-20250514)
         // Módulo de Síntese Narrativa: outputs numéricos → inputs semânticos
         // Base legal injetada: CIVA, CIRC, RGIT, CPP, DAC7
         // ISOLAMENTO: Se a IA falhar, esta página não é gerada — motor íntegro.
@@ -6939,7 +7023,7 @@ async function exportPDF() {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(30, 60, 120);
-            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.3-GOLD ]',
+            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.4-PREMIUM ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
@@ -6951,11 +7035,7 @@ async function exportPDF() {
                 _termW / 2, y, { align: 'center' });
             doc.setTextColor(0, 0, 0);
 
-            // ── INTEGRITY SEAL (Selo Holográfico Digital) — v13.2.3-GOLD ─────
-            // Posição: Canto Superior Esquerdo da zona de encerramento
-            // O QR Code ocupa o canto inferior direito (addFooter isLastPage=true).
-            // O Integrity Seal ocupa o canto inferior esquerdo — sem sobreposição.
-            // PROTOCOLO: o padrão muda com qualquer alteração ao hash → prova visual.
+            // ── INTEGRITY SEAL — v13.2.4-PREMIUM ──────────────────────────────────
             if (typeof window.generateIntegritySeal === 'function') {
                 try {
                     const _sealX = 14;
@@ -6970,7 +7050,6 @@ async function exportPDF() {
             // ── ZONA DE EXCLUSÃO DO QR CODE ───────────────────────────────────
             // O texto acima pára aqui (y ≤ ~145mm para documentos padrão).
             // O Selo QR ocupa [sealY ≈ 225mm, sealY+boxSize ≈ 275mm] — canto direito.
-            // O Integrity Seal ocupa o canto esquerdo na mesma zona vertical.
             // Garantia: nenhum doc.text() é chamado após esta linha nesta página.
             // ③ addFooter(isLastPage=true) a seguir — QR Code posicionado no
             //   canto inferior direito em coordenadas fixas (não dependentes de y).
@@ -7484,11 +7563,11 @@ function clearConsole() {
     };
     IFDESystem.analysis.evidenceIntegrity = [];
     IFDESystem.dataMonths = new Set();
+    IFDESystem.monthlyData = {}; // ATF reset
     IFDESystem.processedFiles = new Set();
 
     // Purga completa do Sujeito Passivo (transacional)
     IFDESystem.client = null;
-    _nifafAlertedHash = null; // NIFAF reset — nova sessão
     document.querySelectorAll('.client-data-field').forEach(el => el.textContent = '---');
     const clientNameInput = document.getElementById('clientNameFixed');
     const clientNIFInput = document.getElementById('clientNIFFixed');
