@@ -27,7 +27,7 @@
 
 'use strict';
 
-console.log('UNIFED - PROBATUM SCRIPT v13.2.4-PREMIUM · DORA COMPLIANT · ATF · INTEGRITY SEAL · DOCX · AI ADVERSARIAL · NIFAF GUARD · ATIVADO');
+console.log('UNIFED - PROBATUM SCRIPT v13.3.0-DIAMOND · DORA COMPLIANT · ATF · INTEGRITY SEAL · DOCX · AI ADVERSARIAL · NIFAF GUARD · NEXUS · ATIVADO');
 
 // ============================================================================
 // 0. HANDSHAKE DE INFRAESTRUTURA — Verificação da Biblioteca OpenTimestamps
@@ -787,7 +787,7 @@ function exportCustodyChainJSON() {
     const logs = ForensicLogger.getLogs();
     const payload = {
         exportedAt: new Date().toISOString(),
-        system: 'UNIFED - PROBATUM v13.2.1-GOLD-CHAIN',
+        system: 'UNIFED - PROBATUM v13.3.0-DIAMOND',
         standard: 'SHA-256 · PROBATUM INTERNAL SEAL · DORA (UE) 2022/2554',
         totalEntries: logs.length,
         entries: logs
@@ -1009,7 +1009,7 @@ async function submitToOpenTimestamps() {
             submittedAt: new Date().toISOString(),
             calendars:   ['alice.btc.calendar.opentimestamps.org', 'bob.btc.calendar.opentimestamps.org'],
             protocol:    'OpenTimestamps · Bitcoin blockchain',
-            system:      'UNIFED - PROBATUM v13.2.1-GOLD',
+            system:      'UNIFED - PROBATUM v13.3.0-DIAMOND',
             error:       'Biblioteca OTS não carregada (CDN inacessível na rede atual)'
         }, null, 2);
 
@@ -1166,7 +1166,7 @@ async function submitToOpenTimestamps() {
             submittedAt: new Date().toISOString(),
             calendars:   ['alice.btc.calendar.opentimestamps.org', 'bob.btc.calendar.opentimestamps.org'],
             protocol:    'OpenTimestamps · Bitcoin blockchain',
-            system:      'UNIFED - PROBATUM v13.2.1-GOLD',
+            system:      'UNIFED - PROBATUM v13.3.0-DIAMOND',
             error:       err.message
         }, null, 2);
 
@@ -1817,7 +1817,7 @@ const ForensicLogger = {
             period: yearMonth || 'COMPLETO',
             total_entries: filtered.length,
             rgpd_basis: 'Art. 30.º RGPD (UE) 2016/679 — Registos das Atividades de Tratamento',
-            system: 'UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT',
+            system: 'UNIFED - PROBATUM v13.3.0-DIAMOND · DORA COMPLIANT',
             logs: filtered
         };
 
@@ -2582,7 +2582,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.2.4-PREMIUM-DORA-COMPLIANT',
+    version: 'v13.3.0-DIAMOND-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -2827,7 +2827,7 @@ function openHashModal() {
 // 13. INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded - Inicializando sistema UNIFED - PROBATUM v13.2.1-GOLD');
+    console.log('DOMContentLoaded - Inicializando sistema UNIFED - PROBATUM v13.3.0-DIAMOND');
     setupStaticListeners();
     populateAnoFiscal();
     populateYears();
@@ -2923,7 +2923,7 @@ function updateLoadingProgress(percent) {
     const bar = document.getElementById('loadingProgress');
     const text = document.getElementById('loadingStatusText');
     if (bar) bar.style.width = percent + '%';
-    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v13.2.1-GOLD · DORA COMPLIANT... ${percent}%`;
+    if (text) text.textContent = `MÓDULO FORENSE BIG DATA v13.3.0-DIAMOND · DORA COMPLIANT... ${percent}%`;
 }
 
 function showMainInterface() {
@@ -2938,7 +2938,7 @@ function showMainInterface() {
             ForensicLogger.addEntry('MAIN_INTERFACE_SHOWN');
         }, 500);
     }
-    logAudit('SISTEMA UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT · MODO PROFISSIONAL ATIVADO · EXTRAÇÃO PRECISA · CSC ONLINE', 'success');
+    logAudit('SISTEMA UNIFED - PROBATUM v13.3.0-DIAMOND · DORA COMPLIANT · MODO PROFISSIONAL ATIVADO · EXTRAÇÃO PRECISA · CSC ONLINE', 'success');
 
     const analyzeBtn = document.getElementById('analyzeBtn');
     if (analyzeBtn) analyzeBtn.disabled = false;
@@ -5134,7 +5134,7 @@ async function exportPDF() {
         const left = 14;
 
         // ══════════════════════════════════════════════════════════════════════
-        // UNIFED - PROBATUM v13.2.1-GOLD — VALORES DINÂMICOS DO DASHBOARD
+        // UNIFED - PROBATUM v13.3.0-DIAMOND — VALORES DINÂMICOS DO DASHBOARD
         // Protocolo: UNIFED-GOLD — Ligação às variáveis globais do motor forense.
         // Substituição de valores hardcoded por referências às variáveis de estado
         // calculadas em performForensicCrossings() — Verdade Material Dinâmica.
@@ -5166,7 +5166,7 @@ async function exportPDF() {
         // Não é forçado um nível específico — o motor decide com base nos dados reais.
 
         // ══════════════════════════════════════════════════════════════════════
-        // UNIFED - PROBATUM v13.2.1-GOLD — MARCA DE ÁGUA DIAGONAL
+        // UNIFED - PROBATUM v13.3.0-DIAMOND — MARCA DE ÁGUA DIAGONAL
         // "PROVA DIGITAL MATERIAL" — Art. 125.º CPP (Admissibilidade da Prova)
         // Aplicada em todas as páginas. Rotate 45º, fonte cinza translúcido.
         // ══════════════════════════════════════════════════════════════════════
@@ -5243,39 +5243,39 @@ async function exportPDF() {
 
         if (typeof window.generateLegalNarrative === 'function') {
             try {
-                logAudit('🤖 [v13.2.4] A gerar Síntese Jurídica + Simulador Adversarial (IA)...', 'info');
+                logAudit('🤖 [v13.3.0] A gerar Síntese Jurídica + Simulador Adversarial (IA)...', 'info');
                 _enrichLegalNarrative = await window.generateLegalNarrative(IFDESystem.analysis);
-                logAudit('✅ [v13.2.4] Síntese Jurídica + Contra-Interrogatório gerados.', 'success');
+                logAudit('✅ [v13.3.0] Síntese Jurídica + Contra-Interrogatório gerados.', 'success');
             } catch (_aiErr) {
                 _enrichLegalNarrative = '[Síntese jurídica indisponível — motor forense íntegro]';
-                logAudit('⚠ [v13.2.4] IA indisponível — PDF gerado sem síntese (CORS/offline).', 'warning');
+                logAudit('⚠ [v13.3.0] IA indisponível — PDF gerado sem síntese (CORS/offline).', 'warning');
             }
         }
 
         if (typeof window.renderSankeyToImage === 'function') {
             try {
-                logAudit('📊 [v13.2.4] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
+                logAudit('📊 [v13.3.0] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
                 _enrichSankeyImage = await window.renderSankeyToImage(IFDESystem.analysis);
                 if (_enrichSankeyImage) {
-                    logAudit('✅ [v13.2.4] Diagrama Sankey renderizado com sucesso.', 'success');
+                    logAudit('✅ [v13.3.0] Diagrama Sankey renderizado com sucesso.', 'success');
                 } else {
-                    logAudit('⚠ [v13.2.4] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
+                    logAudit('⚠ [v13.3.0] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
                 }
             } catch (_sankeyErr) {
                 _enrichSankeyImage = null;
-                logAudit('⚠ [v13.2.2] Erro Sankey — PDF gerado sem diagrama.', 'warning');
+                logAudit('⚠ [v13.3.0] Erro Sankey — PDF gerado sem diagrama.', 'warning');
             }
         }
         if (typeof window.generateTemporalChartImage === 'function') {
             try {
-                logAudit('📅 [v13.2.4] A renderizar Gráfico ATF (Análise Temporal Forense)...', 'info');
+                logAudit('📅 [v13.3.0] A renderizar Gráfico ATF (Análise Temporal Forense)...', 'info');
                 _enrichTemporalImage = await window.generateTemporalChartImage(IFDESystem.monthlyData, IFDESystem.analysis);
                 if (_enrichTemporalImage) {
-                    logAudit('✅ [v13.2.4] Gráfico ATF renderizado com sucesso.', 'success');
+                    logAudit('✅ [v13.3.0] Gráfico ATF renderizado com sucesso.', 'success');
                 }
             } catch (_atfErr) {
                 _enrichTemporalImage = null;
-                logAudit('⚠ [v13.2.4] ATF gráfico indisponível — PDF sem análise temporal.', 'warning');
+                logAudit('⚠ [v13.3.0] ATF gráfico indisponível — PDF sem análise temporal.', 'warning');
             }
         }
         // ══ FIM INICIALIZAÇÃO DA CAMADA DE ENRIQUECIMENTO ══
@@ -5347,7 +5347,7 @@ async function exportPDF() {
                 doc.setFontSize(5);
                 doc.setFont('courier', 'bold');
                 doc.setTextColor(0, 229, 255);
-                doc.text('PROBATUM SEAL v13.2.1-GOLD', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
+                doc.text('PROBATUM SEAL v13.3.0-DIAMOND', sealX + boxSize / 2, sealY + 3.5, { align: 'center' });
 
                 // 4. QR Code — inserido sincronamente com o dataURL pré-gerado
                 // (eliminação da race condition setTimeout QR vs setTimeout save)
@@ -5372,7 +5372,7 @@ async function exportPDF() {
                 doc.setTextColor(30, 60, 120);
                 const certLine1 = '[ UNIFED - PROBATUM CERTIFIED ]';
                 const certLine2 = 'ANALISTA E CONSULTOR FORENSE';
-                const certLine3 = 'v13.2.1-GOLD · Art. 103.º/104.º RGIT';
+                const certLine3 = 'v13.3.0-DIAMOND · Art. 103.º/104.º RGIT';
                 const certLine4 = 'Art. 32.º CRP · Art. 125.º CPP';
                 doc.text(certLine1, sealX + boxSize / 2, sealY + qrSize + 7,  { align: 'center' });
                 doc.text(certLine2, sealX + boxSize / 2, sealY + qrSize + 10, { align: 'center' });
@@ -5405,7 +5405,7 @@ async function exportPDF() {
         doc.text('UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.text('ESTRUTURA DE RELATÓRIO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+        doc.text('ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
 
         doc.setDrawColor(0, 0, 0);
         doc.setLineWidth(1);
@@ -5865,7 +5865,7 @@ async function exportPDF() {
         doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
-        doc.text(`Certificação: UNIFED - PROBATUM v13.2.1-GOLD · DORA COMPLIANT`, left, y); y += 5;
+        doc.text(`Certificação: UNIFED - PROBATUM v13.3.0-DIAMOND · DORA COMPLIANT`, left, y); y += 5;
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7);
         doc.text('Este relatório cumpre com o Regulamento (UE) 2022/2554 (DORA) - Digital Operational Resilience Act, assegurando a resiliência operacional digital e a integridade das evidências digitais processadas.', left, y, { maxWidth: doc.internal.pageSize.getWidth() - 30 }); y += 8;
@@ -6082,7 +6082,7 @@ async function exportPDF() {
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text('DIAGRAMA DE FLUXO FINANCEIRO — MONEY FLOW ANALYSIS · v13.2.2-GOLD',
+            doc.text('DIAGRAMA DE FLUXO FINANCEIRO — MONEY FLOW ANALYSIS · v13.3.0-DIAMOND',
                 doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y = 30;
@@ -6124,7 +6124,7 @@ async function exportPDF() {
             doc.setFontSize(6);
             doc.setFont('courier', 'normal');
             doc.setTextColor(120, 120, 120);
-            doc.text('Gerado por: renderSankeyToImage() · enrichment.js v13.2.2-GOLD · Read-Only · DORA (UE) 2022/2554', left, y + 4);
+            doc.text('Gerado por: renderSankeyToImage() · enrichment.js v13.3.0-DIAMOND · Read-Only · DORA (UE) 2022/2554', left, y + 4);
 
             addFooter(doc, pageNumber);
         }
@@ -6144,7 +6144,7 @@ async function exportPDF() {
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text('ANÁLISE TEMPORAL FORENSE (ATF) — TENDÊNCIAS · OUTLIERS 2σ · ÍNDICE DE RECIDIVA · v13.2.4-PREMIUM',
+            doc.text('ANÁLISE TEMPORAL FORENSE (ATF) — TENDÊNCIAS · OUTLIERS 2σ · ÍNDICE DE RECIDIVA · v13.3.0-DIAMOND',
                 doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y = 30;
@@ -6187,7 +6187,7 @@ async function exportPDF() {
                     doc.setFontSize(6.5);
                     doc.setFont('courier', 'normal');
                     doc.setTextColor(120, 120, 120);
-                    doc.text('Módulo ATF v13.2.4-PREMIUM · Read-Only · IFDESystem.monthlyData · DORA (UE) 2022/2554', left, y + 3);
+                    doc.text('Módulo ATF v13.3.0-DIAMOND · Read-Only · IFDESystem.monthlyData · DORA (UE) 2022/2554', left, y + 3);
                 } catch (_e) { /* fallback silencioso */ }
             }
             addFooter(doc, pageNumber);
@@ -6210,7 +6210,7 @@ async function exportPDF() {
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text('SÍNTESE JURÍDICA ASSISTIDA POR IA — RAG + IN-CONTEXT LEARNING · v13.2.2-GOLD',
+            doc.text('SÍNTESE JURÍDICA ASSISTIDA POR IA — RAG + IN-CONTEXT LEARNING · v13.3.0-DIAMOND',
                 doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y = 30;
@@ -6276,7 +6276,7 @@ async function exportPDF() {
             doc.setFontSize(6.5);
             doc.setFont('courier', 'normal');
             doc.setTextColor(100, 116, 139);
-            doc.text('Gerado por: generateLegalNarrative() · enrichment.js v13.2.2-GOLD', left, y); y += 4;
+            doc.text('Gerado por: generateLegalNarrative() · enrichment.js v13.3.0-DIAMOND', left, y); y += 4;
             doc.text('Modelo: claude-sonnet-4-20250514 · RAG + In-Context Learning · Base Legal: CIVA/CIRC/RGIT/CPP/DAC7', left, y); y += 4;
             doc.text('AVISO: Esta síntese é instrumento de suporte argumentativo. Não substitui parecer jurídico. Uso restrito a mandato autorizado.', left, y);
 
@@ -7023,7 +7023,7 @@ async function exportPDF() {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(30, 60, 120);
-            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.4-PREMIUM ]',
+            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.3.0-DIAMOND ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
@@ -7035,7 +7035,7 @@ async function exportPDF() {
                 _termW / 2, y, { align: 'center' });
             doc.setTextColor(0, 0, 0);
 
-            // ── INTEGRITY SEAL — v13.2.4-PREMIUM ──────────────────────────────────
+            // ── INTEGRITY SEAL — v13.3.0-DIAMOND ──────────────────────────────────
             if (typeof window.generateIntegritySeal === 'function') {
                 try {
                     const _sealX = 14;
@@ -7967,7 +7967,7 @@ window.injectAuxiliaryHelperBoxes = injectAuxiliaryHelperBoxes;
 window.resetAuxiliaryData = resetAuxiliaryData;
 
 /* =====================================================================
-   FIM DO FICHEIRO SCRIPT.JS · v13.2.1-GOLD GOLD · COURT READY · DORA COMPLIANT
+   FIM DO FICHEIRO SCRIPT.JS · v13.3.0-DIAMOND · COURT READY · DORA COMPLIANT
    UNIFED - PROBATUM — PERSISTÊNCIA NORMATIVA E SINCRONIZAÇÃO TEMPORAL
    CORREÇÕES IMPLEMENTADAS:
    ✓ robustSAFTParser v13.1.6-GOLD: Header-Based CSV Mapping (mapeamento dinâmico

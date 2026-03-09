@@ -125,7 +125,7 @@
             <div class="splash-right">
                 <div class="metadata-panel">
                     <p><strong>Módulo:</strong> Investigação Digital · ISO/IEC 27037</p>
-                    <p><strong>Big Data Accumulator:</strong> v13.2.1-GOLD · DORA Compliant · Smoking Gun</p>
+                    <p><strong>Big Data Accumulator:</strong> v13.3.0-DIAMOND · DORA Compliant · Smoking Gun · NEXUS</p>
                     <p><strong>CSC:</strong> Cadeia de Custódia Ativa</p>
                 </div>
                 
@@ -146,7 +146,7 @@
                     <small>Este sistema destina-se exclusivamente a uso pericial autorizado. O acesso não autorizado constitui crime de Acesso Ilegítimo, previsto no Artigo 6.º da Lei do Cibercrime (Lei n.º 109/2009, de 15 de setembro). Ao iniciar o utilizador aceita os termos e condições aqui mencionados.</small>
                 </div>
                 
-                <p class="version-footer">UNIFED - PROBATUM © 2024/2026 EM v13.2.1-GOLD · DORA COMPLIANT · SMOKING GUN · COURT READY · GOLD · BIG DATA</p>
+                <p class="version-footer">UNIFED - PROBATUM © 2024/2026 EM v13.3.0-DIAMOND · DORA COMPLIANT · SMOKING GUN · COURT READY · NEXUS · BIG DATA</p>
             </div>
         </div>
     </div>
@@ -175,7 +175,7 @@
                     <div>
                         <h1>
                             UNIFED - PROBATUM 
-                            <span class="version-badge">v13.2.1-GOLD</span>
+                            <span class="version-badge">v13.3.0-DIAMOND</span>
                         </h1>
                         <p class="subtitle" id="headerSubtitle">ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA</p>
                     </div>
@@ -192,6 +192,15 @@
                     </button>
                     <button id="viewLogsHeaderBtn" class="btn-tool" title="Ver Registo de Atividades (Art. 30 RGPD)">
                         <i class="fas fa-history"></i>
+                    </button>
+                    <!-- NIFAF — Non-Intrusive Forensic Auditory Feedback · v13.3.0-DIAMOND -->
+                    <!-- Movido para o header para acesso permanente durante auditorias ao vivo -->
+                    <button id="audioToggleBtn"
+                        onclick="const _s = window.NIFAF ? NIFAF.toggle() : false; this.innerHTML = _s ? '<i class=\'fas fa-volume-up\'></i>' : '<i class=\'fas fa-volume-mute\'></i>'; this.style.borderColor = _s ? 'var(--accent-cyan)' : ''; this.style.color = _s ? 'var(--accent-cyan)' : '';"
+                        class="btn-tool"
+                        style="font-size: 0.8rem;"
+                        title="Alerta Auditivo Forense (NIFAF) — 180Hz/140Hz · Ativa quando omissão > 15%">
+                        <i class="fas fa-volume-mute"></i>
                     </button>
                 </div>
 
@@ -859,17 +868,7 @@
                     <button class="custody-export-btn" onclick="closeCustodyChainModal()">
                         FECHAR PAINEL
                     </button>
-                    <!-- NIFAF — Non-Intrusive Forensic Auditory Feedback · v13.2.2-GOLD -->
-                    <!-- Default: MUTE — o perito ativa explicitamente a monitorização auditiva -->
-                    <div class="audio-control-wrapper" style="margin-left: 15px; display: inline-flex; align-items: center;" title="Monitorização Auditiva Forense (NIFAF) — 180Hz/140Hz · Ativa quando omissão > 15%">
-                        <button id="audioToggleBtn"
-                            onclick="const _s = window.NIFAF ? NIFAF.toggle() : false; this.innerHTML = _s ? '<i class=\'fas fa-volume-up\'></i>' : '<i class=\'fas fa-volume-mute\'></i>'; this.style.borderColor = _s ? 'var(--accent-cyan)' : ''; this.style.color = _s ? 'var(--accent-cyan)' : '';"
-                            class="custody-export-btn"
-                            style="padding: 5px 10px; font-size: 0.8rem;"
-                            title="Alternar Alerta Auditivo Forense (NIFAF)">
-                            <i class="fas fa-volume-mute"></i>
-                        </button>
-                    </div>
+
                 </div>
             </div>
 
@@ -884,7 +883,7 @@
         }
     </script>
     <!-- SCP: Fallback document.write removido — substituído pelo OTS Dynamic Loader no <head> -->
-    <!-- UNIFED PROBATUM v13.2.2-GOLD — Output Enrichment Layer -->
+    <!-- UNIFED PROBATUM v13.3.0-DIAMOND — Output Enrichment Layer -->
     <!-- Carregado ANTES de script.js para garantir que window.generateLegalNarrative -->
     <!-- e window.renderSankeyToImage estão disponíveis quando exportPDF() é chamado. -->
     <!-- Padrão: Read-Only · Asynchronous Post-Computation Orchestration             -->

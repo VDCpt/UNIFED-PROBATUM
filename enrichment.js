@@ -1,5 +1,5 @@
 /**
- * UNIFED - PROBATUM · OUTPUT ENRICHMENT LAYER · v13.2.4-PREMIUM
+ * UNIFED - PROBATUM · OUTPUT ENRICHMENT LAYER · v13.3.0-DIAMOND
  * ============================================================================
  * Arquitetura: Asynchronous Post-Computation Orchestration
  * Padrão:      Read-Only Data Consumption sobre IFDESystem.analysis
@@ -272,7 +272,7 @@ async function renderSankeyToImage(analysis) {
     ctx.fillStyle = '#00E5FF';
     ctx.font = 'bold 22px Courier New, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('DIAGRAMA DE FLUXO FINANCEIRO FORENSE -- UNIFED-PROBATUM v13.2.4-PREMIUM', W / 2, 32);
+    ctx.fillText('DIAGRAMA DE FLUXO FINANCEIRO FORENSE -- UNIFED-PROBATUM v13.3.0-DIAMOND', W / 2, 32);
     ctx.font = '14px Courier New, monospace';
     ctx.fillStyle = 'rgba(0,229,255,0.7)';
     ctx.fillText('Read-Only · Art. 125.o CPP · Output Enrichment Layer', W / 2, 55);
@@ -390,7 +390,7 @@ function generateIntegritySeal(masterHash, doc, x, y, sealSize) {
     doc.setFont('courier', 'bold');
     doc.setTextColor(0, 229, 255);
     doc.text('PROBATUM INTEGRITY SEAL', CX, y + 3.5, { align: 'center' });
-    doc.text('v13.2.4-PREMIUM \u00b7 SHA-256', CX, y + 6.5, { align: 'center' });
+    doc.text('v13.3.0-DIAMOND \u00b7 SHA-256', CX, y + 6.5, { align: 'center' });
 
     doc.setDrawColor(30, 60, 100);
     doc.setLineWidth(0.2);
@@ -466,7 +466,7 @@ async function exportDOCX() {
         return;
     }
 
-    if (typeof logAudit === 'function') logAudit('\ud83d\udcc4 [v13.2.4] A gerar Minuta de Peticao Inicial (DOCX)...', 'info');
+    if (typeof logAudit === 'function') logAudit('\ud83d\udcc4 [v13.3.0] A gerar Minuta de Peticao Inicial (DOCX)...', 'info');
 
     var sys  = window.IFDESystem;
     var t    = sys.analysis.totals    || {};
@@ -553,7 +553,7 @@ async function exportDOCX() {
         para('', false), hr(),
         para('Processo N.o: ' + xe(sys.sessionId || 'UNIFED-PENDING'), false, '20', '333333'),
         para('Data de Elaboracao: ' + date, false, '20', '333333'),
-        para('Sistema: UNIFED - PROBATUM v13.2.4-PREMIUM - COURT READY - DORA COMPLIANT', false, '18', '666666'),
+        para('Sistema: UNIFED - PROBATUM v13.3.0-DIAMOND - COURT READY - DORA COMPLIANT', false, '18', '666666'),
         para('Master Hash SHA-256: ' + xe(sys.masterHash || 'N/A'), false, '16', '888888'),
         hr(), para('', false),
 
@@ -580,7 +580,7 @@ async function exportDOCX() {
         para('', false), tbl(srcRows), para('', false), hr(), para('', false),
 
         para('IV. SINTESE JURIDICA E ESTRATEGIA DE CONTRA-INTERROGATORIO', true, '26', '003366'),
-        para('Gerada por IA Argumentativa (RAG + In-Context Learning - claude-sonnet-4-20250514)', false, '16', '888888'),
+        para('Gerada por IA Argumentativa (RAG + In-Context Learning - claude-sonnet-4-20250514) · NEXUS v13.3.0-DIAMOND', false, '16', '888888'),
         para('', false)
     ].concat(narrativeParas).concat([
         para('', false), hr(), para('', false),
@@ -658,7 +658,7 @@ async function exportDOCX() {
             try { URL.revokeObjectURL(url); document.body.removeChild(link); } catch (_) {}
         }, 2000);
 
-        if (typeof logAudit === 'function') logAudit('\u2705 [v13.2.4] Minuta DOCX exportada com sucesso.', 'success');
+        if (typeof logAudit === 'function') logAudit('\u2705 [v13.3.0] Minuta DOCX exportada com sucesso.', 'success');
         if (typeof showToast === 'function') showToast('Minuta DOCX exportada - Peticao Inicial pronta', 'success');
         if (typeof ForensicLogger !== 'undefined') ForensicLogger.addEntry('DOCX_EXPORT_COMPLETED', { sessionId: sys.sessionId });
     } catch (zipErr) {
@@ -952,7 +952,7 @@ function openATFModal() {
         '<div style="width:100%;max-width:1100px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,229,255,0.3);padding-bottom:12px;margin-bottom:20px">' +
             '<div>' +
-                '<div style="color:#00E5FF;font-size:1.1rem;font-weight:bold;letter-spacing:0.08em">\u23f3 ANALISE TEMPORAL FORENSE (ATF) \u00b7 v13.2.4-PREMIUM</div>' +
+                '<div style="color:#00E5FF;font-size:1.1rem;font-weight:bold;letter-spacing:0.08em">\u23f3 ANALISE TEMPORAL FORENSE (ATF) \u00b7 v13.3.0-DIAMOND</div>' +
                 '<div style="color:rgba(255,255,255,0.5);font-size:0.72rem;margin-top:4px">Tendencias \u00b7 Outliers 2\u03c3 \u00b7 Indice de Recidiva Algorítmica \u00b7 Read-Only</div>' +
             '</div>' +
             '<button onclick="document.getElementById(\'atfModal\').remove()" ' +
@@ -1087,7 +1087,7 @@ window.openATFModal = openATFModal;
 window.generateLegalNarrative  = generateLegalNarrative;
 window.renderSankeyToImage     = renderSankeyToImage;
 
-console.log('[UNIFED-ENRICHMENT] \u2705 Output Enrichment Layer v13.2.4-PREMIUM carregado.');
+console.log('[UNIFED-ENRICHMENT] \u2705 Output Enrichment Layer v13.3.0-DIAMOND carregado.');
 console.log('[UNIFED-ENRICHMENT]   . generateLegalNarrative()     - IA Argumentativa + AI Adversarial Simulator');
 console.log('[UNIFED-ENRICHMENT]   . renderSankeyToImage()        - Dynamic Canvas-to-PDF (Sankey)');
 console.log('[UNIFED-ENRICHMENT]   . generateIntegritySeal()      - Integrity Visual Signature (Selo Holografico)');
@@ -1099,7 +1099,7 @@ console.log('[UNIFED-ENRICHMENT]   . openATFModal()               - ATF Dashboar
 console.log('[UNIFED-ENRICHMENT]   . Modo: Read-Only - Fonte: IFDESystem.analysis + monthlyData');
 
 /* =====================================================================
-   FIM DO FICHEIRO ENRICHMENT.JS - v13.2.4-PREMIUM
+   FIM DO FICHEIRO ENRICHMENT.JS - v13.3.0-DIAMOND
    UNIFED - PROBATUM - OUTPUT ENRICHMENT LAYER
 
    BUGS CORRIGIDOS:
