@@ -1,5 +1,5 @@
 /**
- * UNIFED - PROBATUM SISTEMA DE PERITAGEM FORENSE - v13.2.2-GOLD · COURT READY · DORA COMPLIANT
+ * UNIFED - PROBATUM SISTEMA DE PERITAGEM FORENSE - v13.3.0-DIAMOND · COURT READY · DORA COMPLIANT
  * VERSAO FINAL ABSOLUTA - EXTRACAO PRECISA DE DADOS — HEADER-BASED CSV MAPPING
  * ====================================================================
  * CORRECOES IMPLEMENTADAS (v13.1.6-GOLD):
@@ -15,7 +15,7 @@
  * 3. led-red-blink / box-despesas-blink: comportamento visual de alerta.
  * 4. Conformidade DORA (UE) 2022/2554 inserida no PDF e nos badges.
  * ====================================================================
- * NOVO — v13.2.2-GOLD (Output Enrichment Layer — enrichment.js):
+ * NOVO — v13.3.0-DIAMOND (Output Enrichment Layer — enrichment.js):
  * 5. generateLegalNarrative(): IA Argumentativa · RAG + In-Context Learning.
  *    Modelo: claude-sonnet-4-20250514. Base legal: CIVA/CIRC/RGIT/CPP/DAC7.
  * 6. renderSankeyToImage(): Dynamic Canvas-to-PDF Injection.
@@ -4360,12 +4360,16 @@ function performForensicCrossings() {
                                     ? (cross.c4_delta / cross.c4_liquidoDeclarado) * 100
                                     : 0;
 
-    // ── Variáveis derivadas (compatibilidade histórica + novos cálculos) ────
-    cross.discrepanciaSaftVsDac7  = ganhos - dac7Total;        // alias histórico (C1 proxy via ganhos)
-    cross.percentagemSaftVsDac7   = ganhos > 0 ? (cross.discrepanciaSaftVsDac7 / ganhos) * 100 : 0;
+    // ── Variáveis derivadas (C1 CORRIGIDO v13.3.0-DIAMOND) ──────────────────
+    // discrepanciaSaftVsDac7: usa saftBruto - dac7Total (Eixo 1: Conformidade Fiscal AT vs UE)
+    cross.discrepanciaSaftVsDac7  = saftBruto - dac7Total;
+    cross.percentagemSaftVsDac7   = saftBruto > 0 ? (cross.discrepanciaSaftVsDac7 / saftBruto) * 100 : 0;
     cross.percentagemDiscrepancia = cross.c2_pct;
+    // Alias semântico explícito para projeção IRC
+    cross.discrepancia            = cross.discrepanciaCritica;
 
-    const discrepanciaMensalMedia = cross.discrepanciaCritica / mesesDados;
+    const mesesNoPeriodo          = mesesDados; // normalização mensal→anual
+    const discrepanciaMensalMedia = cross.discrepanciaCritica / mesesNoPeriodo;
     cross.btor = despesas;
     cross.btf  = faturaPlataforma;
 
@@ -4374,8 +4378,8 @@ function performForensicCrossings() {
     cross.impactoSeteAnosMercado= cross.impactoAnualMercado * 7;
 
     cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;
-    // CORRIGIDO v13.3.0-DIAMOND: normalização semestral→anual via mesesDados
-    cross.agravamentoBrutoIRC  = (cross.discrepanciaSaftVsDac7 / mesesDados) * 12;
+    // IRC v13.3.0-DIAMOND: projeção anual = média mensal C2 * 12 (base: Retenção Indevida)
+    cross.agravamentoBrutoIRC  = (cross.discrepancia / mesesNoPeriodo) * 12;
     cross.ircEstimado          = cross.agravamentoBrutoIRC * 0.21;
     cross.bigDataAlertActive   = Math.abs(cross.discrepanciaCritica) > 0.01;
 
@@ -4393,7 +4397,7 @@ function performForensicCrossings() {
     logAudit(`[C3] SAF-T Bruto (${formatCurrency(saftBruto)}) vs Ganhos Extrato (${formatCurrency(ganhos)}) → Δ ${formatCurrency(cross.c3_delta)} (${cross.c3_pct.toFixed(2)}%) — Viagens faturadas vs transferências efectivas`, 'warning');
     logAudit(`[C4] Líquido Declarado (${formatCurrency(cross.c4_liquidoDeclarado)}) vs Líquido Real (${formatCurrency(ganhosLiquidos)}) → Δ ${formatCurrency(cross.c4_delta)} (${cross.c4_pct.toFixed(2)}%) — Diferença final no bolso`, 'error');
     logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)} | IVA em falta (6%): ${formatCurrency(cross.ivaFalta6)}`, 'error');
-    logAudit(`📐 Agravamento IRC Anual (corrigido): ${formatCurrency(cross.agravamentoBrutoIRC)} | IRC Est. (21%): ${formatCurrency(cross.ircEstimado)}`, 'info');
+    logAudit(`📐 Agravamento IRC Anual (C2/meses×12): ${formatCurrency(cross.agravamentoBrutoIRC)} | IRC Est. (21%): ${formatCurrency(cross.ircEstimado)}`, 'info');
 
     // NIFAF trigger relocated to updateDashboard() — see _nifafAlertedHash guard
 
@@ -5327,7 +5331,7 @@ async function exportPDF() {
         // eliminar falhas quando pageNumber excede TOTAL_PAGES por overflow.
         // ══════════════════════════════════════════════════════════════════════
         const addFooter = (doc, pageNum, isLastPage = false) => {
-            // ── CADEIA CRIPTOGRÁFICA: Master Hash SHA-256 no rodapé de cada página ──
+            // ── CADEIA CRIPTOGRÁFICA: Documento selado no rodapé de cada página ──
             if (!isLastPage) {
                 const _mhShort = (IFDESystem.masterHash || 'HASH_INDISPONIVEL').substring(0, 32) + '…';
                 const _mhY = doc.internal.pageSize.getHeight() - 4;
@@ -5335,7 +5339,7 @@ async function exportPDF() {
                 doc.setFontSize(5.2);
                 doc.setTextColor(140, 140, 140);
                 doc.text(
-                    `SHA-256: ${_mhShort} | UNIFED-PROBATUM v13.3.0-DIAMOND · Elo Criptográfico — Art. 125.º CPP`,
+                    `Documento selado com Master Hash SHA-256: ${_mhShort} | UNIFED-PROBATUM v13.3.0-DIAMOND · Art. 125.º CPP`,
                     doc.internal.pageSize.getWidth() / 2, _mhY, { align: 'center' }
                 );
                 doc.setTextColor(0, 0, 0);
@@ -5367,10 +5371,14 @@ async function exportPDF() {
             doc.setTextColor(100, 100, 100);
             doc.text(`Página ${pageNum} de ${TOTAL_PAGES}`, margin, pageHeight - 10);
 
+            // RODAPÉ OBRIGATÓRIO v13.3.0-DIAMOND: Selo criptográfico em todas as páginas
             const hashFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
             doc.setFontSize(5);
             doc.setFont('courier', 'normal');
-            doc.text(`Master Hash: ${hashFull}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+            doc.text(
+                'Documento selado com Master Hash SHA-256: ' + hashFull,
+                pageWidth / 2, pageHeight - 5, { align: 'center' }
+            );
 
             // ══════════════════════════════════════════════════════════════════
             // SELO DE CERTIFICAÇÃO PROBATUM — ativado por isLastPage=true
@@ -8061,7 +8069,7 @@ window.resetAuxiliaryData = resetAuxiliaryData;
    ✓ generateQRCode: CorrectLevel.L + string compacta UNIFED|SESSION|HASH
    ✓ DORA (UE) 2022/2554 — cláusula no PDF e nos badges
 
-   NOVO — v13.2.1-GOLD-AUX (Módulo Auxiliar Pericial):
+   NOVO — v13.3.0-DIAMOND (Refatoração Cirúrgica — Court Ready):
    ✓ IFDESystem.auxiliaryData: Non-Interfering Data Object — isolado de financials
      Campos: campanhas, portagens, gorjetas, cancelamentos, totalNaoSujeitos
      Base Legal: Lei TVDE · 0% comissão · Art. 125.º CPP

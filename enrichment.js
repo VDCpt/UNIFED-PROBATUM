@@ -277,47 +277,43 @@ async function renderSankeyToImage(analysis) {
     ctx.fillStyle = 'rgba(0,229,255,0.7)';
     ctx.fillText('Read-Only · Art. 125.o CPP · Output Enrichment Layer', W / 2, 55);
 
-    // ── Variáveis para o Sankey ─────────────────────────────────────────────
-    // NODO RAIZ (esquerda): Volume Transacional Real = Ganhos Extrato + Omissões C2
+    // ── Variáveis para o Sankey v13.3.0-DIAMOND ────────────────────────────
+    // NODO RAIZ: Volume Transacional Real = Ganhos Extrato (fonte: extrato bancário)
     var ganhos    = t.ganhos    || 0;
     var dac7      = t.dac7TotalPeriodo || 0;
     var saftBruto = t.saftBruto || 0;
-    var despesas  = t.despesas  || 0;
-    var fatPlat   = t.faturaPlataforma || 0;
-    var omissaoC2 = Math.abs(c.discrepanciaCritica || 0);   // C2: Desp vs Fatura
-    var omissaoC1 = Math.abs(c.c1_delta || (saftBruto - dac7)); // C1: SAF-T vs DAC7
-    var passivo   = Math.abs(c.ivaFalta || 0) + Math.abs(c.ircEstimado || 0);
 
-    // Volume Transacional Real = Ganhos reais do motorista + valores omitidos/retidos
-    var volumeReal = ganhos + omissaoC2;
+    // Volume real = o que efectivamente entrou na conta bancária do sujeito passivo
+    var volumeReal = ganhos;
 
-    // Ramo "Reportado": o que chegou às autoridades (DAC7) — subset do volume real
-    var reportado  = Math.min(dac7, volumeReal);
+    // Ramo 1 — Faturado SAF-T: o que foi declarado à AT via SAF-T
+    var faturadoSaft = Math.min(saftBruto, volumeReal);
 
-    // Ramo "Omitidos/Retidos": o que não foi reportado nem entregue ao motorista
-    var omitidos   = volumeReal - reportado;
+    // Ramo 2 — Reportado DAC7: o que a plataforma comunicou à UE
+    var reportadoDac7 = Math.min(dac7, volumeReal);
 
-    // ── Nós do Diagrama de Fluxo Forense ────────────────────────────────────
-    // Estrutura: [0] Nó Raiz → bifurca para [1] Reportado e [2] Omitidos
-    //            [2] Omitidos → alimenta [3] Passivo Tributário
+    // Ramo 3 — Omissão/Retenção Sistemática: resíduo não declarado nem reportado
+    var omissaoRet = Math.max(0, volumeReal - faturadoSaft - reportadoDac7);
+
+    // ── Nós do Diagrama de Fluxo Forense (3 saídas do nó raiz) ─────────────
     var nodes = [
-        // Nó Principal (esquerda) — Volume Transacional Real
-        { x:  60, y: 200, w: 200, h: 100, label: 'Volume Transacional\nReal (Ganhos +\nOmissoes)',  value: volumeReal, color: '#3B82F6' },
-        // Ramo superior — Reportado ao Estado (DAC7/SAF-T)
-        { x: 420, y:  80, w: 200, h: 100, label: 'Reportado\n(DAC7 / SAF-T)',                       value: reportado,  color: '#10B981' },
-        // Ramo inferior — Fuga (Valores Omitidos/Retidos Ilegalmente)
-        { x: 420, y: 330, w: 200, h: 100, label: 'Valores Omitidos\n/ Retidos\nIlegalmente',        value: omitidos,   color: '#EF4444' },
-        // Nó final — Passivo Tributário resultante das omissões
-        { x: 790, y: 330, w: 200, h: 100, label: 'Passivo\nTributario\n(IVA + IRC)',                value: passivo,    color: '#F59E0B' }
+        // Nó Principal (esquerda) — Volume Transacional Real (Ganhos Extrato)
+        { x:  60, y: 240, w: 200, h: 110, label: 'Volume Transacional\nReal\n(Ganhos Extrato)',       value: volumeReal,    color: '#3B82F6' },
+        // Ramo superior — Faturado SAF-T (declarado à AT)
+        { x: 440, y:  60, w: 200, h:  90, label: 'Faturado\n(SAF-T)',                                 value: faturadoSaft,  color: '#10B981' },
+        // Ramo central — Reportado DAC7 (comunicado à UE)
+        { x: 440, y: 260, w: 200, h:  90, label: 'Reportado\n(DAC7)',                                 value: reportadoDac7, color: '#6366F1' },
+        // Ramo inferior — Omissão/Retenção Sistemática (resíduo forense)
+        { x: 440, y: 460, w: 200, h:  90, label: 'Omissão /\nRetenção\nSistemática',                  value: omissaoRet,    color: '#EF4444' }
     ];
 
     var flows = [
-        // Volume Real → Reportado (fluxo legítimo)
-        { from: 0, to: 1, color: '#10B981', opacity: 0.50 },
-        // Volume Real → Omitidos (fluxo de fuga — evidência forense)
-        { from: 0, to: 2, color: '#EF4444', opacity: 0.65 },
-        // Omitidos → Passivo Tributário (consequência fiscal)
-        { from: 2, to: 3, color: '#F59E0B', opacity: 0.70 }
+        // Volume Real → Faturado SAF-T (fluxo declarado AT)
+        { from: 0, to: 1, color: '#10B981', opacity: 0.55 },
+        // Volume Real → Reportado DAC7 (fluxo comunicado UE)
+        { from: 0, to: 2, color: '#6366F1', opacity: 0.55 },
+        // Volume Real → Omissão/Retenção Sistemática (evidência forense)
+        { from: 0, to: 3, color: '#EF4444', opacity: 0.70 }
     ];
 
     flows.forEach(function(f) {
@@ -362,10 +358,10 @@ async function renderSankeyToImage(analysis) {
     ctx.font = '12px Courier New, monospace';
     ctx.textAlign = 'left';
     [
-        { color: '#3B82F6', text: 'Volume Real: ' + _fmtEur(volumeReal) },
-        { color: '#10B981', text: 'Reportado (DAC7/SAF-T): ' + _fmtEur(reportado) },
-        { color: '#EF4444', text: 'Omitido/Retido: ' + _fmtEur(omitidos) + ' (' + (c.percentagemOmissao || 0).toFixed(2) + '%)' },
-        { color: '#F59E0B', text: 'Passivo Trib. (IVA+IRC): ' + _fmtEur(passivo) }
+        { color: '#3B82F6', text: 'Volume Real (Ganhos Extrato): ' + _fmtEur(volumeReal) },
+        { color: '#10B981', text: 'Faturado (SAF-T): ' + _fmtEur(faturadoSaft) },
+        { color: '#6366F1', text: 'Reportado (DAC7): ' + _fmtEur(reportadoDac7) },
+        { color: '#EF4444', text: 'Omissao/Retencao Sistematica: ' + _fmtEur(omissaoRet) + ' (' + (c.percentagemOmissao || 0).toFixed(2) + '%)' }
     ].forEach(function(lg, i) {
         ctx.fillStyle = lg.color;
         ctx.fillRect(60 + i * 320, H - 45, 14, 14);
