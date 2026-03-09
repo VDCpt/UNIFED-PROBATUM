@@ -92,6 +92,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- SCP: SHIM OTS integrado no OTS Dynamic Loader acima (Core Freeze) -->
 
@@ -337,6 +338,10 @@
                     <div class="toolbar-grid">
                         <button id="exportPDFBtn" class="btn-tool" disabled>
                             <i class="fas fa-file-pdf"></i> <span id="btnPDF">RELATÓRIO PERICIAL</span>
+                        </button>
+                        <!-- DOCX Export — v13.2.3-GOLD · Minuta de Petição Inicial -->
+                        <button id="exportDOCXBtn" class="btn-tool" title="Exportar Minuta de Petição Inicial (.docx) — Estrutura OOXML para edição pelo advogado">
+                            <i class="fas fa-file-word"></i> <span>MINUTA WORD</span>
                         </button>
                         <button id="exportJSONBtn" class="btn-tool">
                             <i class="fas fa-file-code"></i> EXPORTAR JSON

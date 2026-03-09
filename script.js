@@ -27,7 +27,7 @@
 
 'use strict';
 
-console.log('UNIFED - PROBATUM SCRIPT v13.2.2-GOLD · DORA COMPLIANT · CADEIA DE CUSTÓDIA COMPLETA · HEADER-BASED CSV MAPPING · OUTPUT ENRICHMENT LAYER · ATIVADO');
+console.log('UNIFED - PROBATUM SCRIPT v13.2.3-GOLD · DORA COMPLIANT · CADEIA DE CUSTÓDIA COMPLETA · NIFAF GUARD · INTEGRITY SEAL · DOCX EXPORT · AI ADVERSARIAL · ATIVADO');
 
 // ============================================================================
 // 0. HANDSHAKE DE INFRAESTRUTURA — Verificação da Biblioteca OpenTimestamps
@@ -2582,7 +2582,7 @@ const SchemaRegistry = {
 // 9. ESTADO GLOBAL (SINGLE SOURCE OF TRUTH) - UNIFED - PROBATUM
 // ============================================================================
 const IFDESystem = {
-    version: 'v13.2.2-GOLD-DORA-COMPLIANT',
+    version: 'v13.2.3-GOLD-DORA-COMPLIANT',
     name: 'UNIFED - PROBATUM',
     sessionId: null,
     selectedYear: new Date().getFullYear(),
@@ -3154,6 +3154,16 @@ function setupMainListeners() {
 
     const exportJSONBtn = document.getElementById('exportJSONBtn');
     if (exportJSONBtn) exportJSONBtn.addEventListener('click', exportDataJSON);
+
+    // DOCX Export — v13.2.3-GOLD (Minuta de Petição Inicial)
+    const exportDOCXBtn = document.getElementById('exportDOCXBtn');
+    if (exportDOCXBtn) exportDOCXBtn.addEventListener('click', () => {
+        if (typeof window.exportDOCX === 'function') {
+            window.exportDOCX();
+        } else {
+            showToast('Módulo DOCX não disponível. Verifique o carregamento de enrichment.js.', 'error');
+        }
+    });
 
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) resetBtn.addEventListener('click', resetSystem);
@@ -4334,16 +4344,6 @@ function performForensicCrossings() {
     logAudit(`💰 IVA em falta (23%): ${formatCurrency(cross.ivaFalta)}`, 'error');
     logAudit(`💰 IVA em falta (6%): ${formatCurrency(cross.ivaFalta6)}`, 'info');
 
-    // ── NIFAF: Gatilho Pericial de Sinalização Auditiva ───────────────────────
-    // Ativado quando a percentagem de omissão excede 15% da base de comparação.
-    // Threshold forense: >15% constitui indício qualificado nos termos do
-    // Art. 104.º RGIT (Fraude Fiscal Qualificada — vantagem patrimonial > €15k).
-    // O NIFAF só dispara se o utilizador tiver ativado explicitamente o módulo.
-    if (cross.percentagemOmissao > 15) {
-        if (window.NIFAF) window.NIFAF.playCriticalAlert();
-    }
-    // ── FIM NIFAF ──
-
     ForensicLogger.addEntry('CROSSINGS_CALCULATED', {
         discrepancy: cross.discrepanciaCritica,
         saftVsDac7: cross.discrepanciaSaftVsDac7,
@@ -4510,6 +4510,14 @@ function showTwoAxisAlerts() {
     // -------------------------------------------───────────────────────────
 }
 
+// ── NIFAF Session Guard — v13.2.3-GOLD ───────────────────────────────────────
+// Controlo de Estado Único: o pulso sonoro só dispara quando o Master Hash muda
+// E a percentagem de omissão é > 15%. Evita disparos em loop ou redundantes.
+// A variável _nifafAlertedHash é atualizada com o hash que gerou o último alerta.
+// Reset automático a null quando clearConsole() é chamado (purga total).
+let _nifafAlertedHash = null;
+// ── FIM NIFAF Session Guard ──
+
 function updateDashboard() {
     const totals = IFDESystem.analysis.totals;
     const cross = IFDESystem.analysis.crossings;
@@ -4636,6 +4644,20 @@ function updateDashboard() {
     if (quantumBox) {
         quantumBox.style.display = (Math.abs(cross.impactoSeteAnosMercado) > 0) ? 'block' : 'none';
     }
+
+    // ── NIFAF: Gatilho Pericial — Orquestração em updateDashboard() ───────────
+    // v13.2.3-GOLD: Controlo de Estado Único (_nifafAlertedHash guard).
+    // Condições de disparo: (1) omissão > 15% — indício Art. 104.º RGIT;
+    //                       (2) hash atual diferente do último que gerou alerta.
+    // Garante: 1 pulso por processamento único. Zero loops. Zero ruído espúrio.
+    {
+        const _currentHash = IFDESystem.masterHash || '';
+        if (cross.percentagemOmissao > 15 && _currentHash && _currentHash !== _nifafAlertedHash) {
+            _nifafAlertedHash = _currentHash;
+            if (window.NIFAF) window.NIFAF.playCriticalAlert();
+        }
+    }
+    // ── FIM NIFAF Gatilho ──
 
     activateIntermittentAlerts();
 }
@@ -5197,7 +5219,7 @@ async function exportPDF() {
         // ══ FIM PRÉ-GERAÇÃO QR ══
 
         // ══════════════════════════════════════════════════════════════════════
-        // CAMADA DE ENRIQUECIMENTO DE SAÍDA — v13.2.2-GOLD
+        // CAMADA DE ENRIQUECIMENTO DE SAÍDA — v13.2.3-GOLD
         // Asynchronous Post-Computation Orchestration
         // Ponto de injeção: APÓS geração do Master Hash, ANTES da construção de páginas.
         // Padrão: Read-Only sobre IFDESystem.analysis (Fonte de Verdade Imutável).
@@ -5206,32 +5228,35 @@ async function exportPDF() {
         // ══════════════════════════════════════════════════════════════════════
         let _enrichLegalNarrative = null;
         let _enrichSankeyImage    = null;
+        // _enrichIntegritySeal: invocado diretamente em jsPDF — não gera imagem separada
 
         if (typeof window.generateLegalNarrative === 'function') {
             try {
-                logAudit('🤖 [v13.2.2] A gerar Síntese Jurídica Assistida por IA...', 'info');
+                logAudit('🤖 [v13.2.3] A gerar Síntese Jurídica + Simulador Adversarial (IA)...', 'info');
                 _enrichLegalNarrative = await window.generateLegalNarrative(IFDESystem.analysis);
-                logAudit('✅ [v13.2.2] Síntese Jurídica gerada com sucesso.', 'success');
+                logAudit('✅ [v13.2.3] Síntese Jurídica + Contra-Interrogatório gerados.', 'success');
             } catch (_aiErr) {
                 _enrichLegalNarrative = '[Síntese jurídica indisponível — motor forense íntegro]';
-                logAudit('⚠ [v13.2.2] IA indisponível — PDF gerado sem síntese narrativa.', 'warning');
+                logAudit('⚠ [v13.2.3] IA indisponível — PDF gerado sem síntese narrativa.', 'warning');
             }
         }
 
         if (typeof window.renderSankeyToImage === 'function') {
             try {
-                logAudit('📊 [v13.2.2] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
+                logAudit('📊 [v13.2.3] A renderizar Diagrama de Fluxo Financeiro (Sankey)...', 'info');
                 _enrichSankeyImage = await window.renderSankeyToImage(IFDESystem.analysis);
                 if (_enrichSankeyImage) {
-                    logAudit('✅ [v13.2.2] Diagrama Sankey renderizado com sucesso.', 'success');
+                    logAudit('✅ [v13.2.3] Diagrama Sankey renderizado com sucesso.', 'success');
                 } else {
-                    logAudit('⚠ [v13.2.2] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
+                    logAudit('⚠ [v13.2.3] Diagrama Sankey indisponível — PDF gerado sem gráfico.', 'warning');
                 }
             } catch (_sankeyErr) {
                 _enrichSankeyImage = null;
-                logAudit('⚠ [v13.2.2] Erro Sankey — PDF gerado sem diagrama.', 'warning');
+                logAudit('⚠ [v13.2.3] Erro Sankey — PDF gerado sem diagrama.', 'warning');
             }
         }
+
+        logAudit('🔏 [v13.2.3] Integrity Seal (Selo Holográfico) será estampado na página de encerramento.', 'info');
         // ══ FIM INICIALIZAÇÃO DA CAMADA DE ENRIQUECIMENTO ══
 
         // ══════════════════════════════════════════════════════════════════════
@@ -6914,7 +6939,7 @@ async function exportPDF() {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
             doc.setTextColor(30, 60, 120);
-            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.2-GOLD ]',
+            doc.text('[ UNIFED - PROBATUM CERTIFIED · ANALISTA E CONSULTOR FORENSE · v13.2.3-GOLD ]',
                 _termW / 2, y, { align: 'center' }); y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
@@ -6926,9 +6951,26 @@ async function exportPDF() {
                 _termW / 2, y, { align: 'center' });
             doc.setTextColor(0, 0, 0);
 
+            // ── INTEGRITY SEAL (Selo Holográfico Digital) — v13.2.3-GOLD ─────
+            // Posição: Canto Superior Esquerdo da zona de encerramento
+            // O QR Code ocupa o canto inferior direito (addFooter isLastPage=true).
+            // O Integrity Seal ocupa o canto inferior esquerdo — sem sobreposição.
+            // PROTOCOLO: o padrão muda com qualquer alteração ao hash → prova visual.
+            if (typeof window.generateIntegritySeal === 'function') {
+                try {
+                    const _sealX = 14;
+                    const _sealY = doc.internal.pageSize.getHeight() - 14 - 52 - 8;
+                    window.generateIntegritySeal(IFDESystem.masterHash, doc, _sealX, _sealY, 52);
+                } catch (_sealErr) {
+                    console.warn('[UNIFED-SEAL] ⚠ Integrity Seal indisponível:', _sealErr.message);
+                }
+            }
+            // ── FIM INTEGRITY SEAL ──
+
             // ── ZONA DE EXCLUSÃO DO QR CODE ───────────────────────────────────
             // O texto acima pára aqui (y ≤ ~145mm para documentos padrão).
-            // O Selo QR ocupa [sealY ≈ 225mm, sealY+boxSize ≈ 275mm].
+            // O Selo QR ocupa [sealY ≈ 225mm, sealY+boxSize ≈ 275mm] — canto direito.
+            // O Integrity Seal ocupa o canto esquerdo na mesma zona vertical.
             // Garantia: nenhum doc.text() é chamado após esta linha nesta página.
             // ③ addFooter(isLastPage=true) a seguir — QR Code posicionado no
             //   canto inferior direito em coordenadas fixas (não dependentes de y).
@@ -7446,6 +7488,7 @@ function clearConsole() {
 
     // Purga completa do Sujeito Passivo (transacional)
     IFDESystem.client = null;
+    _nifafAlertedHash = null; // NIFAF reset — nova sessão
     document.querySelectorAll('.client-data-field').forEach(el => el.textContent = '---');
     const clientNameInput = document.getElementById('clientNameFixed');
     const clientNIFInput = document.getElementById('clientNIFFixed');

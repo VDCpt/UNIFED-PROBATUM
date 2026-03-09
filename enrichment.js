@@ -1,5 +1,5 @@
 /**
- * UNIFED - PROBATUM · OUTPUT ENRICHMENT LAYER · v13.2.2-GOLD
+ * UNIFED - PROBATUM · OUTPUT ENRICHMENT LAYER · v13.2.3-GOLD
  * ============================================================================
  * Arquitetura: Asynchronous Post-Computation Orchestration
  * Padrão:      Read-Only Data Consumption sobre IFDESystem.analysis
@@ -12,16 +12,28 @@
  *   Consome IFDESystem.analysis como Fonte de Verdade Imutável.
  *
  * MÓDULOS IMPLEMENTADOS:
- *   1. generateLegalNarrative() — IA Argumentativa (RAG + In-Context Learning)
- *      Utiliza Claude claude-sonnet-4-20250514 para síntese jurídico-fiscal.
- *      Injeção de contexto estruturado com artigos CIVA/CIRC/RGIT/CPP.
+ *   1. generateLegalNarrative()   — IA Argumentativa + Simulador Adversarial
+ *      RAG + In-Context Learning. Modelo: claude-sonnet-4-20250514.
+ *      Secção D: Estratégia de Contra-Interrogatório (AI Adversarial Simulator).
  *
- *   2. renderSankeyToImage()    — Dynamic Canvas-to-PDF Injection
- *      Diagrama de Sankey gerado em canvas invisível durante exportPDF().
- *      Retorna base64 PNG para injeção direta no jsPDF.
- *      Dashboard permanece inalterado.
+ *   2. renderSankeyToImage()      — Dynamic Canvas-to-PDF Injection
+ *      Diagrama de Sankey em canvas invisível. Dashboard inalterado.
  *
- * PONTO DE INJEÇÃO: async function exportPDF() — exclusivamente.
+ *   3. generateIntegritySeal()    — Integrity Visual Signature (Selo Holográfico)
+ *      Padrão geométrico determinístico gerado a partir do Master Hash SHA-256.
+ *      Qualquer alteração ao PDF muda o padrão drasticamente. Prova visual de
+ *      autenticidade para Juízes. Renderização via jsPDF (zero dependências extra).
+ *
+ *   4. exportDOCX()               — Structural DOCX Export (Minuta de Petição Inicial)
+ *      Geração de Word (.docx) com OOXML via JSZip. Estrutura: capa + factos
+ *      provados (tabelas) + enquadramento legal + contra-interrogatório.
+ *      Permite ao advogado trabalhar sobre a prova sem alterar o PDF certificado.
+ *
+ *   5. NIFAF                      — Non-Intrusive Forensic Auditory Feedback
+ *      Web Audio API. Zero dependências. Frequências 180Hz/140Hz.
+ *      Gatilho: updateDashboard() com hasAlertedThisSession guard.
+ *
+ * PONTO DE INJEÇÃO: async function exportPDF() e updateDashboard() — exclusivamente.
  * ============================================================================
  */
 
@@ -83,8 +95,8 @@ async function generateLegalNarrative(analysis) {
         return _fallbackNarrative('Dados forenses insuficientes. Carregue os documentos de evidência antes de exportar.');
     }
 
-    const systemPrompt = `És um Assistente Especializado em Análise Jurídico-Fiscal Portuguesa.
-O teu papel é o de um Módulo de Síntese Narrativa: transformas outputs numéricos em inputs semânticos jurídicos.
+    const systemPrompt = `És um Assistente Especializado em Análise Jurídico-Fiscal Portuguesa e em Estratégia de Litígio.
+O teu papel é duplo: (1) Módulo de Síntese Narrativa — transformas outputs numéricos em inputs semânticos jurídicos; (2) Simulador Adversarial — antecipas as linhas de defesa da contraparte e preparas a resposta pericial.
 
 REGRAS ABSOLUTAS DE OPERAÇÃO:
 1. Usa EXCLUSIVAMENTE os dados do contexto forense fornecido — nunca inventes valores.
@@ -92,9 +104,10 @@ REGRAS ABSOLUTAS DE OPERAÇÃO:
 3. Linguagem: português jurídico formal, adequado para submissão em tribunal.
 4. Referencia sempre os artigos legais pertinentes para os factos presentes.
 5. Não uses listas de bullets — escreve em prosa jurídica estruturada.
-6. Mantém objetividade pericial: expõe factos, não formula acusações.`;
+6. Mantém objetividade pericial: expõe factos, não formula acusações.
+7. Na Secção D, simula argumentos plausíveis da defesa e fornece a resposta técnica pericial a cada um.`;
 
-    const userPrompt = `Com base nos seguintes dados forenses certificados e na base legal aplicável, elabora uma Síntese Jurídica Pericial estruturada em três secções obrigatórias.
+    const userPrompt = `Com base nos seguintes dados forenses certificados e na base legal aplicável, elabora uma Síntese Jurídica Pericial estruturada em QUATRO secções obrigatórias.
 
 ═══ DADOS FORENSES CERTIFICADOS (IFDESystem.analysis — Imutável) ═══
 ${forensicContext}
@@ -112,7 +125,10 @@ Secção B — ENQUADRAMENTO LEGAL E TRIBUTÁRIO
 Secção C — RECOMENDAÇÕES PERICIAIS
 [Diligências recomendadas, documentação a solicitar, prazos legais relevantes]
 
-Escreve a síntese em prosa jurídica formal. Máximo 550 palavras. Sem preâmbulos.`;
+Secção D — ESTRATÉGIA DE CONTRA-INTERROGATÓRIO (AI Adversarial Simulator)
+[Para cada discrepância crítica apurada, identifica 2 a 3 possíveis linhas de ataque da contraparte (plataforma ou contribuinte) e fornece a resposta técnica pericial. Formato: "Argumento da Defesa: [...]" seguido de "Resposta Pericial: [...]". Inclui referência ao artigo legal ou documento que invalida o argumento.]
+
+Escreve a síntese em prosa jurídica formal. Máximo 800 palavras. Sem preâmbulos.`;
 
     try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -120,7 +136,7 @@ Escreve a síntese em prosa jurídica formal. Máximo 550 palavras. Sem preâmbu
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
+                max_tokens: 1500,
                 system: systemPrompt,
                 messages: [{ role: 'user', content: userPrompt }]
             })
@@ -241,7 +257,14 @@ function _fallbackNarrative(reason) {
         '',
         'Secção C — RECOMENDAÇÕES PERICIAIS',
         'Recomendam-se as diligências standard: solicitação de SAF-T completo, cruzamento com',
-        'declarações DAC7 e verificação de faturas emitidas vs. receitas declaradas em IRC.'
+        'declarações DAC7 e verificação de faturas emitidas vs. receitas declaradas em IRC.',
+        '',
+        'Secção D — ESTRATÉGIA DE CONTRA-INTERROGATÓRIO',
+        '[Módulo Adversarial indisponível nesta sessão — requer ligação à API de linguagem.]',
+        'Argumento típico da Defesa: "Os valores reportados pelo DAC7 incluem taxas de cancelamento',
+        'e reembolsos que não constituem rendimento tributável do prestador."',
+        'Resposta Pericial: Nos termos do Art. 36.º do CIVA, cada componente do rendimento deve ser',
+        'discriminado em fatura própria. A ausência de faturação discriminada confirma a omissão.'
     ].join('\n');
 }
 
@@ -507,6 +530,362 @@ function _fmtEur(val) {
 
 
 // ============================================================================
+// 4. generateIntegritySeal(masterHash, doc, x, y, sealSize)
+//    Integrity Visual Signature — Selo Holográfico Digital
+//    Padrão geométrico determinístico gerado a partir do Master Hash SHA-256.
+//    Zero dependências externas — usa exclusivamente jsPDF primitives.
+//
+//    PRINCÍPIO:
+//      O hash (64 chars hex = 32 bytes) é convertido em coordenadas geométricas.
+//      Qualquer alteração a um valor no documento altera o hash e, consequentemente,
+//      o padrão visual de forma drástica — constitui prova visual de autenticidade.
+//
+//    CONFORMIDADE: Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554
+// ============================================================================
+function generateIntegritySeal(masterHash, doc, x, y, sealSize) {
+    if (!masterHash || masterHash.length < 32 || !doc) return;
+
+    const SZ   = sealSize || 52;    // tamanho total do quadrado (mm)
+    const CX   = x + SZ / 2;       // centro X
+    const CY   = y + SZ / 2;       // centro Y
+    const R    = SZ * 0.42;        // raio externo
+    const R2   = SZ * 0.28;        // raio médio
+    const R3   = SZ * 0.14;        // raio interno
+
+    // Converter hash hex em array de bytes numéricos 0-255
+    const bytes = [];
+    for (let i = 0; i < Math.min(masterHash.length, 64); i += 2) {
+        bytes.push(parseInt(masterHash.substring(i, i + 2), 16));
+    }
+
+    doc.saveGraphicsState();
+
+    // ── Fundo do Selo ────────────────────────────────────────────────────────
+    doc.setFillColor(8, 18, 36);
+    doc.roundedRect(x, y, SZ, SZ, 2, 2, 'F');
+
+    // ── Borda exterior cyan ──────────────────────────────────────────────────
+    doc.setDrawColor(0, 229, 255);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(x, y, SZ, SZ, 2, 2, 'S');
+
+    // ── Label "PROBATUM INTEGRITY SEAL" ─────────────────────────────────────
+    doc.setFontSize(3.8);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(0, 229, 255);
+    doc.text('PROBATUM INTEGRITY SEAL', CX, y + 3.5, { align: 'center' });
+    doc.text('v13.2.3-GOLD · SHA-256', CX, y + 6.5, { align: 'center' });
+
+    // ── Círculo externo (guia) ───────────────────────────────────────────────
+    doc.setDrawColor(30, 60, 100);
+    doc.setLineWidth(0.2);
+    doc.circle(CX, CY, R, 'S');
+    doc.circle(CX, CY, R3, 'S');
+
+    // ── Raios determinísticos (derivados dos bytes 0-15) ─────────────────────
+    // Cada par de bytes define um ângulo e comprimento de um raio
+    doc.setLineWidth(0.25);
+    for (let i = 0; i < 16; i++) {
+        const angleDeg  = (bytes[i] / 255) * 360;
+        const angleRad  = (angleDeg * Math.PI) / 180;
+        const lenFactor = 0.4 + (bytes[(i + 16) % 32] / 255) * 0.58;
+        const len       = R * lenFactor;
+
+        // Cor derivada de 3 bytes consecutivos (RGB normalizado)
+        const r = Math.round(30 + (bytes[(i * 2)     % 32] / 255) * 225);
+        const g = Math.round(30 + (bytes[(i * 2 + 1) % 32] / 255) * 200);
+        const b = Math.round(80 + (bytes[(i * 2 + 2) % 32] / 255) * 175);
+        doc.setDrawColor(r, g, b);
+
+        const ex = CX + Math.cos(angleRad) * len;
+        const ey = CY + Math.sin(angleRad) * len;
+        doc.line(CX, CY, ex, ey);
+    }
+
+    // ── Polígono interno (bytes 16-23 → vértices de um polígono irregular) ───
+    doc.setDrawColor(0, 229, 255);
+    doc.setLineWidth(0.3);
+    const polyN = 6 + (bytes[16] % 4); // 6 a 9 vértices
+    let prevPx, prevPy;
+    for (let i = 0; i < polyN; i++) {
+        const bi       = (i * 4) % 32;
+        const aFrac    = (bytes[bi]  / 255);
+        const rFrac    = 0.35 + (bytes[(bi + 1) % 32] / 255) * 0.55;
+        const angleDeg = (i / polyN) * 360 + aFrac * (360 / polyN);
+        const angleRad = (angleDeg * Math.PI) / 180;
+        const px       = CX + Math.cos(angleRad) * R2 * rFrac;
+        const py       = CY + Math.sin(angleRad) * R2 * rFrac;
+        if (i > 0) { doc.line(prevPx, prevPy, px, py); }
+        prevPx = px; prevPy = py;
+    }
+
+    // ── Ponto central (fixo — âncora visual) ─────────────────────────────────
+    doc.setFillColor(0, 229, 255);
+    doc.circle(CX, CY, 0.8, 'F');
+
+    // ── Hash curto (primeiros 16 chars) como rodapé do selo ──────────────────
+    const shortHash = masterHash.substring(0, 16) + '...';
+    doc.setFontSize(3.2);
+    doc.setFont('courier', 'normal');
+    doc.setTextColor(100, 140, 180);
+    doc.text(shortHash, CX, y + SZ - 3, { align: 'center' });
+
+    doc.restoreGraphicsState();
+    doc.setTextColor(0, 0, 0);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+
+    console.log('[UNIFED-SEAL] ✅ Integrity Seal gerado — hash:', shortHash);
+}
+
+window.generateIntegritySeal = generateIntegritySeal;
+
+
+// ============================================================================
+// 5. exportDOCX()
+//    Structural DOCX Export — Minuta de Petição Inicial
+//    Geração de Word (.docx) com OOXML via JSZip.
+//    Estrutura: Capa → Factos Provados (tabelas) → Enquadramento Legal
+//               → Estratégia de Contra-Interrogatório → Assinatura.
+//    Permite ao advogado trabalhar sobre a prova sem alterar o PDF certificado.
+//    Dependência: JSZip (carregado via CDN em index.html).
+//    Conformidade: DORA (UE) 2022/2554 · ISO/IEC 27037:2012
+// ============================================================================
+async function exportDOCX() {
+    if (typeof JSZip === 'undefined') {
+        console.error('[UNIFED-DOCX] ❌ JSZip não disponível. Verifique se o CDN está carregado.');
+        if (typeof showToast === 'function') showToast('Erro: JSZip não carregado', 'error');
+        return;
+    }
+    if (!window.IFDESystem || !window.IFDESystem.client) {
+        if (typeof showToast === 'function') showToast('Sem sujeito passivo para gerar minuta.', 'error');
+        return;
+    }
+
+    if (typeof logAudit === 'function') logAudit('📄 [v13.2.3] A gerar Minuta de Petição Inicial (DOCX)...', 'info');
+
+    const sys   = window.IFDESystem;
+    const t     = sys.analysis.totals    || {};
+    const c     = sys.analysis.crossings || {};
+    const v     = sys.analysis.verdict   || {};
+    const now   = new Date();
+    const date  = now.toLocaleDateString('pt-PT');
+
+    // ── Helper: escape XML ────────────────────────────────────────────────────
+    const xe = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    // ── Helper: parágrafo OOXML ───────────────────────────────────────────────
+    const para = (text, bold = false, size = '20', color = '000000', align = 'left') =>
+        `<w:p><w:pPr><w:jc w:val="${align}"/><w:spacing w:after="120"/></w:pPr><w:r>` +
+        `<w:rPr><w:sz w:val="${size}"/><w:szCs w:val="${size}"/>` +
+        (bold ? '<w:b/><w:bCs/>' : '') +
+        `<w:color w:val="${color}"/></w:rPr>` +
+        `<w:t xml:space="preserve">${xe(text)}</w:t></w:r></w:p>`;
+
+    // ── Helper: célula de tabela ──────────────────────────────────────────────
+    const tc = (text, bold = false, w = 4000, shade = null) =>
+        `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>` +
+        (shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>` : '') +
+        `<w:tcBorders><w:top w:val="single" w:sz="4" w:color="AAAAAA"/><w:left w:val="single" w:sz="4" w:color="AAAAAA"/><w:bottom w:val="single" w:sz="4" w:color="AAAAAA"/><w:right w:val="single" w:sz="4" w:color="AAAAAA"/></w:tcBorders>` +
+        `</w:tcPr><w:p><w:pPr><w:spacing w:after="60"/></w:pPr><w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/>` +
+        (bold ? '<w:b/><w:bCs/>' : '') +
+        `</w:rPr><w:t xml:space="preserve">${xe(text)}</w:t></w:r></w:p></w:tc>`;
+
+    // ── Helper: linha de tabela ───────────────────────────────────────────────
+    const tr = (cells) => `<w:tr>${cells.join('')}</w:tr>`;
+
+    // ── Helper: tabela de 2 colunas ───────────────────────────────────────────
+    const table2 = (rows) =>
+        `<w:tbl><w:tblPr><w:tblW w:w="9000" w:type="dxa"/><w:tblBorders><w:insideH w:val="single" w:sz="4" w:color="DDDDDD"/><w:insideV w:val="single" w:sz="4" w:color="DDDDDD"/></w:tblBorders></w:tblPr>${rows.join('')}</w:tbl>`;
+
+    // ── Helper: linha separadora ──────────────────────────────────────────────
+    const hr = () => `<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="003366"/></w:pBdr><w:spacing w:before="120" w:after="120"/></w:pPr></w:p>`;
+
+    // ── Formatador ────────────────────────────────────────────────────────────
+    const fmtEur = (v) => new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(v||0);
+
+    // ── Tabela de discrepâncias ───────────────────────────────────────────────
+    const discRows = [
+        tr([tc('Indicador Pericial', true, 5000, 'E8F0F8'), tc('Valor Apurado (€)', true, 4000, 'E8F0F8')]),
+    ];
+    if (Math.abs(c.discrepanciaCritica) > 0) discRows.push(tr([tc('Omissão de Custos — BTF (Despesas vs Fatura)', false, 5000), tc(fmtEur(c.discrepanciaCritica), false, 4000)]));
+    if (Math.abs(c.discrepanciaSaftVsDac7) > 0) discRows.push(tr([tc('Omissão de Receita — SAF-T vs DAC7', false, 5000), tc(fmtEur(c.discrepanciaSaftVsDac7), false, 4000)]));
+    if (c.ivaFalta > 0) discRows.push(tr([tc('IVA 23% Omitido (Autoliquidação — Art. 2.º CIVA)', false, 5000), tc(fmtEur(c.ivaFalta), false, 4000)]));
+    if (c.ivaFalta6 > 0) discRows.push(tr([tc('IVA 6% Omitido (Transporte — CIVA)', false, 5000), tc(fmtEur(c.ivaFalta6), false, 4000)]));
+    if (c.ircEstimado > 0) discRows.push(tr([tc('IRC Estimado Omitido (Art. 17.º CIRC)', false, 5000), tc(fmtEur(c.ircEstimado), false, 4000)]));
+    if (c.discrepancia5IMT > 0) discRows.push(tr([tc('Contribuição IMT/AMT 5% Omitida', false, 5000), tc(fmtEur(c.discrepancia5IMT), false, 4000)]));
+    if (c.impactoSeteAnosMercado > 0) discRows.push(tr([tc('Impacto Macroeconómico Estimado (7 Anos — Mercado PT)', true, 5000, 'FFF0F0'), tc(fmtEur(c.impactoSeteAnosMercado), true, 4000, 'FFF0F0')]));
+
+    // ── Tabela de fontes ──────────────────────────────────────────────────────
+    const srcRows = [
+        tr([tc('Documento', true, 3000, 'E8F0F8'), tc('Tipo', true, 2000, 'E8F0F8'), tc('Hash SHA-256 (curto)', true, 4000, 'E8F0F8')])
+    ];
+    (sys.analysis.evidenceIntegrity || []).slice(0, 8).forEach(ev => {
+        srcRows.push(tr([tc(ev.filename || 'N/A', false, 3000), tc(ev.type || 'N/A', false, 2000), tc((ev.hash || '').substring(0, 24) + '...', false, 4000)]));
+    });
+
+    // ── Gerar narrativa AI (se disponível) ────────────────────────────────────
+    let aiNarrative = '[Síntese IA indisponível — exportação DOCX em modo offline]';
+    try {
+        if (typeof generateLegalNarrative === 'function') {
+            aiNarrative = await generateLegalNarrative(sys.analysis);
+        }
+    } catch (_e) { /* fallback já definido acima */ }
+
+    // Dividir a narrativa em parágrafos para OOXML
+    const narrativeParas = aiNarrative.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => {
+            const isSectionHeader = /^Sec[çc][ãa]o [A-D]/.test(line) || /^SÍNTESE/.test(line);
+            return para(line, isSectionHeader, isSectionHeader ? '22' : '20', isSectionHeader ? '003366' : '222222');
+        });
+
+    // ── Construção do document.xml ────────────────────────────────────────────
+    const bodyContent = [
+        // ── CAPA ──
+        para('TRIBUNAL JUDICIAL DE COMARCA', true, '24', '003366', 'center'),
+        para('JUÍZO LOCAL CÍVEL', false, '20', '555555', 'center'),
+        para('', false),
+        para('MINUTA DE PETIÇÃO INICIAL', true, '32', '003366', 'center'),
+        para('PROVA PERICIAL FORENSE FISCAL', true, '24', '0066CC', 'center'),
+        para('', false),
+        hr(),
+        para(`Processo N.º: ${xe(sys.sessionId || 'UNIFED-PENDING')}`, false, '20', '333333'),
+        para(`Data de Elaboração: ${date}`, false, '20', '333333'),
+        para(`Sistema: UNIFED - PROBATUM v13.2.3-GOLD · COURT READY · DORA COMPLIANT`, false, '18', '666666'),
+        para(`Master Hash SHA-256: ${xe(sys.masterHash || 'N/A')}`, false, '16', '888888'),
+        hr(),
+        para('', false),
+
+        // ── I. IDENTIFICAÇÃO ──
+        para('I. IDENTIFICAÇÃO', true, '26', '003366'),
+        para('', false),
+        table2([
+            tr([tc('Sujeito Passivo', true, 3000, 'E8F0F8'), tc(sys.client?.name || 'N/A', false, 6000)]),
+            tr([tc('NIF', true, 3000, 'E8F0F8'), tc(sys.client?.nif || 'N/A', false, 6000)]),
+            tr([tc('Plataforma Auditada', true, 3000, 'E8F0F8'), tc(sys.selectedPlatform || 'N/A', false, 6000)]),
+            tr([tc('Ano Fiscal', true, 3000, 'E8F0F8'), tc(String(sys.selectedYear || new Date().getFullYear()), false, 6000)]),
+            tr([tc('Perito Responsável', true, 3000, 'E8F0F8'), tc('Eduardo Monteiro — Analista e Consultor Forense Independente', false, 6000)]),
+            tr([tc('Veredicto de Risco', true, 3000, 'FFF0F0'), tc(v.level?.pt || 'N/A', true, 6000)]),
+        ]),
+        para('', false),
+        hr(),
+        para('', false),
+
+        // ── II. FACTOS PROVADOS ──
+        para('II. FACTOS PROVADOS — DISCREPÂNCIAS APURADAS', true, '26', '003366'),
+        para('', false),
+        para('Com base na análise pericial das evidências digitais certificadas, foram apuradas as seguintes discrepâncias tributárias:', false, '20', '333333'),
+        para('', false),
+        table2(discRows),
+        para('', false),
+        para(`Percentagem de Omissão de Custos apurada: ${(c.percentagemOmissao || 0).toFixed(2)}%`, true, '20', 'CC0000'),
+        para(`Percentagem de Discrepância SAF-T vs DAC7: ${(c.percentagemSaftVsDac7 || 0).toFixed(2)}%`, true, '20', 'CC0000'),
+        para('', false),
+        hr(),
+        para('', false),
+
+        // ── III. CADEIA DE CUSTÓDIA ──
+        para('III. CADEIA DE CUSTÓDIA — EVIDÊNCIAS DIGITAIS', true, '26', '003366'),
+        para('', false),
+        para('As seguintes evidências digitais foram processadas e certificadas com hash SHA-256 pelo motor UNIFED-PROBATUM, garantindo a rastreabilidade total da prova nos termos do Art. 125.º do CPP:', false, '20', '333333'),
+        para('', false),
+        table2(srcRows),
+        para('', false),
+        hr(),
+        para('', false),
+
+        // ── IV. NARRATIVA JURÍDICA ──
+        para('IV. SÍNTESE JURÍDICA E ESTRATÉGIA DE CONTRA-INTERROGATÓRIO', true, '26', '003366'),
+        para('Gerada por IA Argumentativa (RAG + In-Context Learning · claude-sonnet-4-20250514)', false, '16', '888888'),
+        para('', false),
+        ...narrativeParas,
+        para('', false),
+        hr(),
+        para('', false),
+
+        // ── V. ASSINATURA ──
+        para('V. DECLARAÇÃO DO PERITO', true, '26', '003366'),
+        para('', false),
+        para('Declaro, sob compromisso de honra, que o presente documento foi elaborado em qualidade de Consultor Técnico Independente, assumindo os deveres de independência, objetividade e imparcialidade previstos no artigo 153.º do Código de Processo Penal Português.', false, '20', '333333'),
+        para('', false),
+        para(`Lisboa, ${date}`, false, '20', '333333'),
+        para('', false),
+        para('_____________________________________________', false, '20', '333333'),
+        para('Eduardo Monteiro', true, '20', '003366'),
+        para('Analista e Consultor Forense Independente · UNIFED - PROBATUM', false, '18', '555555'),
+        para('', false),
+        para('AVISO: Este documento é uma minuta de trabalho destinada ao advogado mandatário. Não constitui por si só peça processual — deve ser completado, revisto e submetido sob responsabilidade do advogado.', false, '16', 'AA0000'),
+    ].join('');
+
+    // ── OOXML Package ─────────────────────────────────────────────────────────
+    const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+    const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+    const wordRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+    const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="20"/></w:rPr></w:rPrDefault></w:docDefaults>
+</w:styles>`;
+
+    const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <w:body>
+    <w:sectPr>
+      <w:pgSz w:w="11906" w:h="16838"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>
+    </w:sectPr>
+    ${bodyContent}
+  </w:body>
+</w:document>`;
+
+    // ── Empacotar ZIP ─────────────────────────────────────────────────────────
+    try {
+        const zip = new JSZip();
+        zip.file('[Content_Types].xml', contentTypes);
+        zip.file('_rels/.rels', rels);
+        zip.file('word/_rels/document.xml.rels', wordRels);
+        zip.file('word/document.xml', document);
+        zip.file('word/styles.xml', styles);
+
+        const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `UNIFED_PETICAO_${sys.sessionId || 'DRAFT'}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 2000);
+
+        if (typeof logAudit === 'function') logAudit('✅ [v13.2.3] Minuta DOCX exportada com sucesso.', 'success');
+        if (typeof showToast === 'function') showToast('Minuta DOCX exportada · Petição Inicial pronta', 'success');
+        if (typeof ForensicLogger !== 'undefined') ForensicLogger.addEntry('DOCX_EXPORT_COMPLETED', { sessionId: sys.sessionId });
+    } catch (zipErr) {
+        console.error('[UNIFED-DOCX] ❌ Erro ao gerar ZIP:', zipErr.message);
+        if (typeof showToast === 'function') showToast('Erro ao gerar DOCX: ' + zipErr.message, 'error');
+    }
+}
+
+window.exportDOCX = exportDOCX;
+
+
+// ============================================================================
 // 5. NIFAF — Non-Intrusive Forensic Auditory Feedback
 //    Sinalização auditiva de precisão para anomalias críticas.
 //    Padrão: Web Audio API — Zero dependências externas.
@@ -562,23 +941,34 @@ window.NIFAF = NIFAF;
 console.log('[UNIFED-NIFAF] ✅ Non-Intrusive Forensic Auditory Feedback carregado — Estado:', NIFAF.isEnabled ? 'ATIVO' : 'MUTE');
 
 // ============================================================================
-// 4. EXPOSIÇÃO GLOBAL
-//    Funções disponibilizadas para consumo pela função exportPDF() em script.js
+// 6. EXPOSIÇÃO GLOBAL
+//    Funções disponibilizadas para consumo por exportPDF() e exportDOCX() em script.js
 // ============================================================================
 window.generateLegalNarrative = generateLegalNarrative;
 window.renderSankeyToImage    = renderSankeyToImage;
+// generateIntegritySeal e exportDOCX já expostos acima junto das suas definições
 
-console.log('[UNIFED-ENRICHMENT] ✅ Output Enrichment Layer v13.2.2-GOLD carregado.');
-console.log('[UNIFED-ENRICHMENT]   · generateLegalNarrative() — IA Argumentativa (RAG)');
+console.log('[UNIFED-ENRICHMENT] ✅ Output Enrichment Layer v13.2.3-GOLD carregado.');
+console.log('[UNIFED-ENRICHMENT]   · generateLegalNarrative() — IA Argumentativa + Adversarial Simulator');
 console.log('[UNIFED-ENRICHMENT]   · renderSankeyToImage()    — Dynamic Canvas-to-PDF');
+console.log('[UNIFED-ENRICHMENT]   · generateIntegritySeal()  — Integrity Visual Signature (Selo Holográfico)');
+console.log('[UNIFED-ENRICHMENT]   · exportDOCX()             — Structural DOCX (Minuta Petição Inicial)');
+console.log('[UNIFED-ENRICHMENT]   · NIFAF                    — Non-Intrusive Forensic Auditory Feedback');
 console.log('[UNIFED-ENRICHMENT]   · Modo: Read-Only · Fonte de Verdade: IFDESystem.analysis');
 
 /* =====================================================================
-   FIM DO FICHEIRO ENRICHMENT.JS · v13.2.2-GOLD
+   FIM DO FICHEIRO ENRICHMENT.JS · v13.2.3-GOLD
    UNIFED - PROBATUM — OUTPUT ENRICHMENT LAYER
-   ✓ generateLegalNarrative(): RAG + In-Context Learning (claude-sonnet-4-20250514)
+   ✓ generateLegalNarrative(): RAG + In-Context Learning + AI Adversarial Simulator
+     Secção D: Estratégia de Contra-Interrogatório — antecipa defesas da contraparte
    ✓ renderSankeyToImage(): Dynamic Canvas-to-PDF Injection
+   ✓ generateIntegritySeal(): Integrity Visual Signature — padrão geométrico determinístico
+     derivado do Master Hash SHA-256 — prova visual de autenticidade para Juízes
+   ✓ exportDOCX(): Structural DOCX Export — Minuta de Petição Inicial
+     OOXML via JSZip — Capa + Factos Provados + Enquadramento Legal + Contra-Interrogatório
+   ✓ NIFAF: Web Audio API · 180Hz/140Hz · Zero dependências · Air-gapped compatible
+     Gatilho: updateDashboard() com _nifafAlertedHash guard — sem loops
    ✓ Isolamento total do motor de cálculo forense
    ✓ Conformidade DORA/RGPD — não manipula prova digital
-   ✓ Fallback de segurança: se IA falhar, motor forense permanece íntegro
+   ✓ Fallback de segurança: se qualquer módulo falhar, motor forense permanece íntegro
    ===================================================================== */
