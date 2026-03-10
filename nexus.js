@@ -325,11 +325,16 @@
 
             // Hook temporário no JSZip para injetar antes de </w:body>
             JSZip.prototype.file = function(name, data) {
-                var rest = Array.prototype.slice.call(arguments, 2);
-                if (name === 'word/document.xml' && typeof data === 'string') {
-                    data = data.replace('</w:body>', _jurXML + '</w:body>');
+                try { // ── PATCH UNIFED-v13.3.0-DIAMOND: Prevenir colapso do export ──
+                    var rest = Array.prototype.slice.call(arguments, 2);
+                    if (name === 'word/document.xml' && typeof data === 'string') {
+                        data = data.replace('</w:body>', _jurXML + '</w:body>');
+                    }
+                    return _origJSZipFile.apply(this, [name, data].concat(rest));
+                } catch (hookErr) {
+                    console.error('[NEXUS\xB7M2] Erro na injeccao RAG:', hookErr.message || hookErr);
+                    return _origJSZipFile.apply(this, arguments); // Fallback seguro: exporta sem jurisprudência
                 }
-                return _origJSZipFile.apply(this, [name, data].concat(rest));
             };
 
             try {

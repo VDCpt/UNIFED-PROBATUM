@@ -374,6 +374,12 @@ async function renderSankeyToImage(analysis) {
     });
 
     var dataURL = canvas.toDataURL('image/png');
+    // ── PATCH UNIFED-v13.3.0-DIAMOND: Forçar limpeza de memória RAM ──────────
+    // Evita memory leaks em sessões longas com múltiplas exportações PDF
+    canvas.width  = 0;
+    canvas.height = 0;
+    ctx = null;
+    // ── FIM PATCH LIMPEZA DE MEMÓRIA ─────────────────────────────────────────
     document.body.removeChild(canvas);
     return dataURL;
 }
@@ -954,6 +960,12 @@ async function generateTemporalChartImage(monthlyData, analysis) {
     });
 
     var dataURL = canvas.toDataURL('image/png');
+    // ── PATCH UNIFED-v13.3.0-DIAMOND: Forçar limpeza de memória RAM ──────────
+    // Evita memory leaks em sessões longas com múltiplas exportações PDF (ATF)
+    canvas.width  = 0;
+    canvas.height = 0;
+    ctx3 = null;
+    // ── FIM PATCH LIMPEZA DE MEMÓRIA ─────────────────────────────────────────
     document.body.removeChild(canvas);
     console.log('[UNIFED-ATF] \u2705 Grafico ATF gerado - meses:', months.length, '| SP:', atf.persistenceScore);
     return dataURL;
@@ -1123,6 +1135,64 @@ window.openATFModal = openATFModal;
 // ============================================================================
 window.generateLegalNarrative  = generateLegalNarrative;
 window.renderSankeyToImage     = renderSankeyToImage;
+
+// ============================================================================
+// UNIFED-v13.3.0-DIAMOND — generateBurdenOfProofSection()
+// Adenda de Alta Inteligência Jurídica: Inversão do Ónus da Prova
+// Fundamento: Art. 344.º n.º 2 CC · Princípio da Proximidade da Prova
+//             Acórdão STJ 11/07/2013 · Art. 100.º CPPT
+// ISOLAMENTO: Injeção de texto puro — motor de cálculo INTOCADO
+// ============================================================================
+
+/**
+ * Injeta a fundamentação de Inversão do Ónus da Prova.
+ * Focada em esmagar a defesa baseada em "erro de sistema" ou "caixa negra".
+ * @param {number} discrepancyValue - Valor da discrepância apurada (cross.discrepanciaCritica)
+ * @returns {string} Bloco de texto pericial estruturado para inclusão nos outputs
+ */
+function generateBurdenOfProofSection(discrepancyValue) {
+    if (!discrepancyValue || discrepancyValue <= 0) return '';
+
+    var _fmtVal = new Intl.NumberFormat('pt-PT', {
+        style: 'currency', currency: 'EUR', minimumFractionDigits: 2
+    }).format(discrepancyValue);
+
+    return (
+        '---------------------------------------------------------------------------\n' +
+        '[!] ADENDA DE ALTA INTELIGÊNCIA JURÍDICA: INVERSÃO DO ÓNUS DA PROVA\n' +
+        '    Art. 344.º n.º 2 do Código Civil · Princípio da Proximidade da Prova\n' +
+        '---------------------------------------------------------------------------\n' +
+        '\n' +
+        'FUNDAMENTAÇÃO PARA INVERSÃO DO ÓNUS DA PROVA (Art. 344.º, n.º 2 CC)\n' +
+        '\n' +
+        'Objeto: Impossibilidade de Contraprova pelo Sujeito Passivo face à ' +
+        'Assimetria Informativa.\n' +
+        '\n' +
+        'Análise Técnica: A UNIFED-PROBATUM identificou uma divergência estrutural ' +
+        'entre o Fluxo de Caixa Real (Ledger) e o Reporte Fiscal (SAF-T/DAC7). ' +
+        'Dado que a plataforma detém o Monopólio da Emissão Documental ' +
+        '(Art. 36.º, n.º 11 do CIVA) e o controlo exclusivo sobre o algoritmo de ' +
+        'cálculo de comissões, o parceiro encontra-se numa situação de indefesa ' +
+        'técnica. A plataforma atua como "Black Box" fiscal — o sujeito passivo não ' +
+        'tem acesso ao código-fonte nem aos logs brutos de transação que geram a ' +
+        'faturação delegada.\n' +
+        '\n' +
+        'Conclusão Pericial: A conduta da plataforma, ao viciar o reporte documental ' +
+        'e não facultar acesso aos logs brutos de transação, torna impossível a prova ' +
+        'negativa por parte do parceiro. Por força do Princípio da Proximidade da ' +
+        'Prova (Acórdão STJ de 11/07/2013) e do Art. 344.º n.º 2 do C.C., opera-se ' +
+        'a Inversão do Ónus da Prova: incumbe à plataforma demonstrar a integridade ' +
+        'dos valores retidos (' + _fmtVal + '), sob pena de confissão implícita da ' +
+        'apropriação indevida e da fraude fiscal aqui evidenciada.\n' +
+        '\n' +
+        'ESTRATÉGIA PROCESSUAL: Esta perícia constitui "Princípio de Prova Material". ' +
+        'Cabe à Plataforma — e não ao sujeito passivo — provar a inexistência de dolo ' +
+        'na retenção da discrepância apurada de ' + _fmtVal + '.\n' +
+        '---------------------------------------------------------------------------'
+    );
+}
+
+window.generateBurdenOfProofSection = generateBurdenOfProofSection;
 
 console.log('[UNIFED-ENRICHMENT] \u2705 Output Enrichment Layer v13.3.0-DIAMOND carregado.');
 console.log('[UNIFED-ENRICHMENT]   . generateLegalNarrative()     - IA Argumentativa + AI Adversarial Simulator');
