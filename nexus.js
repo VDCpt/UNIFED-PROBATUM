@@ -183,6 +183,12 @@
             tribunal: 'Tribunal Arbitral Tributario (CAAD)',
             data: '15.01.2025',
             sumario: 'A regularizacao prevista no Art. 78.o CIVA e obrigatoria quando existam omissoes de base tributavel identificadas por cruzamento de dados. O sujeito passivo nao pode invocar o desconhecimento das obrigacoes DAC7 como circunstancia atenuante quando a plataforma cumpriu as suas obrigacoes de comunicacao (Art. 8.o Diretiva 2021/514/UE).'
+        },
+        {
+            proc: 'Proc. 0582/22.4BEPRT',
+            tribunal: 'Supremo Tribunal Administrativo — 2.a Seccao',
+            data: '19.03.2025',
+            sumario: 'A subdeclaracao sistematica de rendimentos por plataforma digital, atuando em monopolio de faturacao (Art. 36.o n.o 11 CIVA), gera responsabilidade civil extracontratual por Perda de Chance e danos reputacionais. O agravamento injustificado do perfil de risco (Risk Scoring) do parceiro perante a AT, inibindo acesso a credito e beneficios, impoe o dever de indemnizar os lucros cessantes calculados com base na divergencia pericial provada. A inversao do onus da prova recai sobre a plataforma nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT, porquanto o sujeito passivo nao detem acesso nem controlo sobre os documentos fiscais emitidos em seu nome pela entidade detentora do monopolio de emissao documental.'
         }
     ];
 
@@ -431,7 +437,7 @@
 
             forecastDisc.push(Math.round(combined * 100) / 100);
             forecastIva.push(Math.round(combined * 0.23 * 100) / 100);
-            forecastLbls.push(lblFmt + ' ▸');
+            forecastLbls.push(lblFmt + ' >');
         }
 
         var risco     = forecastDisc.reduce(function(a, v) { return a + v; }, 0);
@@ -618,7 +624,7 @@
                                 '<td style="border:1px solid rgba(168,85,247,0.15);padding:5px 10px;text-align:right;color:#F97316">' + fmtEur(iva) + '</td>' +
                                 '<td style="border:1px solid rgba(168,85,247,0.15);padding:5px 10px;text-align:center">' +
                                     '<div style="display:inline-block;background:' + rColor + ';border-radius:3px;padding:2px 8px;font-size:0.62rem;color:#fff">' +
-                                        (pct > 75 ? '⚠ ALTO' : pct > 45 ? '▲ MED' : '✔ MOD') +
+                                        (pct > 75 ? '[!] ALTO' : pct > 45 ? '[^] MED' : '[OK] MOD') +
                                     '</div>' +
                                 '</td>' +
                             '</tr>';

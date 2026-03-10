@@ -107,7 +107,11 @@ REGRAS ABSOLUTAS:
 4. Referencia sempre os artigos legais pertinentes.
 5. Nao uses listas de bullets — escreve em prosa juridica estruturada.
 6. Objectividade pericial: expoem factos, nao formula acusacoes.
-7. Na Seccao D, simula argumentos plausíveis da defesa e fornece a resposta tecnica pericial a cada um.`;
+7. Na Seccao D, simula argumentos plausíveis da defesa e fornece a resposta tecnica pericial a cada um.
+
+MANDATO ESPECIAL — INVERSÃO DO ÓNUS DA PROVA E QUALIFICAÇÃO DE VÍTIMA:
+Atencao: O sujeito passivo (cliente) e a VITIMA. A plataforma detem o monopolio da emissao de faturas (Art. 36.o n.o 11 CIVA). Deves argumentar a Inversao do Onus da Prova e imputar a responsabilidade do crime de Colarinho Branco e a Perda de Chance (Danos Reputacionais pelo Risk Scoring da AT) exclusivamente a plataforma. O sujeito passivo nao tem acesso nem controlo sobre os documentos fiscais emitidos em seu nome — este facto por si so justifica a inversao do onus probatorio nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT.`;
+
 
     const userPrompt = `Com base nos dados forenses certificados e na base legal aplicavel, elabora uma Sintese Juridica Pericial em QUATRO seccoes obrigatorias.
 
@@ -584,6 +588,13 @@ async function exportDOCX() {
         ]),
         para('', false), hr(), para('', false),
 
+        para('I-A. CONFORMIDADE E EVIDENCIA DIGITAL', true, '26', '003366'), para('', false),
+        para('Objeto: Analise de Discrepancias de Terceiros (Plataformas Digitais) atuando sob monopolio de faturacao (Art. 36.o, n.o 11 CIVA).', false, '20', '333333'),
+        para('Fundamentacao: Art. 104.o n.o 2 RGIT (Fraude Qualificada) e Art. 125.o CPP.', false, '20', '333333'),
+        para('Evidencia: Omissao de base tributavel por divergencia entre Ganhos Reais efetivos (Ledger/Extrato) e o Reporte Fiscal submetido pela plataforma (SAF-T/DAC7).', false, '20', '333333'),
+        para('Conclusao Pericial: A retencao sistematica de percentagens em comissoes sem a devida faturacao constitui apropriacao indevida e indicia crime tributario de omissao de proveitos por parte da entidade processadora.', true, '20', 'CC0000'),
+        para('', false), hr(), para('', false),
+
         para('II. FACTOS PROVADOS - DISCREPANCIAS APURADAS', true, '26', '003366'), para('', false),
         para('Com base na analise pericial das evidencias digitais certificadas, foram apuradas as seguintes discrepancias:', false, '20', '333333'),
         para('', false), tbl(discRows), para('', false),
@@ -594,6 +605,14 @@ async function exportDOCX() {
         para('III. CADEIA DE CUSTODIA - EVIDENCIAS DIGITAIS', true, '26', '003366'), para('', false),
         para('As evidencias digitais foram certificadas com hash SHA-253 nos termos do Art. 125.o do CPP:', false, '20', '333333'),
         para('', false), tbl(srcRows), para('', false), hr(), para('', false),
+
+        para('III-A. QUALIFICACAO JURIDICA — CRIMINALIDADE DE COLARINHO BRANCO', true, '26', '6B0099'), para('', false),
+        para('A engenharia algorítmica da plataforma cria uma zona cinzenta premeditada entre o ganho real retido na fonte e o valor reportado em SAF-T/DAC7. Este diferencial nao declarado fica num limbo contabilístico, caracterizando uma tipologia de criminalidade de colarinho branco e evasao fiscal estruturada, explorando a assimetria de informacao contra o parceiro e o Estado.', false, '20', '333333'),
+        para('', false), hr(), para('', false),
+
+        para('III-B. PERDA DE CHANCE E DANO REPUTACIONAL', true, '26', 'B85000'), para('', false),
+        para('Dano Reputacional e Perda de Chance: O reporte viciado da plataforma a Autoridade Tributaria (com uma discrepancia detetada de ' + fe(c.discrepanciaSaftVsDac7) + ') contamina diretamente o perfil de risco (Risk Scoring) do parceiro. Sendo a plataforma a detentora do monopolio de emissao documental (Art. 36.o n.o 11 CIVA), o sujeito passivo e penalizado sem dolo. Esta adulteracao do perfil fiscal gera lucros cessantes mensuraveis, inibindo o acesso a financiamento bancario, linhas de credito e beneficios fiscais, constituindo fundamento para indemnizacao por responsabilidade civil extracontratual.', false, '20', '333333'),
+        para('', false), hr(), para('', false),
 
         para('IV. SÍNTESE JURÍDICA E ESTRATÉGIA DE CONTRA-INTERROGATÓRIO', true, '26', '003366'),
         para('Gerada por IA Argumentativa (RAG + In-Context Learning - claude-sonnet-4-20250514) · NEXUS v13.3.0-DIAMOND', false, '16', '888888'),

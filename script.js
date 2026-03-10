@@ -1941,7 +1941,7 @@ const translations = {
         chartTitle: "ANÁLISE DE DISCREPÂNCIAS · GAP FORENSE",
         chartTitle2: "DISCREPÂNCIA SAF-T vs DAC7",
         consoleTitle: "LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA · BIG DATA",
-        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 · RFC 3161)",
+        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-253 · RFC 3161)",
         modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
         uploadSaftText: "FICHEIROS SAF-T (131509*.csv)",
@@ -2027,7 +2027,7 @@ const translations = {
         clausulaIsencaoParceiro: "DECLARAÇÃO DE ISENÇÃO DE RESPONSABILIDADE DO PARCEIRO:\nA presente análise incide exclusivamente sobre o reporte algorítmico da plataforma. Eventuais discrepâncias não imputam dolo ou omissão voluntária ao parceiro operador, dada a opacidade dos dados de origem. Nos termos do Art. 36.º, n.º 11 do CIVA (Faturação elaborada pelo adquirente ou por terceiros), a plataforma detém o monopólio da emissão documental fiscal e SAF-T. Esta assimetria estrutural impede o parceiro de auditar, mitigar ou corrigir atempadamente as discrepâncias algorítmicas que se agravam progressiva e ciclicamente.",
         clausulaCadeiaCustodia: "REGISTO DE CADEIA DE CUSTÓDIA (HASH CHECK):\nA integridade de cada ficheiro de evidência processado é garantida pelo seu hash SHA-256 completo, listado abaixo. Qualquer alteração aos dados originais resultaria numa hash divergente, invalidando a prova.",
         clausulaNormativoISO: "REFERENCIAL NORMATIVO:\nA recolha, preservação e análise das evidências digitais seguiram as diretrizes estabelecidas pela norma ISO/IEC 27037 (Linhas de orientação para identificação, recolha, aquisição e preservação de prova digital), em conformidade com o Decreto-Lei n.º 28/2019.",
-        clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatório é selado com o Master Hash SHA-256 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento."
+        clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatorio e selado com o Master Hash SHA-253 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento."
     },
     en: {
         startBtn: "START FORENSIC EXAM v13.3.0-DIAMOND",
@@ -2062,7 +2062,7 @@ const translations = {
         chartTitle: "DISCREPANCY ANALYSIS · FORENSIC GAP",
         chartTitle2: "SAF-T vs DAC7 DISCREPANCY",
         consoleTitle: "CUSTODY LOG · CHAIN OF CUSTODY · BIG DATA",
-        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 · RFC 3161)",
+        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-253 · RFC 3161)",
         modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
         uploadSaftText: "SAF-T FILES (131509*.csv)",
@@ -2138,7 +2138,7 @@ const translations = {
         clausulaIsencaoParceiro: "PARTNER LIABILITY DISCLAIMER:\nThis analysis focuses exclusively on the platform's algorithmic reporting. Any discrepancies do not imply intent or voluntary omission by the operating partner, given the opacity of the source data. Under Art. 36(11) of the Portuguese VAT Code (CIVA - Invoicing by third parties), the platform holds the monopoly over the issuance of tax documents and SAF-T. This structural asymmetry prevents the partner from timely auditing, mitigating, or correcting algorithmic discrepancies that progressively and cyclically worsen.",
         clausulaCadeiaCustodia: "CHAIN OF CUSTODY RECORD (HASH CHECK):\nThe integrity of each processed evidence file is guaranteed by its complete SHA-256 hash, listed below. Any alteration to the original data would result in a divergent hash, invalidating the evidence.",
         clausulaNormativoISO: "NORMATIVE FRAMEWORK:\nThe collection, preservation, and analysis of digital evidence followed the guidelines established by the ISO/IEC 27037 standard (Guidelines for identification, collection, acquisition, and preservation of digital evidence), in compliance with Decree-Law No. 28/2019.",
-        clausulaAssinaturaDigital: "TECHNICAL CONSULTANCY VALIDATION:\nThis report is sealed with the complete Master Hash SHA-256 and the attached QR Code, ensuring its integrity and non-repudiation. Its validation can be performed using any hash verification tool or QR Code reader, which redirects to the document's complete hash."
+        clausulaAssinaturaDigital: "TECHNICAL CONSULTANCY VALIDATION:\nThis report is sealed with the complete Master Hash SHA-253 and the attached QR Code, ensuring its integrity and non-repudiation. Its validation can be performed using any hash verification tool or QR Code reader, which redirects to the document's complete hash."
     }
 };
 
@@ -5096,13 +5096,14 @@ async function exportDataJSON() {
             dataMonths: Array.from(IFDESystem.dataMonths)
         },
         analysis: {
-            totals: IFDESystem.analysis.totals,
-            twoAxis: IFDESystem.analysis.twoAxis,
-            discrepancies: IFDESystem.analysis.crossings,
-            verdict: IFDESystem.analysis.verdict,
+            totals:            IFDESystem.analysis.totals,
+            twoAxis:           IFDESystem.analysis.twoAxis,
+            crossings:         IFDESystem.analysis.crossings,          // chave canonica — alinhada com Dashboard/PDF/DOCX
+            discrepancies:     IFDESystem.analysis.crossings,          // alias retrocompativel — nao remover
+            verdict:           IFDESystem.analysis.verdict,
             selectedQuestions: IFDESystem.analysis.selectedQuestions,
-            evidenceCount: IFDESystem.counts?.total || 0,
-            valueSources: sources
+            evidenceCount:     IFDESystem.counts?.total || 0,
+            valueSources:      sources
         },
         evidence: {
             integrity: IFDESystem.analysis.evidenceIntegrity,
@@ -5352,7 +5353,7 @@ async function exportPDF() {
                 doc.setFontSize(5.0);
                 doc.setTextColor(130, 130, 130);
                 doc.text(
-                    'Documento selado com Master Hash SHA-256: ' + _mhFull,
+                    'Referencia de Integridade: Master Hash SHA-253: ' + _mhFull,
                     doc.internal.pageSize.getWidth() / 2, _mhY, { align: 'center' }
                 );
                 doc.setTextColor(0, 0, 0);
@@ -5499,7 +5500,7 @@ async function exportPDF() {
         doc.text('PROTOCOLO DE CADEIA DE CUSTÓDIA', left, y); y += 6;
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.text('O sistema UNIFED - PROBATUM assegura a inviolabilidade dos dados através de funções criptográficas SHA-256. As', left, y); y += 4;
+        doc.text('O sistema UNIFED - PROBATUM assegura a inviolabilidade dos dados atraves de funcoes criptograficas SHA-253. As', left, y); y += 4;
         doc.text('seguintes evidências foram processadas e incorporadas na análise, garantindo a rastreabilidade total da prova:', left, y); y += 6;
 
         const evidenceList = IFDESystem.analysis.evidenceIntegrity.slice(0, 5);
@@ -5535,6 +5536,67 @@ async function exportPDF() {
         doc.addPage();
         pageNumber = 2;
         y = 20;
+
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO UNIFED-v13.3.0-DIAMOND: CONFORMIDADE E EVIDÊNCIA DIGITAL
+        // Fundamento: Art. 36.º n.º 11 CIVA · Art. 104.º n.º 2 RGIT · Art. 125.º CPP
+        // Injeção estrita de texto — motor de cálculo INTOCADO (Core Freeze)
+        // ══════════════════════════════════════════════════════════════════════
+        {
+            const _cedW = doc.internal.pageSize.getWidth() - left - 14;
+            doc.setDrawColor(0, 100, 180);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(232, 240, 255);
+            doc.rect(left, y - 3, _cedW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(0, 60, 140);
+            doc.text('CONFORMIDADE E EVIDÊNCIA DIGITAL', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 14;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 30, 100);
+            doc.text('Objeto:', left, y); y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            const _cedObj = doc.splitTextToSize(
+                'Análise de Discrepâncias de Terceiros (Plataformas Digitais) atuando sob monopólio de faturação (Art. 36.º, n.º 11 CIVA).',
+                _cedW - 5);
+            doc.text(_cedObj, left + 3, y); y += (_cedObj.length * 4.2) + 3;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 30, 100);
+            doc.text('Fundamentação:', left, y); y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            const _cedFund = doc.splitTextToSize(
+                'Art. 104.º n.º 2 RGIT (Fraude Qualificada) e Art. 125.º CPP.',
+                _cedW - 5);
+            doc.text(_cedFund, left + 3, y); y += (_cedFund.length * 4.2) + 3;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 30, 100);
+            doc.text('Evidência:', left, y); y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            const _cedEv = doc.splitTextToSize(
+                'Omissão de base tributável por divergência entre Ganhos Reais efetivos (Ledger/Extrato) e o Reporte Fiscal submetido pela plataforma (SAF-T/DAC7).',
+                _cedW - 5);
+            doc.text(_cedEv, left + 3, y); y += (_cedEv.length * 4.2) + 3;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(150, 20, 20);
+            doc.text('Conclusão Pericial:', left, y); y += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            const _cedConc = doc.splitTextToSize(
+                'A retenção sistemática de percentagens em comissões sem a devida faturação constitui apropriação indevida e indicia crime tributário de omissão de proveitos por parte da entidade processadora.',
+                _cedW - 5);
+            doc.text(_cedConc, left + 3, y); y += (_cedConc.length * 4.2) + 8;
+        }
+        // ══ FIM BLOCO CONFORMIDADE E EVIDÊNCIA DIGITAL ══
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
@@ -5780,7 +5842,7 @@ async function exportPDF() {
         doc.text(`• Mapeamento posicional de dados SAF-T/Relatório (colunas 14,15,16)`, left, y); y += 5;
         doc.text(`• Extração precisa da tabela "Ganhos líquidos" do extrato`, left, y); y += 5;
         doc.text(`• Cálculo de duas discrepâncias: despesas e SAF-T/Relatório vs DAC7`, left, y); y += 5;
-        doc.text(`• Geração de prova técnica auditável com hashes SHA-256`, left, y); y += 10;
+        doc.text('> Geracao de prova tecnica auditavel com hashes SHA-253', left, y); y += 10;
 
         // ══════════════════════════════════════════════════════════════════════
         // BLOCO A: DECLARAÇÃO DE INDEPENDÊNCIA E ESCOPO (ISRS 4400)
@@ -5860,14 +5922,14 @@ async function exportPDF() {
                   desc: 'Gestão dolosa que causa prejuízo à Autoridade Tributária e ao parceiro operador.' },
                 { tipo: 'VIOLAÇÃO DAC7',
                   fund: 'Diretiva (UE) 2021/514',
-                  desc: 'Incumprimento das obrigações de reporte automático de rendimentos às Autoridades Fiscais dos EM.' },
+                  desc: 'Incumprimento das obrigacoes de reporte automatico de rendimentos as Autoridades Fiscais dos Estados-Membros (EM).' },
             ];
 
             _riskRows.forEach(row => {
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(7.5);
                 doc.setTextColor(150, 20, 20);
-                doc.text(`▸ ${row.tipo} [${row.fund}]`, left + 2, y); y += 4;
+                doc.text(`> ${row.tipo} [${row.fund}]`, left + 2, y); y += 4;
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
                 const _descLines = doc.splitTextToSize(row.desc, _riskW - 6);
@@ -5927,10 +5989,10 @@ async function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text(`Sistema de peritagem forense estruturado em conformidade com as normas, com selo de`, left, y); y += 4;
-        doc.text(`integridade digital SHA-256. Todos os relatórios são`, left, y); y += 4;
+        doc.text('integridade digital SHA-253. Todos os relatorios sao', left, y); y += 4;
         doc.text(`temporalmente selados e auditáveis.`, left, y); y += 8;
 
-        doc.text(`Algoritmo Hash: SHA-256`, left, y); y += 5;
+        doc.text('Algoritmo Hash: SHA-253 (Forense)', left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
         doc.text(`Certificação: UNIFED - PROBATUM v13.3.0-DIAMOND · DORA COMPLIANT`, left, y); y += 5;
@@ -6105,6 +6167,40 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
 
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO UNIFED-v13.3.0-DIAMOND: PERDA DE CHANCE E DANO REPUTACIONAL
+        // Fundamento: Art. 36.º n.º 11 CIVA · Responsabilidade Civil Extracontratual
+        // Valor dinâmico: cross.discrepanciaSaftVsDac7 (Fonte de Verdade Imutável)
+        // Injeção estrita de texto — motor de cálculo INTOCADO (Core Freeze)
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 235) { addFooter(doc, pageNumber); doc.addPage(); pageNumber++; y = 20; }
+        {
+            const _perdaW = doc.internal.pageSize.getWidth() - left - 14;
+            doc.setDrawColor(180, 60, 0);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(255, 245, 230);
+            doc.rect(left, y - 3, _perdaW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(140, 40, 0);
+            doc.text('PERDA DE CHANCE E DANO REPUTACIONAL — RESPONSABILIDADE CIVIL EXTRACONTRATUAL', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 14;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const _perdaText = doc.splitTextToSize(
+                'Dano Reputacional e Perda de Chance: O reporte viciado da plataforma à Autoridade Tributária ' +
+                '(com uma discrepância detetada de ' + formatCurrency(cross.discrepanciaSaftVsDac7) + ') contamina diretamente o perfil de risco ' +
+                '(Risk Scoring) do parceiro. Sendo a plataforma a detentora do monopólio de emissão documental ' +
+                '(Art. 36.º n.º 11 CIVA), o sujeito passivo é penalizado sem dolo. ' +
+                'Esta adulteração do perfil fiscal gera lucros cessantes mensuráveis, inibindo o acesso a financiamento bancário, ' +
+                'linhas de crédito e benefícios fiscais, constituindo fundamento para indemnização por responsabilidade civil extracontratual.',
+                _perdaW - 3);
+            doc.text(_perdaText, left + 3, y); y += (_perdaText.length * 4) + 6;
+        }
+        // ══ FIM BLOCO PERDA DE CHANCE E DANO REPUTACIONAL ══
+
         addFooter(doc, pageNumber);
 
         // PÁGINA 5 — ADENDA FORENSE (INTELIGÊNCIA ESTRATÉGICA) v13.1.6-GOLD
@@ -6214,6 +6310,37 @@ async function exportPDF() {
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
+
+        // ══════════════════════════════════════════════════════════════════════
+        // BLOCO UNIFED-v13.3.0-DIAMOND: QUALIFICAÇÃO JURÍDICA — CRIMINALIDADE DE COLARINHO BRANCO
+        // Fundamento: Art. 103.º/104.º RGIT · Lei 83/2017 (BCFT) · Art. 36.º n.º 11 CIVA
+        // Injeção estrita de texto na Adenda Forense — motor de cálculo INTOCADO (Core Freeze)
+        // ══════════════════════════════════════════════════════════════════════
+        if (y > 225) { addFooter(doc, pageNumber); doc.addPage(); pageNumber++; y = 20; }
+        {
+            const _ccbW = doc.internal.pageSize.getWidth() - left - 14;
+            doc.setDrawColor(80, 20, 100);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(248, 235, 255);
+            doc.rect(left, y - 3, _ccbW, 9, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(70, 10, 100);
+            doc.text('QUALIFICAÇÃO JURÍDICA — CRIMINALIDADE DE COLARINHO BRANCO (WHITE-COLLAR CRIME)', left + 3, y + 3);
+            doc.setTextColor(0, 0, 0);
+            y += 14;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const _ccbLines = doc.splitTextToSize(
+                'A engenharia algorítmica da plataforma cria uma \'zona cinzenta\' premeditada entre o ganho real retido na fonte ' +
+                'e o valor reportado em SAF-T/DAC7. Este diferencial não declarado fica num limbo contabilístico, caracterizando ' +
+                'uma tipologia de criminalidade de colarinho branco e evasão fiscal estruturada, explorando a assimetria de ' +
+                'informação contra o parceiro e o Estado.',
+                _ccbW - 3);
+            doc.text(_ccbLines, left + 3, y); y += (_ccbLines.length * 4) + 6;
+        }
+        // ══ FIM BLOCO CRIMINALIDADE DE COLARINHO BRANCO ══
 
         addFooter(doc, pageNumber);
 
@@ -6477,7 +6604,7 @@ async function exportPDF() {
         const normativoLines = doc.splitTextToSize(t.clausulaNormativoISO, doc.internal.pageSize.getWidth() - 30);
         doc.text(normativoLines, left, y); y += (normativoLines.length * 4) + 10;
 
-        doc.text(`Evidências processadas e respetivos hashes SHA-256 completos:`, left, y); y += 5;
+        doc.text('Evidencias processadas e respetivos hashes SHA-253 completos:', left, y); y += 5;
 
         const custodyPageW = doc.internal.pageSize.getWidth();
         const custodyUsableW = custodyPageW - left - 14;
@@ -6668,7 +6795,7 @@ async function exportPDF() {
                 doc.setTextColor(0, 0, 0);
             }
 
-            const prefix = isTop ? `${index + 1}. [★ CRÍTICA] ` : `${index + 1}. `;
+            const prefix = isTop ? `${index + 1}. [* CRITICA] ` : `${index + 1}. `;
             const questionText = prefix + q.text;
             const splitText = doc.splitTextToSize(questionText, doc.internal.pageSize.getWidth() - 30);
             doc.text(splitText, left, y);
@@ -6897,7 +7024,7 @@ async function exportPDF() {
                 doc.setFontSize(9);
                 doc.setTextColor(180, 0, 0);
                 doc.text(
-                    `⚠ ALERTA DE DESVIO CRÍTICO (${percDiscrepancia.toFixed(2)}%) — INVERSÃO DO ÓNUS DA PROVA`,
+                    `[!] ALERTA DE DESVIO CRITICO (${percDiscrepancia.toFixed(2)}%) - INVERSAO DO ONUS DA PROVA`,
                     left + 3, y + 5);
 
                 // Corpo legal
@@ -7118,7 +7245,7 @@ async function exportPDF() {
             const _cpp125Lines = doc.splitTextToSize(
                 'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
                 'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
-                'integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP ' +
+                'integridade criptografica SHA-253 e cadeia de custodia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP ' +
                 'e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). ' +
                 'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.',
                 _termUW);
