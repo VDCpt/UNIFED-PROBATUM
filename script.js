@@ -2119,7 +2119,7 @@ const translations = {
         hashModalTitle: "VERIFICAÇÃO DE INTEGRIDADE · CADEIA DE CUSTÓDIA",
         omissaoDespesasPctTitle: "Percentagem Cobrada Pela Plataforma",
         closeHashBtnText: "VALIDAR E FECHAR",
-        notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, o ficheiro SAF-T (.xml) é substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet, sendo os movimentos extratados pelo ficheiro Ganhos da Empresa. O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019.\"",
+        notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, ou a sua entrega em estado insuficiente e inconsistente (incompleto ou corrompido), o ficheiro SAF-T (.xml) é tecnicamente substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet.\nO cruzamento de dados entre a plataforma e o parceiro é validado pelo ficheiro PDF de extratos 'Ganhos da Empresa'. Para efeitos de perícia, o ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, detendo valor probatório material por constituir a fonte primária e fidedigna dos registos que deveriam integrar o reporte fiscal final.\nA integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019 e os princípios de cadeia de custódia previstos no Art. 125.º do CPP.\"\n\nFUNDAMENTAÇÃO DA PROVA MATERIAL: Para efeitos de prova legal de rendimentos reais, consideram-se os ficheiros operacionais que contêm o rasto digital de centenas de viagens efetivamente realizadas. Este conteúdo reflete a atividade económica real do motorista, sendo por isso elevado à categoria de Documento de Suporte (Ledger). Esta metodologia permite detetar e corrigir as discrepâncias omissas nos ficheiros de reporte simplificado, assegurando uma reconstrução financeira rigorosa e auditável em sede judicial.",
         parecerTecnicoFinal: "PARECER TÉCNICO DE CONCLUSÃO:\n\"Com base na análise algorítmica dos dados cruzados, detetaram-se duas discrepâncias fundamentais: (1) diferença entre comissões retidas nos extratos e valores faturados pela plataforma, e (2) diferença entre o total do SAF-T e o reportado em DAC7. A utilização de identificadores SHA-256 e selagem QR Code assegura que este parecer é uma Prova Digital Material imutável. Recomenda-se a sua utilização imediata em sede judicial para proteção do mandato e fundamentação de pedido de auditoria externa.\"",
         clausulaIsencaoParceiro: "DECLARAÇÃO DE ISENÇÃO DE RESPONSABILIDADE DO PARCEIRO:\nA presente análise incide exclusivamente sobre o reporte algorítmico da plataforma. Eventuais discrepâncias não imputam dolo ou omissão voluntária ao parceiro operador, dada a opacidade dos dados de origem. Nos termos do Art. 36.º, n.º 11 do CIVA (Faturação elaborada pelo adquirente ou por terceiros), a plataforma detém o monopólio da emissão documental fiscal e SAF-T. Esta assimetria estrutural impede o parceiro de auditar, mitigar ou corrigir atempadamente as discrepâncias algorítmicas que se agravam progressiva e ciclicamente.",
         clausulaCadeiaCustodia: "REGISTO DE CADEIA DE CUSTÓDIA (HASH CHECK):\nA integridade de cada ficheiro de evidência processado é garantida pelo seu hash SHA-256 completo, listado abaixo. Qualquer alteração aos dados originais resultaria numa hash divergente, invalidando a prova.",
@@ -5245,7 +5245,7 @@ async function exportDataJSON() {
 
     // ── EXTENSÃO DE SCHEMA v13.1.6-GOLD ──────────────────────────────────────
     // 1. legalBasis: Nota Metodológica completa — base legal DL 28/2019
-    exportData.metadata.legalBasis = "Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, o ficheiro SAF-T (.xml) é substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet, sendo os movimentos extratados pelo ficheiro Ganhos da Empresa. O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019.";
+    exportData.metadata.legalBasis = "Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, ou a sua entrega em estado insuficiente e inconsistente (incompleto ou corrompido), o ficheiro SAF-T (.xml) é tecnicamente substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet. O cruzamento de dados entre a plataforma e o parceiro é validado pelo ficheiro PDF de extratos 'Ganhos da Empresa'. Para efeitos de perícia, o ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, detendo valor probatório material por constituir a fonte primária e fidedigna dos registos que deveriam integrar o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019 e os princípios de cadeia de custódia previstos no Art. 125.º do CPP. FUNDAMENTAÇÃO DA PROVA MATERIAL: Para efeitos de prova legal de rendimentos reais, consideram-se os ficheiros operacionais que contêm o rasto digital de centenas de viagens efetivamente realizadas. Este conteúdo reflete a atividade económica real do motorista, sendo por isso elevado à categoria de Documento de Suporte (Ledger). Esta metodologia permite detetar e corrigir as discrepâncias omissas nos ficheiros de reporte simplificado, assegurando uma reconstrução financeira rigorosa e auditável em sede judicial.";
 
     // 2. integrityHash: SHA-256 self-hash do payload completo — DEVE SER A ÚLTIMA CHAVE DO JSON
     // Calculado sobre o objeto final (após legalBasis) para garantir integridade total
@@ -5604,11 +5604,43 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
 
+        // ── NOTA METODOLÓGICA FORENSE ─────────────────────────────────────────
+        // A string notaMetodologica contém dois parágrafos separados por \n\n:
+        //   [0] Nota Metodológica (itálico cinzento)
+        //   [1] Fundamentação da Prova Material (bold azul escuro — peso pericial superior)
+        // Split no separador \n\nFUNDAMENTAÇÃO para obter os dois blocos
+        const _notaSplit = t.notaMetodologica.split('\n\nFUNDAMENTAÇÃO DA PROVA MATERIAL:');
+        const _notaTexto = _notaSplit[0] || t.notaMetodologica;
+        const _fundTexto = _notaSplit[1] ? 'FUNDAMENTAÇÃO DA PROVA MATERIAL:' + _notaSplit[1] : '';
+
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
         doc.setTextColor(100, 100, 100);
-        const notaMetodologicaLines = doc.splitTextToSize(t.notaMetodologica, doc.internal.pageSize.getWidth() - 30);
-        doc.text(notaMetodologicaLines, left, y); y += (notaMetodologicaLines.length * 4) + 5;
+        const notaMetodologicaLines = doc.splitTextToSize(_notaTexto, doc.internal.pageSize.getWidth() - 30);
+        doc.text(notaMetodologicaLines, left, y); y += (notaMetodologicaLines.length * 4) + 4;
+
+        // ── FUNDAMENTAÇÃO DA PROVA MATERIAL — bloco de destaque ──────────────
+        if (_fundTexto) {
+            // Overflow guard antes do novo bloco
+            if (y > 240) {
+                addFooter(doc, pageNumber);
+                doc.addPage(); pageNumber++; y = 20;
+            }
+            const _pageW = doc.internal.pageSize.getWidth();
+            // Caixa de fundo azul-escuro (destaque probatório)
+            doc.setFillColor(13, 27, 42);
+            doc.setDrawColor(0, 229, 255);
+            doc.setLineWidth(0.5);
+            const _fundLines = doc.splitTextToSize(_fundTexto, _pageW - 38);
+            const _fundBoxH  = (_fundLines.length * 3.8) + 7;
+            doc.roundedRect(left, y, _pageW - left * 2, _fundBoxH, 2, 2, 'FD');
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 229, 255);
+            doc.text(_fundLines, left + 4, y + 5);
+            y += _fundBoxH + 5;
+        }
+
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
 
