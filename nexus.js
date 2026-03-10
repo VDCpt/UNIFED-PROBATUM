@@ -321,33 +321,29 @@
                 ? (sys.analysis.crossings.percentagemOmissao || 0)
                 : 0;
 
+            // ── FIX-4: SUBSTITUIÇÃO DO PROTOTYPE OVERRIDE ──────────────────────────
+            // Abordagem anterior (FRÁGIL): JSZip.prototype.file override.
+            //   · Prototype pollution-adjacent — quebra se o CDN JSZip mudar
+            //     a arquitetura interna do método .file().
+            //   · Risco de leave-behind: se _origExportDOCX lançasse exceção
+            //     antes do finally, o prototype ficava corrompido até reload.
+            //
+            // Nova abordagem (SEGURA): o XML jurisprudencial é construído aqui
+            // e passado diretamente como argumento xmlInject a exportDOCX().
+            // O string replacement ocorre em _docXml (variável local de enrichment.js)
+            // ANTES da instanciação do new JSZip() — sem tocar em protótipos globais.
+            // ─────────────────────────────────────────────────────────────────────────
+
             // Apenas injeta o bloco jurisprudencial se existir discrepância detetada
-            if (discPct <= 0 || typeof JSZip === 'undefined') {
+            if (discPct <= 0) {
                 return _origExportDOCX.apply(this, arguments);
             }
 
             var _jurXML = _buildJurisprudenceXML(sys.analysis);
-            var _origJSZipFile = JSZip.prototype.file;
 
-            // Hook temporário no JSZip para injetar antes de </w:body>
-            JSZip.prototype.file = function(name, data) {
-                try { // ── PATCH UNIFED-v13.3.0-DIAMOND: Prevenir colapso do export ──
-                    var rest = Array.prototype.slice.call(arguments, 2);
-                    if (name === 'word/document.xml' && typeof data === 'string') {
-                        data = data.replace('</w:body>', _jurXML + '</w:body>');
-                    }
-                    return _origJSZipFile.apply(this, [name, data].concat(rest));
-                } catch (hookErr) {
-                    console.error('[NEXUS\xB7M2] Erro na injeccao RAG:', hookErr.message || hookErr);
-                    return _origJSZipFile.apply(this, arguments); // Fallback seguro: exporta sem jurisprudência
-                }
-            };
-
-            try {
-                await _origExportDOCX.apply(this, arguments);
-            } finally {
-                JSZip.prototype.file = _origJSZipFile;
-            }
+            // Passa o XML como primeiro argumento — exportDOCX(xmlInject) em enrichment.js
+            await _origExportDOCX.call(this, _jurXML);
+            // ── FIM FIX-4 ──────────────────────────────────────────────────────────
 
             console.info('[NEXUS\u00b7M2] \u2705 Jurisprud\u00eancia UNIFED-PROBATUM injectada no DOCX \u2014 ' +
                 _STA_ACORDAOS.length + ' ac\u00f3rd\u00e3os (STA/TCA/CAAD) \u00b7 discrepancia: ' + discPct.toFixed(2) + '%');

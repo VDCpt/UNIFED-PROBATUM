@@ -140,7 +140,16 @@ Seccao D - ESTRATEGIA DE CONTRA-INTERROGATORIO (AI Adversarial Simulator)
 Maximo 900 palavras. Prosa juridica formal. Sem preambulos.`;
 
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        // ── FIX-3: RESOLUÇÃO DE CORS — PROXY SERVERLESS ─────────────────────────
+        // O fetch direto a api.anthropic.com falha com bloqueio CORS estrito
+        // (política do browser: cross-origin sem cabeçalho Allow-Origin).
+        // Solução: Proxy Serverless (Cloudflare Worker em claude-proxy.worker.js)
+        // que interceta o pedido, injeta x-api-key via variável de ambiente segura,
+        // faz forward para Anthropic e devolve os cabeçalhos CORS corretos.
+        // O x-api-key NUNCA é exposto no front-end (segurança de produção).
+        // Worker: https://github.com/unifed/claude-proxy | Env: ANTHROPIC_API_KEY
+        // ────────────────────────────────────────────────────────────────────────
+        const response = await fetch('https://api.unifed.com/claude-proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -150,6 +159,7 @@ Maximo 900 palavras. Prosa juridica formal. Sem preambulos.`;
                 messages: [{ role: 'user', content: userPrompt }]
             })
         });
+        // ── FIM FIX-3 ────────────────────────────────────────────────────────────
 
         if (!response.ok) throw new Error('HTTP ' + response.status);
 
@@ -480,7 +490,7 @@ window.generateIntegritySeal = generateIntegritySeal;
 
 
 // ============================================================================
-// 5. exportDOCX() - Structural DOCX Export - Minuta de Peticao Inicial
+// 5. exportDOCX(xmlInject) - Structural DOCX Export - Minuta de Peticao Inicial
 //
 //    BUG FIX CRITICO: A variavel interna do documento OOXML foi renomeada
 //    para _docXml (anteriormente "document"), o que causava shadow do
@@ -488,9 +498,16 @@ window.generateIntegritySeal = generateIntegritySeal;
 //    "document.createElement is not a function"
 //    O objeto global document e agora usado corretamente no final.
 //
+//    FIX-4 (v13.3.0-DIAMOND): Parâmetro opcional xmlInject.
+//    O NEXUS RAG passa o XML jurisprudencial diretamente como argumento.
+//    O string replacement seguro ocorre em _docXml (variável local) ANTES
+//    da instanciação do new JSZip() — elimina o risco de prototype pollution
+//    adjacente (JSZip.prototype.file override).
+//    Padrão: injeção limpa e imune a mudanças de arquitetura do CDN JSZip.
+//
 //    Dependencia: JSZip (carregado via CDN em index.html).
 // ============================================================================
-async function exportDOCX() {
+async function exportDOCX(xmlInject) {
     if (typeof JSZip === 'undefined') {
         console.error('[UNIFED-DOCX] \u274c JSZip nao disponivel.');
         if (typeof showToast === 'function') showToast('Erro: JSZip nao carregado', 'error');
@@ -718,6 +735,19 @@ async function exportDOCX() {
         '</w:document>';
 
     try {
+        // ── FIX-4: INJEÇÃO SEGURA DE XML (xmlInject → _docXml) ──────────────────
+        // O NEXUS RAG passa o bloco XML jurisprudencial via parâmetro formal.
+        // O string replacement ocorre em _docXml (variável local) ANTES de
+        // instanciar o new JSZip(), eliminando completamente a necessidade de
+        // JSZip.prototype.file override (prototype pollution-adjacent).
+        // Esta abordagem é imune a mudanças de arquitetura interna do CDN JSZip.
+        // ────────────────────────────────────────────────────────────────────────
+        if (xmlInject && typeof xmlInject === 'string' && xmlInject.trim().length > 0) {
+            _docXml = _docXml.replace('</w:body>', xmlInject + '</w:body>');
+            console.info('[UNIFED-DOCX] [i] xmlInject RAG aplicado em _docXml (' + xmlInject.length + ' chars) — prototype seguro.');
+        }
+        // ── FIM FIX-4 ─────────────────────────────────────────────────────────────
+
         var zip = new JSZip();
         zip.file('[Content_Types].xml', contentTypes);
         zip.file('_rels/.rels', pkgRels);
@@ -1120,6 +1150,21 @@ function openATFModal() {
         try {
             var cvs = document.getElementById('atfChartCanvas');
             if (cvs) {
+                // ── FIX-1: MITIGAÇÃO DE MEMORY LEAK (WebGL Context Accumulation) ──────
+                // Chart.js acumula contextos WebGL no mesmo <canvas> se não for
+                // explicitamente destruído. A API oficial Chart.getChart(canvas) permite
+                // recuperar a instância ativa sem aceder a internals privados.
+                // Se existir uma instância prévia, invoca .destroy() para libertar
+                // o contexto na Garbage Collection antes de instanciar o novo render.
+                // Conformidade: DORA (UE) 2022/2554 — Resiliência de Sistemas Críticos.
+                // ──────────────────────────────────────────────────────────────────────
+                var _existingChart = Chart.getChart(cvs);
+                if (_existingChart) {
+                    _existingChart.destroy();
+                    console.info('[UNIFED-ATF] [i] Instância Chart.js prévia destruída (memory leak mitigado).');
+                }
+                // ── FIM FIX-1 ──────────────────────────────────────────────────────────
+
                 var mean2s = atf.mean + 2 * atf.stdDev;
                 new Chart(cvs, {
                     type: 'line',

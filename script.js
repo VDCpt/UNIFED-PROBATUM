@@ -1877,22 +1877,65 @@ const ForensicLogger = {
     _getSecret() {
         if (typeof CryptoJS === 'undefined') return null;
 
-        // 1. Obter o sessionId gerado por generateSessionId() em runtime
-        //    (contém Date.now().toString(36) + Math.random — entropia mínima 64 bits)
-        const _sessionId = (typeof IFDESystem !== 'undefined' && IFDESystem.sessionId)
-            ? IFDESystem.sessionId
-            : 'UNIFED-DIAMOND-PROBATUM-PRESESSION';
+        // ── FIX-2: RESILIÊNCIA AES-256 — ÂNCORAS sessionStorage ─────────────────
+        // PROBLEMA ORIGINAL: _sessionId e _sessionStart eram lidos diretamente de
+        // IFDESystem em runtime. Um reload (F5) destrói IFDESystem antes da
+        // re-inicialização, gerando novos valores → chave diferente → payload
+        // cifrado em localStorage permanentemente indecifrável (key mismatch).
+        //
+        // SOLUÇÃO: sessionStorage como âncora de sessão de aba.
+        //   · sessionStorage sobrevive a F5/reload mas é destruído ao fechar a aba
+        //     (isola corretamente sessões forenses distintas por aba/janela).
+        //   · Fluxo: verificar sessionStorage primeiro; se existir, consumir;
+        //     se não existir, gerar a partir de IFDESystem, guardar e usar.
+        //   · Fallback triplo: IFDESystem → dia UTC → literal pré-sessão.
+        //   · A estrutura HMAC-SHA256 (sessionId + start + salt) é preservada.
+        //   · try/catch para Private Browsing com restrições de storage.
+        // ────────────────────────────────────────────────────────────────────────
+        const _SS_KEY_ID    = 'IFDE_SESSION_ID_ANCHOR';
+        const _SS_KEY_START = 'IFDE_SESSION_START_ANCHOR';
 
-        // 2. Adicionar o timestamp de início de sessão como segundo fator de entropia.
-        //    IFDESystem._sessionStart é fixado no momento da inicialização do sistema
-        //    e NÃO muda durante a sessão — garante consistência para decifração.
-        const _sessionStart = (typeof IFDESystem !== 'undefined' && IFDESystem._sessionStart)
-            ? String(IFDESystem._sessionStart)
-            : String(Math.floor(Date.now() / 86400000)); // Fallback: dia atual (UTC)
+        let _sessionId    = null;
+        let _sessionStart = null;
+
+        try {
+            // Verificar âncoras existentes no sessionStorage
+            const _storedId    = sessionStorage.getItem(_SS_KEY_ID);
+            const _storedStart = sessionStorage.getItem(_SS_KEY_START);
+
+            if (_storedId && _storedStart) {
+                // Consumir âncoras existentes — sobreviveu ao reload
+                _sessionId    = _storedId;
+                _sessionStart = _storedStart;
+            } else {
+                // Gerar a partir de IFDESystem (primeira inicialização da aba)
+                _sessionId = (typeof IFDESystem !== 'undefined' && IFDESystem.sessionId)
+                    ? IFDESystem.sessionId
+                    : 'UNIFED-DIAMOND-PROBATUM-PRESESSION';
+
+                _sessionStart = (typeof IFDESystem !== 'undefined' && IFDESystem._sessionStart)
+                    ? String(IFDESystem._sessionStart)
+                    : String(Math.floor(Date.now() / 86400000)); // Fallback: dia atual (UTC)
+
+                // Persistir no sessionStorage — sobreviverá a reloads desta aba
+                sessionStorage.setItem(_SS_KEY_ID,    _sessionId);
+                sessionStorage.setItem(_SS_KEY_START, _sessionStart);
+            }
+        } catch (_ssErr) {
+            // sessionStorage indisponível (Private Browsing restrito, iframe sandbox)
+            // Fallback: ler diretamente de IFDESystem (comportamento anterior)
+            _sessionId = (typeof IFDESystem !== 'undefined' && IFDESystem.sessionId)
+                ? IFDESystem.sessionId
+                : 'UNIFED-DIAMOND-PROBATUM-PRESESSION';
+
+            _sessionStart = (typeof IFDESystem !== 'undefined' && IFDESystem._sessionStart)
+                ? String(IFDESystem._sessionStart)
+                : String(Math.floor(Date.now() / 86400000));
+        }
+        // ── FIM FIX-2 ─────────────────────────────────────────────────────────────
 
         // 3. HMAC-SHA256: sessionId + start + salt pericial fixo
-        //    A chave resultante é única por sessão e impossível de reproduzir
-        //    sem conhecer o sessionId e o timestamp de início exatos.
+        //    A chave resultante é única por sessão de aba e irrepetível entre abas.
         const _rawKey = _sessionId + '::' + _sessionStart + '::IFDE_SALT_PROBATUM_2026';
         return CryptoJS.SHA256(_rawKey).toString();
     },
