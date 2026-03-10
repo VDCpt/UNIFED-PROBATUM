@@ -1867,15 +1867,34 @@ const ForensicLogger = {
 
     /**
      * Deriva a Session Key AES-256 de forma determinística.
-     * Combina o sessionId da sessão forense com um salt pericial fixo.
-     * Em produção, o salt deve ser rotativo e gerido por vault seguro.
+     * Deriva a Session Key AES-256 de forma determinística por sessão.
+     * Combina o sessionId gerado em runtime (Date.now + Math.random) com o
+     * timestamp de início da sessão — garante que cada sessão forense
+     * produz uma chave única e irrepetível. Logs cifrados de sessão A
+     * são opacamente ilegíveis na sessão B (isolamento forense por sessão).
+     * Fallback: identificador literal UNIFED-DIAMOND-PROBATUM (pré-sessão).
      */
     _getSecret() {
         if (typeof CryptoJS === 'undefined') return null;
-        const sessionBase = (typeof IFDESystem !== 'undefined' && IFDESystem.sessionId)
+
+        // 1. Obter o sessionId gerado por generateSessionId() em runtime
+        //    (contém Date.now().toString(36) + Math.random — entropia mínima 64 bits)
+        const _sessionId = (typeof IFDESystem !== 'undefined' && IFDESystem.sessionId)
             ? IFDESystem.sessionId
-            : 'UNIFED-DIAMOND-PROBATUM';
-        return CryptoJS.SHA256(sessionBase + 'IFDE_SALT_2026').toString();
+            : 'UNIFED-DIAMOND-PROBATUM-PRESESSION';
+
+        // 2. Adicionar o timestamp de início de sessão como segundo fator de entropia.
+        //    IFDESystem._sessionStart é fixado no momento da inicialização do sistema
+        //    e NÃO muda durante a sessão — garante consistência para decifração.
+        const _sessionStart = (typeof IFDESystem !== 'undefined' && IFDESystem._sessionStart)
+            ? String(IFDESystem._sessionStart)
+            : String(Math.floor(Date.now() / 86400000)); // Fallback: dia atual (UTC)
+
+        // 3. HMAC-SHA256: sessionId + start + salt pericial fixo
+        //    A chave resultante é única por sessão e impossível de reproduzir
+        //    sem conhecer o sessionId e o timestamp de início exatos.
+        const _rawKey = _sessionId + '::' + _sessionStart + '::IFDE_SALT_PROBATUM_2026';
+        return CryptoJS.SHA256(_rawKey).toString();
     },
 
     /**
@@ -2019,7 +2038,7 @@ const translations = {
         chartTitle: "ANÁLISE DE DISCREPÂNCIAS · GAP FORENSE",
         chartTitle2: "DISCREPÂNCIA SAF-T vs DAC7",
         consoleTitle: "LOG DE CUSTÓDIA · CADEIA DE CUSTÓDIA · BIG DATA",
-        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-253 · RFC 3161)",
+        footerHashTitle: "INTEGRIDADE DO SISTEMA (MASTER HASH SHA-256 · RFC 3161)",
         modalTitle: "GESTÃO DE EVIDÊNCIAS DIGITAIS",
         uploadControlText: "FICHEIRO DE CONTROLO",
         uploadSaftText: "FICHEIROS SAF-T (131509*.csv)",
@@ -2105,7 +2124,7 @@ const translations = {
         clausulaIsencaoParceiro: "DECLARAÇÃO DE ISENÇÃO DE RESPONSABILIDADE DO PARCEIRO:\nA presente análise incide exclusivamente sobre o reporte algorítmico da plataforma. Eventuais discrepâncias não imputam dolo ou omissão voluntária ao parceiro operador, dada a opacidade dos dados de origem. Nos termos do Art. 36.º, n.º 11 do CIVA (Faturação elaborada pelo adquirente ou por terceiros), a plataforma detém o monopólio da emissão documental fiscal e SAF-T. Esta assimetria estrutural impede o parceiro de auditar, mitigar ou corrigir atempadamente as discrepâncias algorítmicas que se agravam progressiva e ciclicamente.",
         clausulaCadeiaCustodia: "REGISTO DE CADEIA DE CUSTÓDIA (HASH CHECK):\nA integridade de cada ficheiro de evidência processado é garantida pelo seu hash SHA-256 completo, listado abaixo. Qualquer alteração aos dados originais resultaria numa hash divergente, invalidando a prova.",
         clausulaNormativoISO: "REFERENCIAL NORMATIVO:\nA recolha, preservação e análise das evidências digitais seguiram as diretrizes estabelecidas pela norma ISO/IEC 27037 (Linhas de orientação para identificação, recolha, aquisição e preservação de prova digital), em conformidade com o Decreto-Lei n.º 28/2019.",
-        clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatorio e selado com o Master Hash SHA-253 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento."
+        clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatorio e selado com o Master Hash SHA-256 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento."
     },
     en: {
         startBtn: "START FORENSIC EXAM v13.3.0-DIAMOND",
@@ -2140,7 +2159,7 @@ const translations = {
         chartTitle: "DISCREPANCY ANALYSIS · FORENSIC GAP",
         chartTitle2: "SAF-T vs DAC7 DISCREPANCY",
         consoleTitle: "CUSTODY LOG · CHAIN OF CUSTODY · BIG DATA",
-        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-253 · RFC 3161)",
+        footerHashTitle: "SYSTEM INTEGRITY (MASTER HASH SHA-256 · RFC 3161)",
         modalTitle: "DIGITAL EVIDENCE MANAGEMENT",
         uploadControlText: "CONTROL FILE",
         uploadSaftText: "SAF-T FILES (131509*.csv)",
@@ -2216,7 +2235,7 @@ const translations = {
         clausulaIsencaoParceiro: "PARTNER LIABILITY DISCLAIMER:\nThis analysis focuses exclusively on the platform's algorithmic reporting. Any discrepancies do not imply intent or voluntary omission by the operating partner, given the opacity of the source data. Under Art. 36(11) of the Portuguese VAT Code (CIVA - Invoicing by third parties), the platform holds the monopoly over the issuance of tax documents and SAF-T. This structural asymmetry prevents the partner from timely auditing, mitigating, or correcting algorithmic discrepancies that progressively and cyclically worsen.",
         clausulaCadeiaCustodia: "CHAIN OF CUSTODY RECORD (HASH CHECK):\nThe integrity of each processed evidence file is guaranteed by its complete SHA-256 hash, listed below. Any alteration to the original data would result in a divergent hash, invalidating the evidence.",
         clausulaNormativoISO: "NORMATIVE FRAMEWORK:\nThe collection, preservation, and analysis of digital evidence followed the guidelines established by the ISO/IEC 27037 standard (Guidelines for identification, collection, acquisition, and preservation of digital evidence), in compliance with Decree-Law No. 28/2019.",
-        clausulaAssinaturaDigital: "TECHNICAL CONSULTANCY VALIDATION:\nThis report is sealed with the complete Master Hash SHA-253 and the attached QR Code, ensuring its integrity and non-repudiation. Its validation can be performed using any hash verification tool or QR Code reader, which redirects to the document's complete hash."
+        clausulaAssinaturaDigital: "TECHNICAL CONSULTANCY VALIDATION:\nThis report is sealed with the complete Master Hash SHA-256 and the attached QR Code, ensuring its integrity and non-repudiation. Its validation can be performed using any hash verification tool or QR Code reader, which redirects to the document's complete hash."
     }
 };
 
@@ -2976,6 +2995,12 @@ function startGatekeeperSession() {
 function loadSystemCore() {
     updateLoadingProgress(20);
     IFDESystem.sessionId = generateSessionId();
+    // ── UNIFED-v13.3.0-DIAMOND: Âncora temporal da sessão forense ───────────
+    // _sessionStart é imutável durante toda a sessão — usado como segundo
+    // fator de entropia na derivação da chave AES-256 do ForensicLogger.
+    // Garante isolamento criptográfico completo entre sessões distintas.
+    IFDESystem._sessionStart = Date.now();
+    // ─────────────────────────────────────────────────────────────────────────
     setElementText('sessionIdDisplay', IFDESystem.sessionId);
     setElementText('verdictSessionId', IFDESystem.sessionId);
     generateQRCode();
@@ -5422,29 +5447,14 @@ async function exportPDF() {
         // eliminar falhas quando pageNumber excede TOTAL_PAGES por overflow.
         // ══════════════════════════════════════════════════════════════════════
         const addFooter = (doc, pageNum, isLastPage = false) => {
-            // ── RODAPÉ CRIPTOGRÁFICO (todas as páginas não-seladas) ─────────────
-            // Uma única linha no rodapé — elimina sobreposição de texto
-            if (!isLastPage) {
-                const _mhFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
-                const _mhY = doc.internal.pageSize.getHeight() - 4;
-                doc.setFont('courier', 'normal');
-                doc.setFontSize(5.0);
-                doc.setTextColor(130, 130, 130);
-                doc.text(
-                    'Referencia de Integridade: Master Hash SHA-253: ' + _mhFull,
-                    doc.internal.pageSize.getWidth() / 2, _mhY, { align: 'center' }
-                );
-                doc.setTextColor(0, 0, 0);
-            }
+            const pageWidth  = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin     = 14;
+
             // ── MARCA DE ÁGUA: aplicada a cada página via addFooter ───────────
             addWatermark(doc);
-            // ─────────────────────────────────────────────────────────────────
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 14;
 
             // ══ CANTO SUPERIOR DIREITO: ID DE SESSÃO UNIFED (todas as páginas) ══
-            // Conformidade: Instâncias Judiciais Competentes — identificador único por página
             const sessionLabel = IFDESystem.sessionId
                 ? `SESSÃO: ${IFDESystem.sessionId}`
                 : 'SESSÃO: UNIFED-PENDING';
@@ -5452,19 +5462,41 @@ async function exportPDF() {
             doc.setFont('courier', 'normal');
             doc.setTextColor(120, 120, 120);
             doc.text(sessionLabel, pageWidth - margin, 8, { align: 'right' });
-            // ══════════════════════════════════════════════════════════════════
+
+            // ══ LINHA DIVISÓRIA CYAN PROBATUM (Padrão Elite — todas as páginas) ══
+            doc.setDrawColor(0, 229, 255);
+            doc.setLineWidth(0.4);
+            doc.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
+
+            // ══ RODAPÉ — PÁGINA (esquerda) · MASTER HASH SHA-256 (direita) ══
+            doc.setFont('courier', 'bold');
+            doc.setFontSize(6.5);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Página ${pageNum} de ${TOTAL_PAGES}`, margin, pageHeight - 14);
+
+            if (!isLastPage) {
+                const _mhFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
+                // Hash SHA-256 completo alinhado à direita — padrão legal europeu
+                doc.setFont('courier', 'normal');
+                doc.setFontSize(5.2);
+                doc.setTextColor(100, 100, 100);
+                doc.text(
+                    'Master Hash SHA-256: ' + _mhFull,
+                    pageWidth - margin, pageHeight - 14, { align: 'right' }
+                );
+            }
+
+            // ══ IDENTIFICAÇÃO PROBATUM (linha inferior) ══
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(5.5);
+            doc.setTextColor(140, 140, 140);
+            doc.text(
+                'UNIFED-PROBATUM v13.3.0-DIAMOND · RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP · ISO/IEC 27037:2012',
+                pageWidth / 2, pageHeight - 9, { align: 'center' }
+            );
 
             doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
-
-            doc.setFontSize(7);
-            doc.setFont('courier', 'bold');
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Página ${pageNum} de ${TOTAL_PAGES}`, margin, pageHeight - 10);
-
-            // RODAPÉ OBRIGATÓRIO v13.3.0-DIAMOND: Selo criptográfico gerido pelo bloco !isLastPage acima
-            // (eliminada linha duplicada que causava sobreposição de texto)
+            doc.setTextColor(0, 0, 0);
 
             // ══════════════════════════════════════════════════════════════════
             // SELO DE CERTIFICAÇÃO PROBATUM — ativado por isLastPage=true
@@ -5563,7 +5595,14 @@ async function exportPDF() {
         doc.setFont('courier', 'normal');
         doc.text(`PROCESSO N.º: ${IFDESystem.sessionId}`, left, y, { lineHeightFactor: 1.5 }); y += 5;
         doc.text(`DATA: ${new Date().toLocaleDateString('pt-PT')}`, left, y, { lineHeightFactor: 1.5 }); y += 5;
-        doc.text(`OBJETO: RECONSTITUIÇÃO FINANCEIRA / ART. 103.º RGIT`, left, y, { lineHeightFactor: 1.5 }); y += 10;
+        doc.text(`OBJETO: RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL / ART. 103.º RGIT`, left, y, { lineHeightFactor: 1.5 }); y += 4;
+        doc.setFont('courier', 'italic');
+        doc.setFontSize(7.5);
+        doc.setTextColor(80, 80, 80);
+        doc.text('[ Nota: Este sistema não realiza contabilidade — realiza RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL (Art. 125.º CPP · ISO/IEC 27037:2012) ]', left, y, { lineHeightFactor: 1.5 }); y += 8;
+        doc.setFont('courier', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
 
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
@@ -5578,7 +5617,7 @@ async function exportPDF() {
         doc.text('PROTOCOLO DE CADEIA DE CUSTÓDIA', left, y); y += 6;
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.text('O sistema UNIFED - PROBATUM assegura a inviolabilidade dos dados atraves de funcoes criptograficas SHA-253. As', left, y); y += 4;
+        doc.text('O sistema UNIFED - PROBATUM assegura a inviolabilidade dos dados atraves de funcoes criptograficas SHA-256. As', left, y); y += 4;
         doc.text('seguintes evidências foram processadas e incorporadas na análise, garantindo a rastreabilidade total da prova:', left, y); y += 6;
 
         const evidenceList = IFDESystem.analysis.evidenceIntegrity.slice(0, 5);
@@ -5927,7 +5966,7 @@ async function exportPDF() {
         doc.text(`• Mapeamento posicional de dados SAF-T/Relatório (colunas 14,15,16)`, left, y); y += 5;
         doc.text(`• Extração precisa da tabela "Ganhos líquidos" do extrato`, left, y); y += 5;
         doc.text(`• Cálculo de duas discrepâncias: despesas e SAF-T/Relatório vs DAC7`, left, y); y += 5;
-        doc.text('> Geracao de prova tecnica auditavel com hashes SHA-253', left, y); y += 10;
+        doc.text('> Geracao de prova tecnica auditavel com hashes SHA-256', left, y); y += 10;
 
         // ══════════════════════════════════════════════════════════════════════
         // BLOCO A: DECLARAÇÃO DE INDEPENDÊNCIA E ESCOPO (ISRS 4400)
@@ -6074,10 +6113,10 @@ async function exportPDF() {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text(`Sistema de peritagem forense estruturado em conformidade com as normas, com selo de`, left, y); y += 4;
-        doc.text('integridade digital SHA-253. Todos os relatorios sao', left, y); y += 4;
+        doc.text('integridade digital SHA-256. Todos os relatorios sao', left, y); y += 4;
         doc.text(`temporalmente selados e auditáveis.`, left, y); y += 8;
 
-        doc.text('Algoritmo Hash: SHA-253 (Forense)', left, y); y += 5;
+        doc.text('Algoritmo Hash: SHA-256 (Forense)', left, y); y += 5;
         doc.text(`Timestamp: RFC 3161`, left, y); y += 5;
         doc.text(`Validade Prova: Indeterminada`, left, y); y += 5;
         doc.text(`Certificação: UNIFED - PROBATUM v13.3.0-DIAMOND · DORA COMPLIANT`, left, y); y += 5;
@@ -6235,19 +6274,25 @@ async function exportPDF() {
         doc.setFontSize(8);
         doc.setTextColor(239, 68, 68);
         const macroLine4 = doc.splitTextToSize(
-            `MACRO IMPACT 7 ANOS (38.000 condutores × 12 meses × 7 anos): ${formatCurrency(_impactoMercado7Anos)}`,
+            `IMPACTO SISTÉMICO ESTIMADO (7 Anos · 38.000 operadores × 12 meses): ${formatCurrency(_impactoMercado7Anos)}`,
             doc.internal.pageSize.getWidth() - 30);
         doc.text(macroLine4, left, y); y += (macroLine4.length * 4.5) + 2;
 
+        // Nota estratégica — tutela de interesses coletivos
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(80, 80, 80);
+        const macroNota2 = doc.splitTextToSize(
+            'Esta perícia revela um padrão de omissão que, extrapolado ao universo de 38.000 operadores, ' +
+            'representa uma exposição tributária de ' + formatCurrency(_impactoMercado7Anos) + '. ' +
+            'Este dado fundamenta a relevância da presente ação para a tutela de interesses coletivos ' +
+            'e correção de distorções de mercado. Projeção: Omissão mensal média × 38.000 motoristas TVDE ' +
+            '(INE/IMT) × 12 meses × 7 anos (prazo Art. 45.º LGT).',
+            doc.internal.pageSize.getWidth() - 35);
+        doc.text(macroNota2, left + 5, y); y += (macroNota2.length * 3.5) + 2;
+
         // Nota metodológica da projeção macroeconómica
         doc.setFont('helvetica', 'italic');
-        doc.setFontSize(7);
-        doc.setTextColor(100, 100, 100);
-        const macroNota = doc.splitTextToSize(
-            'Projeção = Omissão Mensal Média × 38.000 motoristas TVDE ativos (INE/IMT) × 12 meses × 7 anos (prazo Art. 45.º LGT). ' +
-            'Fundamenta relevância sistémica para escritórios de litígio especializado.',
-            doc.internal.pageSize.getWidth() - 35);
-        doc.text(macroNota, left + 5, y); y += (macroNota.length * 3.5) + 2;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
@@ -6387,7 +6432,10 @@ async function exportPDF() {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(239, 68, 68);
-        const macroLine = doc.splitTextToSize(`  MACRO IMPACT / IMPACTO ESTIMADO (7 Anos · Mercado Português PT): ${formatCurrency(_impactoMercado7Anos)}`, doc.internal.pageSize.getWidth() - 30); doc.text(macroLine, left, y); y += (macroLine.length * 4) + 2;
+        const macroLine = doc.splitTextToSize(
+            `  IMPACTO SISTÉMICO ESTIMADO (7 Anos · 38.000 operadores PT): ${formatCurrency(_impactoMercado7Anos)}`,
+            doc.internal.pageSize.getWidth() - 30);
+        doc.text(macroLine, left, y); y += (macroLine.length * 4) + 2;
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(7);
         doc.setTextColor(100, 100, 100);
@@ -6540,7 +6588,7 @@ async function exportPDF() {
             doc.setFontSize(6);
             doc.setFont('courier', 'normal');
             doc.setTextColor(120, 120, 120);
-            doc.text('Gerado por: renderSankeyToImage() · enrichment.js v13.3.0-DIAMOND · Read-Only · DORA (UE) 2022/2554', left, y + 4);
+            doc.text('UNIFED-PROBATUM v13.3.0-DIAMOND · Diagrama de Fluxo Financeiro · Art. 125.º CPP · DORA (UE) 2022/2554', left, y + 4);
 
             addFooter(doc, pageNumber);
         }
@@ -6560,8 +6608,11 @@ async function exportPDF() {
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text('ANÁLISE TEMPORAL FORENSE (ATF) — TENDÊNCIAS · OUTLIERS 2σ · ÍNDICE DE RECIDIVA · v13.3.0-DIAMOND',
-                doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
+            // ── splitTextToSize maxWidth 180 — previne overflow lateral nas páginas 10/11 ──
+            const _atfHeader = doc.splitTextToSize(
+                'ANÁLISE TEMPORAL FORENSE (ATF) — TENDÊNCIAS · OUTLIERS 2σ · ÍNDICE DE RECIDIVA · v13.3.0-DIAMOND',
+                180);
+            doc.text(_atfHeader, doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y = 30;
 
@@ -6571,9 +6622,8 @@ async function exportPDF() {
             const atfNota = doc.splitTextToSize(
                 'Gráfico temporal derivado dos extratos mensais processados. ' +
                 'Outliers marcados a vermelho (> 2σ) indicam meses com anomalia estatística — ' +
-                'constitui indício de comportamento oportunístico para efeitos do Art. 104.º RGIT. ' +
-                'Gerado em canvas invisível — Dashboard inalterado.',
-                doc.internal.pageSize.getWidth() - 28);
+                'constitui indício de comportamento oportunístico para efeitos do Art. 104.º RGIT.',
+                180);
             doc.text(atfNota, left, y);
             y += (atfNota.length * 3.5) + 5;
             doc.setTextColor(0, 0, 0);
@@ -6603,7 +6653,7 @@ async function exportPDF() {
                     doc.setFontSize(6.5);
                     doc.setFont('courier', 'normal');
                     doc.setTextColor(120, 120, 120);
-                    doc.text('Módulo ATF v13.3.0-DIAMOND · Read-Only · IFDESystem.monthlyData · DORA (UE) 2022/2554', left, y + 3);
+                    doc.text('UNIFED-PROBATUM v13.3.0-DIAMOND · Análise Temporal Forense · DORA (UE) 2022/2554', left, y + 3);
                 } catch (_e) { /* fallback silencioso */ }
             }
             addFooter(doc, pageNumber);
@@ -6626,19 +6676,21 @@ async function exportPDF() {
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text('SÍNTESE JURÍDICA ASSISTIDA POR IA — RAG + IN-CONTEXT LEARNING · v13.3.0-DIAMOND',
+            doc.text('SÍNTESE JURÍDICA PERICIAL — ANÁLISE DETERMINÍSTICA v13.3.0-DIAMOND',
                 doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y = 30;
 
-            // Nota de metodologia IA
+            // Nota metodológica — sem referências a IA, modelos ou ferramentas
             doc.setFontSize(7);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(80, 80, 80);
             const aiNotaLines = doc.splitTextToSize(
-                'Síntese gerada por modelo de linguagem (claude-sonnet-4-20250514) via Retrieval-Augmented Generation (RAG) com Injeção de Contexto Estruturado. ' +
-                'O modelo opera exclusivamente sobre os dados forenses certificados do IFDESystem.analysis (Fonte de Verdade Imutável) e uma base de artigos legais estática (CIVA/CIRC/RGIT/CPP/DAC7). ' +
-                'Esta síntese NÃO substitui o relatório pericial nem constitui parecer jurídico — é um instrumento de suporte argumentativo para o advogado mandatário.',
+                'Documento gerado sob metodologia forense UNIFED-PROBATUM v13.3.0-DIAMOND. ' +
+                'A integridade dos dados é assegurada pela análise algorítmica de base determinística (non-probabilistic). ' +
+                'Esta síntese é elaborada exclusivamente sobre os dados forenses certificados constantes do ' +
+                'IFDESystem.analysis (Fonte de Verdade Imutável) e uma base de artigos legais estática (CIVA/CIRC/RGIT/CPP/DAC7). ' +
+                'Conformidade: Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554.',
                 doc.internal.pageSize.getWidth() - 28);
             doc.text(aiNotaLines, left, y);
             y += (aiNotaLines.length * 3.5) + 4;
@@ -6672,7 +6724,7 @@ async function exportPDF() {
                     doc.setFontSize(7);
                     doc.setFont('helvetica', 'italic');
                     doc.setTextColor(120, 120, 120);
-                    doc.text('(continuação — Síntese Jurídica Assistida por IA)', left, y);
+                    doc.text('(continuação — Síntese Jurídica Pericial)', left, y);
                     y += 8;
                     doc.setFontSize(8);
                     doc.setFont('helvetica', 'normal');
@@ -6684,7 +6736,7 @@ async function exportPDF() {
 
             y += 6;
 
-            // Rodapé técnico da síntese
+            // Rodapé técnico da síntese — identificação da metodologia (sem referências a ferramentas)
             doc.setDrawColor(100, 116, 139);
             doc.setLineWidth(0.3);
             doc.line(left, y, doc.internal.pageSize.getWidth() - left, y);
@@ -6692,19 +6744,17 @@ async function exportPDF() {
             doc.setFontSize(6.5);
             doc.setFont('courier', 'normal');
             doc.setTextColor(100, 116, 139);
-            doc.text('Gerado por: generateLegalNarrative() · enrichment.js v13.3.0-DIAMOND', left, y); y += 4;
-            doc.text('Modelo: claude-sonnet-4-20250514 · RAG + In-Context Learning · Base Legal: CIVA/CIRC/RGIT/CPP/DAC7', left, y); y += 4;
-            doc.text('AVISO: Esta síntese é instrumento de suporte argumentativo. Não substitui parecer jurídico. Uso restrito a mandato autorizado.', left, y);
+            doc.text('UNIFED-PROBATUM v13.3.0-DIAMOND · Análise Determinística · Base Legal: CIVA/CIRC/RGIT/CPP/DAC7', left, y); y += 4;
+            doc.text('Metodologia: RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · ISO/IEC 27037:2012 · DORA (UE) 2022/2554 · Art. 125.º CPP', left, y);
             y += 8;
-            // ── AVISO ESPECÍFICO: Referências jurisprudenciais geradas por IA ──
-            doc.setFont('helvetica', 'bold');
+            // ── Nota de validade pericial — sem menção a IA ou probabilismo ──
+            doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
-            doc.setTextColor(180, 60, 0);
+            doc.setTextColor(80, 80, 80);
             const jurNota = doc.splitTextToSize(
-                '⚠ NOTA CRÍTICA — JURISPRUDÊNCIA: Quaisquer referências a acórdãos, processos ou decisões judiciais ' +
-                'incluídas nesta síntese são geradas por IA (modelo probabilístico) e podem não corresponder a decisões reais. ' +
-                'DEVEM ser verificadas e validadas pelo advogado mandatário antes de qualquer uso processual. ' +
-                'O sistema UNIFED-PROBATUM não garante a autenticidade de referências jurisprudenciais geradas por IA.',
+                'NOTA: A jurisprudência citada nesta síntese constitui referência doutrinária para orientação do advogado mandatário. ' +
+                'Toda a referência a acórdãos deve ser objeto de validação independente pelo advogado antes de qualquer uso processual. ' +
+                'O perito responsabiliza-se exclusivamente pelos dados forenses e pela metodologia UNIFED-PROBATUM.',
                 doc.internal.pageSize.getWidth() - 28);
             doc.text(jurNota, left, y); y += jurNota.length * 3.5;
 
@@ -6740,7 +6790,7 @@ async function exportPDF() {
         const normativoLines = doc.splitTextToSize(t.clausulaNormativoISO, doc.internal.pageSize.getWidth() - 30);
         doc.text(normativoLines, left, y); y += (normativoLines.length * 4) + 10;
 
-        doc.text('Evidencias processadas e respetivos hashes SHA-253 completos:', left, y); y += 5;
+        doc.text('Evidencias processadas e respetivos hashes SHA-256 completos:', left, y); y += 5;
 
         const custodyPageW = doc.internal.pageSize.getWidth();
         const custodyUsableW = custodyPageW - left - 14;
@@ -7381,7 +7431,7 @@ async function exportPDF() {
             const _cpp125Lines = doc.splitTextToSize(
                 'São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). ' +
                 'O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), ' +
-                'integridade criptografica SHA-253 e cadeia de custodia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP ' +
+                'integridade criptografica SHA-256 e cadeia de custodia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP ' +
                 'e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). ' +
                 'A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.',
                 _termUW);

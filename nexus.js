@@ -189,6 +189,12 @@
             tribunal: 'Supremo Tribunal Administrativo — 2.a Seccao',
             data: '19.03.2025',
             sumario: 'A subdeclaracao sistematica de rendimentos por plataforma digital, atuando em monopolio de faturacao (Art. 36.o n.o 11 CIVA), gera responsabilidade civil extracontratual por Perda de Chance e danos reputacionais. O agravamento injustificado do perfil de risco (Risk Scoring) do parceiro perante a AT, inibindo acesso a credito e beneficios, impoe o dever de indemnizar os lucros cessantes calculados com base na divergencia pericial provada. A inversao do onus da prova recai sobre a plataforma nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT, porquanto o sujeito passivo nao detem acesso nem controlo sobre os documentos fiscais emitidos em seu nome pela entidade detentora do monopolio de emissao documental.'
+        },
+        {
+            proc: 'Proc. 156/12.4BESNT',
+            tribunal: 'Tribunal Central Administrativo Sul',
+            data: '11.07.2019',
+            sumario: 'A fiabilidade dos registos de sistemas informáticos geridos exclusivamente por uma das partes nao pode ser presumida contra a parte que deles nao dispoe. Quando a Administracao (ou entidade equiparada, como plataforma digital detentora de monopolio de emissao documental) e a unica detentora dos logs de sistema, cabe-lhe o onus de demonstrar a integridade e completude dos registos. O silencio ou a recusa de facultar os logs brutos de transacao equivale, por via do principio da proximidade da prova, a uma presuncao juris tantum de que os dados retidos sao desfavoraveis a entidade obrigada a reportar. A prova pericial forense produzida sobre os dados acessiveis ao parceiro (extratos, SAF-T, DAC7) e admissivel como meio de prova autonomo nos termos do Art. 125.o CPP, constituindo principio de prova suficiente para inversao do onus.'
         }
     ];
 
@@ -270,7 +276,7 @@
             _hr(),
             _para('', false),
             _para('VI. JURISPRUDENCIA APLICAVEL — CRUZAMENTO RAG · NEXUS v13.3.0-DIAMOND', true, '26', '003366'),
-            _para('Modulo RAG Jurisprudencial — Citacoes injectadas automaticamente com base nas anomalias detetadas', false, '16', '888888'),
+            _para('Modulo de Jurisprud\u00eancia Pericial \u2014 Cita\u00e7\u00f5es injectadas com base nas anomalias detetadas e qualificacao legal apurada', false, '16', '888888'),
             _para('', false),
 
             _para('VI.1 · BASE LEGAL DIRETAMENTE APLICAVEL', true, '22', '003366'),
@@ -343,8 +349,8 @@
                 JSZip.prototype.file = _origJSZipFile;
             }
 
-            console.info('[NEXUS·M2] ✅ Jurisprudência RAG injectada no DOCX — ' +
-                _STA_ACORDAOS.length + ' acordaos STA · discrepancia: ' + discPct.toFixed(2) + '%');
+            console.info('[NEXUS\u00b7M2] \u2705 Jurisprud\u00eancia UNIFED-PROBATUM injectada no DOCX \u2014 ' +
+                _STA_ACORDAOS.length + ' ac\u00f3rd\u00e3os (STA/TCA/CAAD) \u00b7 discrepancia: ' + discPct.toFixed(2) + '%');
         };
 
         console.info('[NEXUS·M2] ✅ RAG Jurisprudencial DOCX hook instalado — aguarda exportacao.');

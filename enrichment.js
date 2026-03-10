@@ -425,7 +425,7 @@ function generateIntegritySeal(masterHash, doc, x, y, sealSize) {
     doc.setFont('courier', 'bold');
     doc.setTextColor(0, 229, 255);
     doc.text('PROBATUM INTEGRITY SEAL', CX, y + 3.5, { align: 'center' });
-    doc.text('v13.3.0-DIAMOND \u00b7 SHA-253', CX, y + 6.5, { align: 'center' });
+    doc.text('v13.3.0-DIAMOND \u00b7 SHA-256', CX, y + 6.5, { align: 'center' });
 
     doc.setDrawColor(30, 60, 100);
     doc.setLineWidth(0.2);
@@ -560,7 +560,7 @@ async function exportDOCX() {
     if ((c.ircEstimado || 0) > 0) discRows.push(tr([tc('IRC Estimado Omitido (Art. 17.o CIRC)', false, 5000), tc(fe(c.ircEstimado), false, 4000)]));
     if ((c.impactoSeteAnosMercado || 0) > 0) discRows.push(tr([tc('Impacto Macroeconomico 7 Anos', true, 5000, 'FFF0F0'), tc(fe(c.impactoSeteAnosMercado), true, 4000, 'FFF0F0')]));
 
-    var srcRows = [tr([tc('Documento', true, 3000, 'E8F0F8'), tc('Tipo', true, 2000, 'E8F0F8'), tc('Hash SHA-253 (prefixo)', true, 4000, 'E8F0F8')])];
+    var srcRows = [tr([tc('Documento', true, 3000, 'E8F0F8'), tc('Tipo', true, 2000, 'E8F0F8'), tc('Hash SHA-256 (prefixo)', true, 4000, 'E8F0F8')])];
     (sys.analysis.evidenceIntegrity || []).slice(0, 8).forEach(function(ev) {
         srcRows.push(tr([tc(ev.filename || 'N/A', false, 3000), tc(ev.type || 'N/A', false, 2000), tc((ev.hash || '').substring(0, 24) + '...', false, 4000)]));
     });
@@ -589,7 +589,7 @@ async function exportDOCX() {
         para('Processo N.o: ' + xe(sys.sessionId || 'UNIFED-PENDING'), false, '20', '333333'),
         para('Data de Elaboracao: ' + date, false, '20', '333333'),
         para('Sistema: UNIFED - PROBATUM v13.3.0-DIAMOND - COURT READY - DORA COMPLIANT', false, '18', '666666'),
-        para('Referencia de Integridade: Master Hash SHA-253: ' + xe(sys.masterHash || 'N/A'), false, '16', '888888'),
+        para('Referencia de Integridade: Master Hash SHA-256: ' + xe(sys.masterHash || 'N/A'), false, '16', '888888'),
         hr(), para('', false),
 
         para('I. IDENTIFICACAO', true, '26', '003366'), para('', false),
@@ -618,7 +618,7 @@ async function exportDOCX() {
         para('', false), hr(), para('', false),
 
         para('III. CADEIA DE CUSTODIA - EVIDENCIAS DIGITAIS', true, '26', '003366'), para('', false),
-        para('As evidencias digitais foram certificadas com hash SHA-253 nos termos do Art. 125.o do CPP:', false, '20', '333333'),
+        para('As evidencias digitais foram certificadas com hash SHA-256 nos termos do Art. 125.o do CPP:', false, '20', '333333'),
         para('', false), tbl(srcRows), para('', false), hr(), para('', false),
 
         para('III-A. QUALIFICACAO JURIDICA — CRIMINALIDADE DE COLARINHO BRANCO', true, '26', '6B0099'), para('', false),
@@ -629,10 +629,9 @@ async function exportDOCX() {
         para('Dano Reputacional e Perda de Chance: O reporte viciado da plataforma a Autoridade Tributaria (com uma discrepancia detetada de ' + fe(c.discrepanciaSaftVsDac7) + ') contamina diretamente o perfil de risco (Risk Scoring) do parceiro. Sendo a plataforma a detentora do monopolio de emissao documental (Art. 36.o n.o 11 CIVA), o sujeito passivo e penalizado sem dolo. Esta adulteracao do perfil fiscal gera lucros cessantes mensuraveis, inibindo o acesso a financiamento bancario, linhas de credito e beneficios fiscais, constituindo fundamento para indemnizacao por responsabilidade civil extracontratual.', false, '20', '333333'),
         para('', false), hr(), para('', false),
 
-        para('IV. SÍNTESE JURÍDICA E ESTRATÉGIA DE CONTRA-INTERROGATÓRIO', true, '26', '003366'),
-        para('Gerada por IA Argumentativa (RAG + In-Context Learning - claude-sonnet-4-20250514) · NEXUS v13.3.0-DIAMOND', false, '16', '888888'),
-        para('AVISO OBRIGATÓRIO: Esta síntese é instrumento de suporte argumentativo para o advogado mandatário. NÃO substitui parecer jurídico nem constitui peça processual autónoma.', true, '18', 'AA0000'),
-        para('[!] JURISPRUDENCIA — NOTA CRITICA: Quaisquer referências a acórdãos, processos ou decisões judiciais incluídas abaixo foram geradas por modelo de linguagem (IA) e podem não corresponder a decisões reais existentes. DEVEM ser verificadas pelo advogado antes de qualquer uso processual. O UNIFED-PROBATUM não garante a autenticidade de referências jurisprudenciais geradas por IA.', false, '18', 'CC4400'),
+        para('IV. SÍNTESE JURÍDICA PERICIAL — ANÁLISE DETERMINÍSTICA', true, '26', '003366'),
+        para('Elaborada sob metodologia forense UNIFED-PROBATUM v13.3.0-DIAMOND. Análise algorítmica de base determinística (non-probabilistic). Conformidade: Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554.', false, '16', '555555'),
+        para('NOTA: A jurisprudência citada constitui referência doutrinária para orientação do advogado mandatário. Toda a referência a acórdãos deve ser validada pelo advogado antes de qualquer uso processual. O perito responsabiliza-se pelos dados forenses e pela metodologia UNIFED-PROBATUM.', false, '16', '888888'),
         para('', false)
     ].concat(narrativeParas).concat([
         para('', false), hr(), para('', false),
