@@ -110,7 +110,14 @@ REGRAS ABSOLUTAS:
 7. Na Seccao D, simula argumentos plausíveis da defesa e fornece a resposta tecnica pericial a cada um.
 
 MANDATO ESPECIAL — INVERSÃO DO ÓNUS DA PROVA E QUALIFICAÇÃO DE VÍTIMA:
-Atencao: O sujeito passivo (cliente) e a VITIMA. A plataforma detem o monopolio da emissao de faturas (Art. 36.o n.o 11 CIVA). Deves argumentar a Inversao do Onus da Prova e imputar a responsabilidade do crime de Colarinho Branco e a Perda de Chance (Danos Reputacionais pelo Risk Scoring da AT) exclusivamente a plataforma. O sujeito passivo nao tem acesso nem controlo sobre os documentos fiscais emitidos em seu nome — este facto por si so justifica a inversao do onus probatorio nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT.`;
+Atencao: O sujeito passivo (cliente) e a VITIMA. A plataforma detem o monopolio da emissao de faturas (Art. 36.o n.o 11 CIVA). Deves argumentar a Inversao do Onus da Prova e imputar a responsabilidade do crime de Colarinho Branco e a Perda de Chance (Danos Reputacionais pelo Risk Scoring da AT) exclusivamente a plataforma. O sujeito passivo nao tem acesso nem controlo sobre os documentos fiscais emitidos em seu nome — este facto por si so justifica a inversao do onus probatorio nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT.
+
+TERMO JURÍDICO OBRIGATÓRIO — LIMBO CONTABILÍSTICO (Gatilho Processual):
+Deves SEMPRE incluir o termo "limbo contabilístico" na Seccao A (Qualificacao Juridica dos Factos). A divergencia apurada nao constitui erro de processamento, mas sim a criacao de um limbo contabilístico que serve a retencao indevida de margem operacional e a evasao fiscal estruturada. Este termo e reconhecido como "gatilho" em processos de criminalidade economica nos tribunais portugueses e deve ser empregue com precisao tecnica na qualificacao dos factos.
+
+IDENTIDADE DO SISTEMA — RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL:
+O sistema UNIFED-PROBATUM nao realiza contabilidade. Realiza RECONSTITUICAO DA VERDADE MATERIAL DIGITAL — um processo forense de engenharia reversa sobre os fluxos de caixa reais vs. reportados, com o objetivo de estabelecer a verdade material dos factos para efeitos processuais. Esta distinção e juridicamente relevante e deve ser sublinhada na narrativa.`;
+
 
 
     const userPrompt = `Com base nos dados forenses certificados e na base legal aplicavel, elabora uma Sintese Juridica Pericial em QUATRO seccoes obrigatorias.
@@ -123,12 +130,14 @@ ${legalContext}
 
 === ESTRUTURA OBRIGATORIA ===
 Seccao A - QUALIFICACAO JURIDICA DOS FACTOS
+[OBRIGATORIO: Usar o termo "limbo contabilístico" para qualificar a divergencia apurada. Texto mandatório a incluir: "A divergencia apurada nao constitui erro de processamento, mas sim a criacao de um limbo contabilístico que serve a retencao indevida de margem operacional e a evasao fiscal estruturada."]
 Seccao B - ENQUADRAMENTO LEGAL E TRIBUTARIO
 Seccao C - RECOMENDACOES PERICIAIS
+[OBRIGATORIO: Sublinhar que o UNIFED-PROBATUM realiza RECONSTITUICAO DA VERDADE MATERIAL DIGITAL — nao contabilidade — e que esta distinção e juridicamente relevante para a admissibilidade da prova pericial.]
 Seccao D - ESTRATEGIA DE CONTRA-INTERROGATORIO (AI Adversarial Simulator)
 [Para cada discrepancia critica, identifica 2-3 linhas de ataque da contraparte e fornece a resposta tecnica pericial com referencia legal.]
 
-Maximo 800 palavras. Prosa juridica formal. Sem preambulos.`;
+Maximo 900 palavras. Prosa juridica formal. Sem preambulos.`;
 
     try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -627,13 +636,34 @@ async function exportDOCX() {
         para('', false)
     ].concat(narrativeParas).concat([
         para('', false), hr(), para('', false),
-        para('V. DECLARACAO DO PERITO', true, '26', '003366'), para('', false),
+        para('V. CLÁUSULA DE CONDENAÇÃO — PETIÇÃO CONSOLIDADA (PERDA DE CHANCE)', true, '26', '003366'), para('', false),
+        para('NOTA METODOLÓGICA OBRIGATÓRIA: O UNIFED-PROBATUM não realiza contabilidade. Realiza RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL — um processo forense de engenharia reversa sobre os fluxos de caixa reais vs. reportados, com o objetivo de estabelecer a verdade material dos factos para efeitos processuais. Esta distinção é juridicamente relevante para a admissibilidade da prova pericial (Art. 125.º CPP · ISO/IEC 27037:2012).', true, '18', '003366'),
+        para('', false),
+        tbl([
+            tr([tc('Componente de Condenação', true, 4000, 'E8F0F8'), tc('Fórmula / Quantificação', true, 5000, 'E8F0F8')]),
+            tr([tc('Indemnização por Perda de Chance (principal)', false, 4000), tc('A liquidar em execução de sentença — correspondente ao diferencial de juros bancários agravados pelo vício no cadastro fiscal (Risk Scoring AT) causado pela Ré, calculado desde a data de início das omissões até efectivo ressarcimento.', false, 5000)]),
+            tr([tc('Omissão de IVA 23% (retenção indevida)', false, 4000), tc(fe(c.ivaFalta) + ' — Art. 2.º n.º 1 al. i) CIVA · Autoliquidação em falta', false, 5000)]),
+            tr([tc('Omissão de IVA 6% (transporte)', false, 4000), tc(fe(c.ivaFalta6) + ' — Art. 18.º n.º 1 al. b) CIVA · Taxa Reduzida Transporte', false, 5000)]),
+            tr([tc('Omissão de Faturação (C2 — Smoking Gun)', true, 4000, 'FFF0F0'), tc(fe(c.discrepanciaCritica) + ' (' + (c.percentagemOmissao || 0).toFixed(2) + '%) — Discrepância Despesas/Fatura (BTOR vs BTF)', true, 5000, 'FFF0F0')]),
+            tr([tc('Dano Reputacional / Risk Scoring AT', false, 4000), tc('Exposição ao risco: ' + fe(c.discrepanciaSaftVsDac7) + ' (omissão SAF-T vs DAC7) — agravamento injustificado do perfil fiscal que inibe acesso a crédito e benefícios fiscais.', false, 5000)]),
+            tr([tc('IRC Estimado Omitido (21%)', false, 4000), tc(fe(c.ircEstimado) + ' — Art. 17.º CIRC · Agravamento anual', false, 5000)]),
+            tr([tc('Juros de Mora / Sanções CIVA', false, 4000), tc('A liquidar — Art. 108.º CIVA · Art. 103.º/104.º RGIT · prazo de prescrição 7 anos (Art. 45.º LGT)', false, 5000)]),
+            tr([tc('IMPACTO MACROECONÓMICO (7 Anos · 38.000 condutores PT)', true, 4000, 'FFF0F0'), tc(fe(c.impactoSeteAnosMercado) + ' — Relevância sistémica para litígio especializado', true, 5000, 'FFF0F0')])
+        ]),
+        para('', false),
+        para('Cláusula de Redação Processual (para peça autónoma do advogado mandatário):', true, '18', '003366'),
+        para('"Deve a Ré ser condenada a pagar ao Autor: (i) indemnização a liquidar em execução de sentença, correspondente ao diferencial de juros bancários agravados pelo vício no cadastro fiscal (Risk Scoring) causado pela conduta omissiva da Ré, imputável à subdeclaração sistemática de rendimentos perante a Autoridade Tributária; (ii) o valor apurado de ' + fe(c.discrepanciaCritica) + ' a título de omissão de faturação de comissões retidas sem suporte documental; (iii) IVA em falta no montante de ' + fe((c.ivaFalta || 0) + (c.ivaFalta6 || 0)) + '; (iv) juros de mora e acréscimos legais sobre todos os montantes, desde a data de início das omissões até integral pagamento — tudo nos termos dos Arts. 103.º/104.º RGIT, Art. 36.º n.º 11 CIVA, e Art. 483.º CC."', false, '20', '333333'),
+        para('', false), hr(), para('', false),
+        para('V-A. DECLARACAO DO PERITO', true, '26', '003366'), para('', false),
         para('Declaro, sob compromisso de honra, que o presente documento foi elaborado em qualidade de Consultor Tecnico Independente, assumindo os deveres de independencia, objetividade e imparcialidade previstos no artigo 153.o do Codigo de Processo Penal Portugues.', false, '20', '333333'),
+        para('', false),
+        para('O presente estudo constitui RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL — nao contabilidade. O sistema UNIFED-PROBATUM aplica metodologia de engenharia reversa forense sobre fluxos de caixa reais vs. reportados (BTOR vs BTF), com rastreabilidade criptografica completa (SHA-256 + RFC 3161 + AES-256), sendo os resultados plenamente admissiveis como prova tecnica pericial (Art. 125.o CPP · ISO/IEC 27037:2012 · DORA UE 2022/2554).', false, '20', '555555'),
         para('', false),
         para('Lisboa, ' + date, false, '20', '333333'), para('', false),
         para('_____________________________________________', false, '20', '333333'),
         para('Eduardo Monteiro', true, '20', '003366'),
-        para('Analista e Consultor Forense Independente - UNIFED - PROBATUM', false, '18', '555555'),
+        para('Analista e Consultor Forense Independente - UNIFED - PROBATUM v13.3.0-DIAMOND', false, '18', '555555'),
+        para('Reconstituicao da Verdade Material Digital · Art. 153.o CPP · ISO/IEC 27037:2012', false, '16', '888888'),
         para('', false),
         para('AVISO: Esta minuta e destinada ao advogado mandatario. Nao constitui por si so peca processual.', false, '16', 'AA0000')
     ]).join('');
