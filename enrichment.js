@@ -571,9 +571,19 @@ async function exportDOCX() {
             aiNarrative = await generateLegalNarrative(sys.analysis);
     } catch (_e) { /* silent */ }
 
+    // ── PASSO 1 · Ghost-Text Purge ───────────────────────────────────────────
+    // Elimina qualquer fragmento de metadados, paginação ou ruído de formatação
+    // que possa ter vazado para a narrativa gerada (e.g. "Página X de Y",
+    // "PROBATUM SEAL", "AL RGIT", "TERIAL", entidades HTML mal codificadas).
+    // O pipeline devolve APENAS doutrina jurídica limpa.
+    // ─────────────────────────────────────────────────────────────────────────
+    var _ghostRe = /Página\s+\d+\s+de\s+\d+|PROBATUM\s+SEAL|v13\.\d+\.\d+-[A-Z]+\s*·\s*Página|\bTERIAL\b|\bAL\s+RGIT\b|&amp;|&ndash;|&–|&#\d+;/gi;
+
     var narrativeParas = aiNarrative.split('\n')
         .map(function(l) { return l.trim(); })
         .filter(function(l) { return l.length > 0; })
+        .map(function(l) { return l.replace(_ghostRe, '').trim(); })   // purge ghost
+        .filter(function(l) { return l.length > 0; })                  // drop empty after purge
         .map(function(l) {
             var isH = /^Secc?[a-z]o [A-D]|^SINTESE/.test(l);
             return para(l, isH, isH ? '22' : '20', isH ? '003366' : '222222');

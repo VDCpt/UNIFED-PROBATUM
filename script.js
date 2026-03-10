@@ -5463,40 +5463,10 @@ async function exportPDF() {
             doc.setTextColor(120, 120, 120);
             doc.text(sessionLabel, pageWidth - margin, 8, { align: 'right' });
 
-            // ══ LINHA DIVISÓRIA CYAN PROBATUM (Padrão Elite — todas as páginas) ══
-            doc.setDrawColor(0, 229, 255);
-            doc.setLineWidth(0.4);
-            doc.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
-
-            // ══ RODAPÉ — PÁGINA (esquerda) · MASTER HASH SHA-256 (direita) ══
-            doc.setFont('courier', 'bold');
-            doc.setFontSize(6.5);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Página ${pageNum} de ${TOTAL_PAGES}`, margin, pageHeight - 14);
-
-            if (!isLastPage) {
-                const _mhFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
-                // Hash SHA-256 completo alinhado à direita — padrão legal europeu
-                doc.setFont('courier', 'normal');
-                doc.setFontSize(5.2);
-                doc.setTextColor(100, 100, 100);
-                doc.text(
-                    'Master Hash SHA-256: ' + _mhFull,
-                    pageWidth - margin, pageHeight - 14, { align: 'right' }
-                );
-            }
-
-            // ══ IDENTIFICAÇÃO PROBATUM (linha inferior) ══
-            doc.setFont('courier', 'normal');
-            doc.setFontSize(5.5);
-            doc.setTextColor(140, 140, 140);
-            doc.text(
-                'UNIFED-PROBATUM v13.3.0-DIAMOND · RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP · ISO/IEC 27037:2012',
-                pageWidth / 2, pageHeight - 9, { align: 'center' }
-            );
-
-            doc.setDrawColor(0, 0, 0);
-            doc.setTextColor(0, 0, 0);
+            // ══ NOTA: linha divisória + Página X/Y + Master Hash + PROBATUM text ══
+            // São agora desenhados pelo loop universal ANTES de doc.save()
+            // para garantir valores de total de páginas corretos em todas.
+            // addFooter mantém APENAS: marca de água, sessão (topo), e QR seal.
 
             // ══════════════════════════════════════════════════════════════════
             // SELO DE CERTIFICAÇÃO PROBATUM — ativado por isLastPage=true
@@ -5571,6 +5541,45 @@ async function exportPDF() {
             }
         };
 
+        // ══════════════════════════════════════════════════════════════════════
+        // writeDynamicText — GESTOR DINÂMICO DO EIXO Y (UNIFED-PROBATUM v13.3.0)
+        // Substitui posicionamentos estáticos nos blocos de texto de prosa livre.
+        // Garante wrap automático (splitTextToSize) e quebra de página antes de
+        // atingir a zona do rodapé (25mm de margem de segurança).
+        // Uso: y = writeDynamicText(doc, text, y [, fontSize, isBold, color])
+        // Devolve o novo valor de y — nunca muta estado externo directamente.
+        // NOTA: Não aplicar a elementos absolutamente posicionados (headers,
+        //       colunas de tabela, anotações de gráfico, footer zone) — esses
+        //       têm coordenadas fixas por design de layout.
+        // ══════════════════════════════════════════════════════════════════════
+        const writeDynamicText = (doc, text, curY, fontSize = 9, isBold = false, textColor = [0, 0, 0]) => {
+            const _ph   = doc.internal.pageSize.getHeight(); // A4 = 297mm
+            const _maxW = 180;                               // margem útil
+            const _lh   = fontSize * 0.42;                  // line-height estimado
+
+            doc.setFontSize(fontSize);
+            doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+            doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+
+            const lines  = doc.splitTextToSize(text, _maxW);
+            const textH  = lines.length * _lh;
+
+            // Quebra de página automática — 28mm de zona de rodapé reservada
+            if (curY + textH > (_ph - 28)) {
+                addFooter(doc, pageNumber);
+                doc.addPage();
+                pageNumber++;
+                curY = 20;
+                // Re-aplicar estilo pois addPage() não o preserva
+                doc.setFontSize(fontSize);
+                doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+                doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+            }
+
+            doc.text(lines, left, curY);
+            return curY + textH + 4; // +4mm breathing room
+        };
+
         // PÁGINA 1
         let y = 20;
 
@@ -5604,40 +5613,38 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
 
-        // ── NOTA METODOLÓGICA FORENSE ─────────────────────────────────────────
+        // ── NOTA METODOLÓGICA FORENSE (PASSO 3 — writeDynamicText) ───────────
+        // Renderização via Gestor Dinâmico do Eixo Y — sem posicionamento estático.
         // A string notaMetodologica contém dois parágrafos separados por \n\n:
         //   [0] Nota Metodológica (itálico cinzento)
-        //   [1] Fundamentação da Prova Material (bold azul escuro — peso pericial superior)
-        // Split no separador \n\nFUNDAMENTAÇÃO para obter os dois blocos
+        //   [1] Fundamentação da Prova Material (bold azul escuro)
         const _notaSplit = t.notaMetodologica.split('\n\nFUNDAMENTAÇÃO DA PROVA MATERIAL:');
         const _notaTexto = _notaSplit[0] || t.notaMetodologica;
         const _fundTexto = _notaSplit[1] ? 'FUNDAMENTAÇÃO DA PROVA MATERIAL:' + _notaSplit[1] : '';
 
-        doc.setFontSize(8);
+        // Bloco 1: Nota Metodológica (itálico, cor cinzenta)
         doc.setFont('helvetica', 'italic');
-        doc.setTextColor(100, 100, 100);
-        const notaMetodologicaLines = doc.splitTextToSize(_notaTexto, doc.internal.pageSize.getWidth() - 30);
-        doc.text(notaMetodologicaLines, left, y); y += (notaMetodologicaLines.length * 4) + 4;
+        y = writeDynamicText(doc, _notaTexto, y, 8, false, [100, 100, 100]);
 
-        // ── FUNDAMENTAÇÃO DA PROVA MATERIAL — bloco de destaque ──────────────
+        // Bloco 2: Fundamentação da Prova Material — caixa de destaque visual
         if (_fundTexto) {
-            // Overflow guard antes do novo bloco
-            if (y > 240) {
+            const _pageW    = doc.internal.pageSize.getWidth();
+            const _fundLns  = doc.splitTextToSize(_fundTexto, _pageW - 38);
+            const _fundBoxH = (_fundLns.length * 3.8) + 7;
+            // Overflow guard antes da caixa — 28mm rodapé + altura da caixa
+            if (y + _fundBoxH > (doc.internal.pageSize.getHeight() - 28)) {
                 addFooter(doc, pageNumber);
-                doc.addPage(); pageNumber++; y = 20;
+                doc.addPage(); pageNumber++;
+                y = 20;
             }
-            const _pageW = doc.internal.pageSize.getWidth();
-            // Caixa de fundo azul-escuro (destaque probatório)
             doc.setFillColor(13, 27, 42);
             doc.setDrawColor(0, 229, 255);
             doc.setLineWidth(0.5);
-            const _fundLines = doc.splitTextToSize(_fundTexto, _pageW - 38);
-            const _fundBoxH  = (_fundLines.length * 3.8) + 7;
             doc.roundedRect(left, y, _pageW - left * 2, _fundBoxH, 2, 2, 'FD');
             doc.setFontSize(7.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 229, 255);
-            doc.text(_fundLines, left + 4, y + 5);
+            doc.text(_fundLns, left + 4, y + 5);
             y += _fundBoxH + 5;
         }
 
@@ -7583,37 +7590,60 @@ async function exportPDF() {
         // ══ FIM PÁGINA FINAL ISOLADA ══
 
         // ══════════════════════════════════════════════════════════════════════
-        // SEGUNDA PASSAGEM — CORRECÇÃO DE NUMERAÇÃO (PROTOCOLO UNIFED-GOLD)
-        // Problema: TOTAL_PAGES=8 fixo; pageNumber pode ultrapassar 8 por
-        // overflow dinâmico (cadeia de custódia, perguntas, TSA).
-        // Solução: após construção completa, obter total real via
-        // doc.getNumberOfPages(), iterar todas as páginas, apagar o texto
-        // antigo com rectângulo branco e re-escrever "Página X de Y" correcto.
+        // LOOP UNIVERSAL DE RODAPÉ — PASSO 4 (UNIFED-PROBATUM v13.3.0-DIAMOND)
+        // Executado UMA ÚNICA VEZ, imediatamente antes de doc.save().
+        // Garante que todas as páginas têm o rodapé correto com o total real
+        // de páginas, a Master Hash definitiva e identificação PROBATUM.
+        // Substitui a antiga 2.ª passagem parcial (só corrigia "Página X de Y").
         // ══════════════════════════════════════════════════════════════════════
         const realTotalPages = doc.getNumberOfPages();
-        TOTAL_PAGES = realTotalPages; // actualizar para log e texto de encerramento
+        TOTAL_PAGES = realTotalPages;
 
         const _pw  = doc.internal.pageSize.getWidth();
         const _ph  = doc.internal.pageSize.getHeight();
         const _mg  = 14;
+        const _mhFull = IFDESystem.masterHash || 'HASH_INDISPONIVEL';
 
         for (let _p = 1; _p <= realTotalPages; _p++) {
             doc.setPage(_p);
 
-            // 1. Apagar texto antigo — rectângulo branco sobre a zona do rodapé
-            //    Zona: x=margin, y=pageHeight-14 (cobre "Página X de Y" a 7pt)
+            // 1. Limpar zona de rodapé — rectângulo branco elimina qualquer detrito
             doc.setFillColor(255, 255, 255);
-            doc.rect(_mg, _ph - 14, 60, 8, 'F');
+            doc.rect(0, _ph - 22, _pw, 22, 'F');
 
-            // 2. Re-escrever "Página X de Y" com total correcto
-            doc.setFontSize(7);
+            // 2. Linha divisória CYAN PROBATUM
+            doc.setDrawColor(0, 229, 255);
+            doc.setLineWidth(0.5);
+            doc.line(_mg, _ph - 20, _pw - _mg, _ph - 20);
+
+            // 3. Página X de Y (esquerda)
             doc.setFont('courier', 'bold');
+            doc.setFontSize(6.5);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Página ${_p} de ${realTotalPages}`, _mg, _ph - 10);
+            doc.text(`Página ${_p} de ${realTotalPages}`, _mg, _ph - 14);
 
+            // 4. Master Hash SHA-256 completo (direita) — padrão legal europeu
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(5.2);
+            doc.setTextColor(100, 100, 100);
+            doc.text(
+                'Master Hash SHA-256: ' + _mhFull,
+                _pw - _mg, _ph - 14, { align: 'right' }
+            );
+
+            // 5. Doutrina Elite (centro, linha inferior)
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(5.5);
+            doc.setTextColor(140, 140, 140);
+            doc.text(
+                'UNIFED-PROBATUM v13.3.0-DIAMOND · RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL · Art. 125.º CPP',
+                _pw / 2, _ph - 9, { align: 'center' }
+            );
+
+            doc.setDrawColor(0, 0, 0);
             doc.setTextColor(0, 0, 0);
         }
-        // ══ FIM SEGUNDA PASSAGEM ══
+        // ══ FIM LOOP UNIVERSAL DE RODAPÉ ══
 
         // Guardar PDF — sincronamente após inserção garantida do QR Code e correcção de numeração
         doc.save(`UNIFED_PERITIA_${IFDESystem.sessionId}.pdf`);
