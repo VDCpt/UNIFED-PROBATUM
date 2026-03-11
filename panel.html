@@ -1,0 +1,260 @@
+<!--
+  ============================================================================
+  UNIFED - PROBATUM · v13.5.0-PURE · PAINEL DE CASO REAL ANONIMIZADO
+  ============================================================================
+  Inserir após o painel de Dashboard principal no index.html.
+  Todos os valores são preenchidos por _syncPureDashboard() em script.js.
+  IDs marcados com "pure-*" — sem conflito com IDs existentes.
+  ============================================================================
+-->
+
+<section id="pureDashboard" class="pure-section" aria-label="Painel Caso Real Anonimizado v13.5.0-PURE">
+
+  <!-- ── HEADER DA SECÇÃO ────────────────────────────────────────────────── -->
+  <div class="pure-section-header">
+    <div class="pure-section-title">
+      <span class="pure-badge-version">v13.5.0-PURE</span>
+      RECONSTITUIÇÃO DA VERDADE MATERIAL — CASO REAL ANONIMIZADO
+    </div>
+    <div class="pure-session-badge">
+      <span class="pure-label">SESSÃO</span>
+      <span id="pure-session-id" class="pure-mono">UNIFED-MMLADX8Q-CV69L</span>
+      <span class="pure-label" style="margin-left:12px">SHA-256</span>
+      <span id="pure-hash-prefix" class="pure-mono pure-hash">5150e767...</span>
+    </div>
+  </div>
+
+  <!-- ── PAINEL I · RECONSTITUIÇÃO FINANCEIRA ────────────────────────────── -->
+  <div class="pure-card" id="pureFinancialCard">
+    <h3 class="pure-card-title">
+      <span class="pure-icon">🔬</span>
+      I. RECONSTITUIÇÃO DA VERDADE MATERIAL (EXTRATO vs SAF-T vs DAC7)
+    </h3>
+    <div class="pure-data-grid pure-3col">
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">Ganhos (Extrato Ledger)</div>
+        <div id="pure-ganhos" class="pure-data-value pure-value-primary">€ 0,00</div>
+        <div class="pure-data-sub">Fonte primária · Viagens efectuadas</div>
+      </div>
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">Despesas / Comissões (BTOR)</div>
+        <div id="pure-despesas" class="pure-data-value pure-value-warn">€ 0,00</div>
+        <div class="pure-data-sub">Retidas pela plataforma (extrato)</div>
+      </div>
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">Ganhos Líquidos (Extrato)</div>
+        <div id="pure-liquido" class="pure-data-value pure-value-neutral">€ 0,00</div>
+        <div class="pure-data-sub">Ganhos − Despesas (extrato real)</div>
+      </div>
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">SAF-T Bruto (Declarado)</div>
+        <div id="pure-saft" class="pure-data-value pure-value-neutral">€ 0,00</div>
+        <div class="pure-data-sub">Faturação interna plataforma</div>
+      </div>
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">DAC7 (Reportado à AT)</div>
+        <div id="pure-dac7" class="pure-data-value pure-value-neutral">€ 0,00</div>
+        <div class="pure-data-sub">2.º Semestre 2024 (Q4 activo)</div>
+      </div>
+
+      <div class="pure-data-block">
+        <div class="pure-data-label">Comissões Faturadas (BTF)</div>
+        <div id="pure-fatura" class="pure-data-value pure-value-warn">€ 0,00</div>
+        <div class="pure-data-sub">Valor em faturas emitidas (PT1124/PT1125)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PAINEL II · DISCREPÂNCIAS (SMOKING GUN) ─────────────────────────── -->
+  <div class="pure-card pure-card-alert" id="pureDiscCard">
+    <h3 class="pure-card-title">
+      <span class="pure-icon">🔫</span>
+      II. DISCREPÂNCIAS APURADAS — PROVA RAINHA
+    </h3>
+
+    <div class="pure-smoking-guns">
+
+      <!-- C2 — Despesas vs Fatura (Smoking Gun Principal) -->
+      <div class="pure-sg pure-sg-critical">
+        <div class="pure-sg-label">SMOKING GUN 2 — Despesas/Comissões (Extrato) vs Comissões Faturadas (BTF)</div>
+        <div class="pure-sg-row">
+          <span class="pure-sg-key">BTOR (Extrato):</span>
+          <span class="pure-sg-val">€ 2.399,53</span>
+        </div>
+        <div class="pure-sg-row">
+          <span class="pure-sg-key">BTF (Fatura):</span>
+          <span class="pure-sg-val">€ 262,94</span>
+        </div>
+        <div class="pure-sg-delta">
+          <span>OMISSÃO:</span>
+          <span id="pure-disc-c2" class="pure-delta-value">€ 0,00</span>
+          <span id="pure-disc-c2-pct" class="pure-delta-pct">0,00%</span>
+        </div>
+        <div class="pure-sg-legal">Art. 36.º n.º 11 CIVA · Art. 104.º RGIT</div>
+      </div>
+
+      <!-- C1 — SAF-T vs DAC7 -->
+      <div class="pure-sg pure-sg-secondary">
+        <div class="pure-sg-label">SMOKING GUN 1 — SAF-T Bruto vs Reportado DAC7 (AT)</div>
+        <div class="pure-sg-row">
+          <span class="pure-sg-key">SAF-T Bruto:</span>
+          <span class="pure-sg-val">€ 8.227,97</span>
+        </div>
+        <div class="pure-sg-row">
+          <span class="pure-sg-key">DAC7 (2.º Sem.):</span>
+          <span class="pure-sg-val">€ 7.755,16</span>
+        </div>
+        <div class="pure-sg-delta">
+          <span>DIFERENÇA:</span>
+          <span id="pure-disc-saft-dac7" class="pure-delta-value">€ 0,00</span>
+          <span id="pure-disc-saft-pct" class="pure-delta-pct">0,00%</span>
+        </div>
+        <div class="pure-sg-legal">Diretiva DAC7 (UE) 2021/514 · DL n.º 41/2023</div>
+      </div>
+
+    </div>
+
+    <!-- Impacto Fiscal -->
+    <div class="pure-fiscal-row">
+      <div class="pure-fiscal-item">
+        <div class="pure-fiscal-label">IVA 23% Omitido</div>
+        <div id="pure-iva-23" class="pure-fiscal-value">€ 0,00</div>
+        <div class="pure-fiscal-sub">Art. 2.º n.º 1 al. i) CIVA</div>
+      </div>
+      <div class="pure-fiscal-item">
+        <div class="pure-fiscal-label">IVA 6% Omitido</div>
+        <div id="pure-iva-6" class="pure-fiscal-value">€ 0,00</div>
+        <div class="pure-fiscal-sub">Art. 18.º CIVA · Transporte</div>
+      </div>
+      <div class="pure-fiscal-item">
+        <div class="pure-fiscal-label">IRC Estimado (21%)</div>
+        <div id="pure-irc" class="pure-fiscal-value">€ 0,00</div>
+        <div class="pure-fiscal-sub">Art. 17.º CIRC</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PAINEL III · ATF ─────────────────────────────────────────────────── -->
+  <div class="pure-card" id="pureATFCard">
+    <h3 class="pure-card-title">
+      <span class="pure-icon">⏳</span>
+      III. ANÁLISE TEMPORAL FORENSE (ATF) — 3 MESES ACTIVOS (OUT–DEZ 2024)
+    </h3>
+
+    <div class="pure-atf-grid">
+
+      <div class="pure-atf-block pure-atf-sp">
+        <div class="pure-atf-label">SCORE DE PERSISTÊNCIA</div>
+        <div id="pure-atf-sp" class="pure-atf-big">40<span style="font-size:1rem;opacity:0.6">/100</span></div>
+        <div class="pure-atf-classify" id="pure-atf-status">OMISSÃO PONTUAL / RISCO MODERADO</div>
+        <div class="pure-atf-bar">
+          <div class="pure-atf-bar-fill" style="width:40%;background:#F59E0B"></div>
+        </div>
+      </div>
+
+      <div class="pure-atf-block">
+        <div class="pure-atf-label">TENDÊNCIA</div>
+        <div id="pure-atf-trend" class="pure-atf-trend-val">📉 DESCENDENTE</div>
+        <div class="pure-atf-sub">Regressão linear (OLS) · 3 pontos</div>
+      </div>
+
+      <div class="pure-atf-block">
+        <div class="pure-atf-label">OUTLIERS &gt; 2σ</div>
+        <div id="pure-atf-outliers" class="pure-atf-outlier-val">0 outliers &gt; 2σ</div>
+        <div class="pure-atf-sub">Sem picos estatisticamente anómalos</div>
+      </div>
+
+      <div class="pure-atf-block">
+        <div class="pure-atf-label">HISTÓRICO</div>
+        <div id="pure-atf-meses" class="pure-atf-meses-val">3 meses activos</div>
+        <div class="pure-atf-sub">Set 2024 excluído (actividade parcial)</div>
+      </div>
+
+    </div>
+
+    <!-- Nota metodológica ATF -->
+    <div class="pure-atf-note">
+      <strong>Nota Metodológica:</strong>
+      Score de Persistência calculado pelo motor <code>computeTemporalAnalysis()</code> sobre 3 meses
+      de histórico (Out/Nov/Dez 2024). SP=40 corresponde à classificação
+      <em>"Omissões pontuais — possível erro operacional"</em> nos termos do motor UNIFED-PROBATUM.
+      A tendência descendente indica que a discrepância diminuiu entre Outubro e Dezembro.
+      Conclusão ATF: <strong>não há evidência de padrão doloso sistémico neste período.</strong>
+      As discrepâncias absolutas (C2: €2.136,59 — 89,04%) mantêm relevância jurídica independente.
+    </div>
+
+    <!-- Botão para abrir modal ATF completo -->
+    <div style="text-align:center;margin-top:16px">
+      <button
+        onclick="if(typeof openATFModal === 'function') openATFModal();"
+        class="pure-btn-atf"
+        title="Abrir modal ATF completo com Chart.js e Motor Preditivo NEXUS">
+        ⏳ ABRIR ANÁLISE TEMPORAL FORENSE COMPLETA
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PAINEL IV · ZONA CINZENTA (valores não sujeitos a comissão) ───────── -->
+  <div class="pure-card" id="pureZonaCinzentaCard">
+    <h3 class="pure-card-title">
+      <span class="pure-icon">🔍</span>
+      IV. ZONA CINZENTA — VALORES NÃO SUJEITOS A COMISSÃO (ISOLADOS)
+    </h3>
+    <p class="pure-zc-intro">
+      O sistema isolou <strong>€ 451,00</strong> em fluxos não sujeitos a comissão pela plataforma
+      (Campanhas + Gorjetas — mês de Outubro). A reconciliação DAC7 deve verificar se estes valores
+      foram indevidamente incluídos na base de reporte à AT, explicando parte da discrepância C1.
+    </p>
+    <div class="pure-zc-grid">
+      <div class="pure-zc-item">
+        <span class="pure-zc-label">Campanhas (total período)</span>
+        <span id="pure-nc-campanhas" class="pure-zc-val">€ 0,00</span>
+        <span class="pure-zc-tag">Isento comissão · 0%</span>
+      </div>
+      <div class="pure-zc-item">
+        <span class="pure-zc-label">Gorjetas (total período)</span>
+        <span id="pure-nc-gorjetas" class="pure-zc-val">€ 0,00</span>
+        <span class="pure-zc-tag">Transferência P2P · 0%</span>
+      </div>
+      <div class="pure-zc-item pure-zc-total">
+        <span class="pure-zc-label">Total Não Sujeitos (Out 2024)</span>
+        <span id="pure-nc-total" class="pure-zc-val">€ 0,00</span>
+        <span class="pure-zc-tag">Fora da base tributável TVDE</span>
+      </div>
+    </div>
+    <div class="pure-zc-question">
+      <strong>Questão para contraditório (Art. 327.º CPP):</strong>
+      Pode a plataforma confirmar se os €451,00 em Gorjetas e Campanhas (isentos de comissão nos termos
+      da Lei TVDE) foram incluídos na base de cálculo do reporte DAC7? Se sim, qual o fundamento legal?
+    </div>
+  </div>
+
+  <!-- ── PAINEL V · VEREDICTO E INTEGRIDADE ──────────────────────────────── -->
+  <div class="pure-card pure-card-verdict" id="pureVerdictCard">
+    <div class="pure-verdict-row">
+      <div class="pure-verdict-block">
+        <div class="pure-verdict-label">VEREDICTO PERICIAL</div>
+        <div id="pure-verdict" class="pure-verdict-value">RISCO ELEVADO</div>
+        <div id="pure-verdict-pct" class="pure-verdict-pct">89,04%</div>
+        <div class="pure-verdict-basis">Art. 103.º / 104.º RGIT · Art. 125.º CPP</div>
+      </div>
+      <div class="pure-integrity-block">
+        <div class="pure-verdict-label">INTEGRIDADE SHA-256</div>
+        <div id="pure-hash-prefix-verdict" class="pure-mono pure-hash-lg">5150e767...</div>
+        <div class="pure-verdict-basis">RFC 3161 · ISO/IEC 27037:2012</div>
+        <div class="pure-verdict-basis" style="margin-top:4px">
+          <em>Dados reais · demoMode: false · DORA Compliant</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+<!-- FIM: pureDashboard · v13.5.0-PURE · UNIFED-MMLADX8Q-CV69L -->

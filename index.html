@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="UNIFED - PROBATUM (Unidade Independente de Inteligência Forense Económica e Digital) v13.3.0-DIAMOND · DORA COMPLIANT · COURT READY · PROVA DIGITAL MATERIAL">
+    <meta name="description" content="UNIFED - PROBATUM (Unidade Independente de Inteligência Forense Económica e Digital) v13.5.0-PURE · DORA COMPLIANT · COURT READY · PROVA DIGITAL MATERIAL">
     <meta name="author" content="UNIFED - PROBATUM · Unidade Independente de Inteligência Forense Económica e Digital">
-    <title>UNIFED - PROBATUM · v13.3.0-DIAMOND · DORA COMPLIANT · COURT READY · SMOKING GUN · CADEIA DE CUSTÓDIA</title>
+    <title>UNIFED - PROBATUM · v13.5.0-PURE · DORA COMPLIANT · COURT READY · SMOKING GUN · CADEIA DE CUSTÓDIA</title>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 
@@ -125,7 +125,7 @@
             <div class="splash-right">
                 <div class="metadata-panel">
                     <p><strong>Módulo:</strong> Investigação Digital · ISO/IEC 27037</p>
-                    <p><strong>Big Data Accumulator:</strong> v13.3.0-DIAMOND · DORA Compliant · Smoking Gun · NEXUS</p>
+                    <p><strong>Big Data Accumulator:</strong> v13.5.0-PURE · DORA Compliant · Smoking Gun · NEXUS</p>
                     <p><strong>CSC:</strong> Cadeia de Custódia Ativa</p>
                 </div>
                 
@@ -146,7 +146,7 @@
                     <small>Este sistema destina-se exclusivamente a uso pericial autorizado. O acesso não autorizado constitui crime de Acesso Ilegítimo, previsto no Artigo 6.º da Lei do Cibercrime (Lei n.º 109/2009, de 15 de setembro). Ao iniciar o utilizador aceita os termos e condições aqui mencionados.</small>
                 </div>
                 
-                <p class="version-footer">UNIFED - PROBATUM © 2024/2026 EM v13.3.0-DIAMOND · DORA COMPLIANT · SMOKING GUN · COURT READY · NEXUS · BIG DATA</p>
+                <p class="version-footer">UNIFED - PROBATUM © 2024/2026 EM v13.5.0-PURE · DORA COMPLIANT · SMOKING GUN · COURT READY · NEXUS · BIG DATA</p>
             </div>
         </div>
     </div>
@@ -175,7 +175,7 @@
                     <div>
                         <h1>
                             UNIFED - PROBATUM 
-                            <span class="version-badge">v13.3.0-DIAMOND</span>
+                            <span class="version-badge">v13.5.0-PURE</span>
                         </h1>
                         <p class="subtitle" id="headerSubtitle">ISO/IEC 27037 | NIST SP 800-86 | INTERPOL · CSC | BIG DATA</p>
                     </div>
@@ -591,6 +591,15 @@
                     </div>
                 </div>
 
+                <!-- ══ UNIFED - PROBATUM v13.5.0-PURE · PAINEL DE CASO REAL ANONIMIZADO ══════
+                     Reconstituição da Verdade Material — Dados verificados JSON UNIFED-MMLADX8Q-CV69L
+                     Activação: IFDESystem.loadAnonymizedRealCase() (chamada em script_injection.js)
+                     Conformidade: ISO/IEC 27037 · Art. 125.º CPP · DORA (UE) 2022/2554
+                     ══════════════════════════════════════════════════════════════════════════════ -->
+                <div id="pureDashboardWrapper" style="display:none">
+                    <!-- Conteúdo injectado via innerHTML pelo script_injection_v13.5.0-PURE.js -->
+                </div>
+
                 <!-- CONSOLE DE AUDITORIA -->
                 <div class="console-section">
                     <div class="console-header">
@@ -607,7 +616,7 @@
                             <span id="masterHashValue">A aguardar dados...</span>
                         </div>
                         <div id="qrcodeContainer" style="margin-top: 10px; display: flex; justify-content: center;"></div>
-                        <p class="copyright">UNIFED - PROBATUM © 2024/2026 | Módulo de Peritagem Forense v13.3.0-DIAMOND | DORA COMPLIANT | COURT READY | DIAMOND | SMOKING GUN</p>
+                        <p class="copyright">UNIFED - PROBATUM © 2024/2026 | Módulo de Peritagem Forense v13.5.0-PURE | DORA COMPLIANT | COURT READY | DIAMOND | SMOKING GUN</p>
                         <span id="pageCount" style="display: none;"></span>
 
                         <!-- ── Acesso à Cadeia de Custódia ── -->
@@ -899,6 +908,54 @@
          Conformidade: DORA (UE) 2022/2554 · ISO/IEC 27037:2012 · Art. 125.º CPP
          ══════════════════════════════════════════════════════════════════════════ -->
     <script src="nexus.js"></script>
+
+    <!-- ══ UNIFED - PROBATUM v13.5.0-PURE · CASO REAL ANONIMIZADO ═══════════════
+         Carregado APÓS nexus.js. Injeta os dados reais verificados (UNIFED-MMLADX8Q-CV69L)
+         no IFDESystem e activa o painel #pureDashboard.
+         Conformidade: ISO/IEC 27037 · Art. 125.º CPP · DORA (UE) 2022/2554
+         Core Freeze: não altera fórmulas de script.js nem módulos enrichment/nexus.
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <link rel="stylesheet" href="style_additions_v13.5.0-PURE.css">
+    <script src="script_injection_v13.5.0-PURE.js"></script>
+    <script>
+        // ── Activação do Painel v13.5.0-PURE ───────────────────────────────────
+        // Aguarda IFDESystem estar disponível, depois:
+        //   1. Injeta o HTML do painel no wrapper
+        //   2. Chama loadAnonymizedRealCase() para popular os dados
+        //   3. Torna o wrapper visível
+        // O fetch do panel.html é local — sem dependências externas.
+        (function _activatePurePanel() {
+            function _inject() {
+                if (typeof IFDESystem === 'undefined' || typeof loadAnonymizedRealCase !== 'function') {
+                    setTimeout(_inject, 200);
+                    return;
+                }
+                fetch('panel_v13.5.0-PURE.html')
+                    .then(function(r) { return r.text(); })
+                    .then(function(html) {
+                        var wrapper = document.getElementById('pureDashboardWrapper');
+                        if (wrapper) {
+                            wrapper.innerHTML = html;
+                            wrapper.style.display = 'block';
+                        }
+                        // Popular os dados reais verificados
+                        if (typeof IFDESystem.loadAnonymizedRealCase === 'function') {
+                            IFDESystem.loadAnonymizedRealCase();
+                        }
+                        console.info('[UNIFED-PURE] ✅ Painel v13.5.0-PURE activado — UNIFED-MMLADX8Q-CV69L.');
+                    })
+                    .catch(function(err) {
+                        // Fallback silencioso: o painel não está disponível (standalone mode)
+                        console.info('[UNIFED-PURE] [i] panel_v13.5.0-PURE.html não encontrado — modo standalone.');
+                    });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', _inject);
+            } else {
+                setTimeout(_inject, 400);
+            }
+        })();
+    </script>
 
 </body>
 </html>
